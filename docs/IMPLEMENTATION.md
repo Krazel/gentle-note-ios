@@ -21,7 +21,7 @@
   products, prices, transactions, or store configuration are active.
 - Privacy manifest, purpose strings, English-only resources, manual Xcode
   project, shared scheme, unit tests, static verifier, and a manual-only macOS
-  build workflow.
+  workflow that tests and packages a labeled unsigned Local-QA IPA.
 
 ## Deliberately not claimed complete
 
@@ -32,5 +32,5 @@ network, deletion, and visual 1:1 gates remain unexecuted. The final app icon,
 specialist/lived-experience review, legal/support endpoints, product name
 clearance, signing, and App Store configuration also remain outside this handoff.
 
-The manual GitHub workflow must not be dispatched until macOS minutes/cost are
-authorized. It never uploads to TestFlight or App Store Connect.
+The owner authorized dispatching this workflow on 2026-08-26. It never uploads
+to TestFlight or App Store Connect and does not consume signing secrets.

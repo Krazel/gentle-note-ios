@@ -1,4 +1,4 @@
-name: iOS Verify (manual)
+name: Build Local-QA IPA
 
 on:
   workflow_dispatch:
@@ -7,13 +7,16 @@ permissions:
   contents: read
 
 jobs:
-  build-and-test:
+  build-test-and-package:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+          xcodebuild -list -project GentleNote.xcodeproj
       - name: Build and test
         run: |
           set -o pipefail
@@ -21,13 +24,67 @@ jobs:
             -project GentleNote.xcodeproj \
             -scheme GentleNote \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
-            -derivedDataPath DerivedData \
+            -derivedDataPath "$RUNNER_TEMP/SimulatorDerivedData" \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Build unsigned device app
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project GentleNote.xcodeproj \
+            -scheme GentleNote \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath "$RUNNER_TEMP/DeviceDerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+
+      - name: Package Local-QA IPA and manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHORT_SHA="${GITHUB_SHA::7}"
+          ARTIFACT_BASENAME="GentleNote-0.1-build-1-${SHORT_SHA}-Local-QA-unsigned"
+          APP_PATH="$RUNNER_TEMP/DeviceDerivedData/Build/Products/Release-iphoneos/GentleNote.app"
+          OUTPUT_DIR="$RUNNER_TEMP/GentleNoteArtifact"
+          test -d "$APP_PATH"
+          mkdir -p "$OUTPUT_DIR/Payload"
+          cp -R "$APP_PATH" "$OUTPUT_DIR/Payload/GentleNote.app"
+          (
+            cd "$OUTPUT_DIR"
+            /usr/bin/ditto -c -k --sequesterRsrc --keepParent Payload "${ARTIFACT_BASENAME}.ipa"
+          )
+          rm -rf "$OUTPUT_DIR/Payload"
+          cat > "$OUTPUT_DIR/${ARTIFACT_BASENAME}.json" <<JSON
+          {
+            "app": "Gentle Note",
+            "marketingVersion": "0.1",
+            "build": "1",
+            "commit": "$GITHUB_SHA",
+            "ciRun": "$GITHUB_RUN_ID",
+            "purpose": "Local-QA",
+            "signed": false,
+            "minimumIOS": "17.0",
+            "bundleIdentifier": "com.krazel.gentlenote",
+            "installability": "Requires a sideloading or re-signing tool with a valid Apple identity/profile. This IPA is not directly installable as a normally signed app."
+          }
+          JSON
+          shasum -a 256 "$OUTPUT_DIR/${ARTIFACT_BASENAME}.ipa" > "$OUTPUT_DIR/${ARTIFACT_BASENAME}.sha256"
+          echo "ARTIFACT_BASENAME=$ARTIFACT_BASENAME" >> "$GITHUB_ENV"
+
+      - name: Upload Local-QA IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_BASENAME }}
+          path: ${{ runner.temp }}/GentleNoteArtifact/*
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Preserve test evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: GentleNote-0.1-build-1-test-evidence
-          path: DerivedData/Logs/Test/*.xcresult
+          path: ${{ runner.temp }}/SimulatorDerivedData/Logs/Test/*.xcresult
           if-no-files-found: warn
           retention-days: 14

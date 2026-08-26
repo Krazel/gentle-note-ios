@@ -25,10 +25,22 @@ calorie, macro, or required meal logging.
 No third-party runtime dependency is used. Camera, microphone, Face ID/Touch ID,
 StoreKit, PDF export, and playback use Apple frameworks.
 
+## Local-QA IPA
+
+The manual GitHub Actions workflow compiles and tests the app on macOS, builds a
+device `.app` without Apple signing, and packages it as a clearly labeled
+`Local-QA-unsigned.ipa` artifact with a JSON manifest and SHA-256 file.
+
+The unsigned IPA is intended for a sideloading or re-signing service that adds
+a valid Apple identity and provisioning profile. It is not directly installable
+as a normally signed iPhone app. The workflow never uploads to TestFlight or
+App Store Connect and reads no signing secrets.
+
 ## Release boundary
 
-Version is `0.1`, build `1`. This source is not published, uploaded to
-TestFlight, submitted to App Review, or connected to real StoreKit products.
+Version is `0.1`, build `1`. The source repository may be public, but the app is
+not uploaded to TestFlight, submitted to App Review, or connected to real
+StoreKit products.
 The visual runtime comparison, physical-device privacy tests, specialist/lived
 experience copy review, final app icon, legal URLs, signing, and release
 preflight remain required before a candidate can be called publishable.
