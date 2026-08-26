@@ -262,9 +262,20 @@ struct JournalHistoryView: View {
                 }.pickerStyle(.segmented)
             }
             if entries.isEmpty {
-                ContentUnavailableView(query.isEmpty ? "No entries yet" : "No entries matched",
-                                       systemImage: "leaf",
-                                       description: Text(query.isEmpty ? "Write when it feels useful—there’s no schedule to keep." : "Try different words or clear the filters."))
+                VStack(spacing: 10) {
+                    Image(systemName: "leaf")
+                        .font(.title2)
+                        .foregroundStyle(QuietLinen.sage)
+                    Text(query.isEmpty ? "No entries yet" : "No entries matched")
+                        .font(.headline)
+                    Text(query.isEmpty ? "Write when it feels useful—there’s no schedule to keep." : "Try different words or clear the filters.")
+                        .font(.subheadline)
+                        .foregroundStyle(QuietLinen.muted)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 30)
+                .listRowBackground(Color.clear)
             } else {
                 ForEach(entries) { entry in
                     NavigationLink(value: entry) { JournalRow(entry: entry) }

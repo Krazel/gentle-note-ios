@@ -11,7 +11,6 @@ private let gentleNoteVersionText: String = {
 
 struct SettingsRootView: View {
     @EnvironmentObject private var model: AppModel
-    @State private var destination: SettingsDestination?
 
     var body: some View {
         NavigationStack {
@@ -34,7 +33,7 @@ struct SettingsRootView: View {
                     footer: { Label("No account. No ads. No analytics.", systemImage: "leaf") }
             }
             .scrollContentBackground(.hidden).linenScreen().navigationTitle("Settings")
-            .navigationDestination(item: $destination) { destination in
+            .navigationDestination(for: SettingsDestination.self) { destination in
                 switch destination {
                 case .privacy: PrivacyLockView()
                 case .permissions: MediaPermissionsView()
@@ -52,10 +51,11 @@ struct SettingsRootView: View {
     }
 
     private func row(_ destination: SettingsDestination, _ title: String, _ icon: String, destructive: Bool = false) -> some View {
-        Button { self.destination = destination } label: {
-            HStack { Image(systemName: icon).frame(width: 26); Text(title); Spacer(); Image(systemName: "chevron.right").font(.caption) }
+        NavigationLink(value: destination) {
+            HStack { Image(systemName: icon).frame(width: 26); Text(title); Spacer() }
                 .frame(minHeight: 44).foregroundStyle(destructive ? QuietLinen.danger : QuietLinen.ink)
-        }.buttonStyle(.plain)
+        }
+        .buttonStyle(.plain)
     }
 }
 
