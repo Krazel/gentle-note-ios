@@ -388,7 +388,7 @@ struct VideoRecorderView: View {
             item.duration = seconds.isFinite ? seconds : recorder.elapsed
             try model.saveLibraryItem(item)
             dismiss()
-        } catch { error = error.localizedDescription }
+        } catch let caughtError { error = caughtError.localizedDescription }
     }
 
     private func discardRecording() {
@@ -458,7 +458,7 @@ struct AudioRecorderView: View {
             item.title = title; item.isKept = kept; item.collectionIDs = collectionIDs; item.tagIDs = tagIDs
             item.encryptedMediaFilename = filename; item.mediaFileExtension = "m4a"; item.duration = recorder.elapsed
             try model.saveLibraryItem(item); dismiss()
-        } catch { error = error.localizedDescription }
+        } catch let caughtError { error = caughtError.localizedDescription }
     }
 
     private func discard() {
@@ -614,12 +614,16 @@ struct TagsView: View {
             Section {
                 HStack { TextField("New tag", text: $newTag); Button("Add") { if !newTag.isEmpty { _ = try? model.addTag(named: newTag); newTag = "" } } }
             }
-            Section("Tags") {
+            Section {
                 ForEach(visibleTags) { tag in
                     HStack { Image(systemName: "tag"); Text(tag.name); Spacer() }
                         .swipeActions { Button("Delete", role: .destructive) { try? model.deleteTag(tag.id) } }
                 }
-            } footer: { Text("Deleting a tag does not delete the items that use it.") }
+            } header: {
+                Text("Tags")
+            } footer: {
+                Text("Deleting a tag does not delete the items that use it.")
+            }
         }
         .searchable(text: $search, prompt: "Search tags")
         .scrollContentBackground(.hidden).linenScreen().navigationTitle("Tags")
