@@ -75,8 +75,9 @@ $Pbx = Get-Content -LiteralPath (Join-Path $ProjectRoot 'GentleNote.xcodeproj\pr
 foreach ($Source in @('GentleNoteApp.swift','Models.swift','SecureStore.swift','AppModel.swift','AuthenticationService.swift','MediaServices.swift','ExportService.swift','SupportStore.swift','DesignSystem.swift','Components.swift','OnboardingAndRoot.swift','JournalViews.swift','LibraryViews.swift','SettingsViews.swift','GentleNoteTests.swift','PrivacyInfo.xcprivacy')) {
     if (-not $Pbx.Contains($Source)) { $Failures.Add("Xcode project omits: $Source") }
 }
-if (-not $Pbx.Contains('MARKETING_VERSION = 0.1')) { $Failures.Add('Marketing version is not 0.1') }
+if (-not $Pbx.Contains('MARKETING_VERSION = 0.1.1')) { $Failures.Add('Marketing version is not 0.1.1') }
 if (-not $Pbx.Contains('CURRENT_PROJECT_VERSION = 1')) { $Failures.Add('Build number is not 1') }
+if (-not $Pbx.Contains('IPHONEOS_DEPLOYMENT_TARGET = 16.0')) { $Failures.Add('Minimum iOS version is not 16.0') }
 
 if ($Failures.Count -gt 0) {
     Write-Output 'VERIFY: FAIL'
@@ -87,5 +88,5 @@ if ($Failures.Count -gt 0) {
 Write-Output 'VERIFY: PASS'
 Write-Output "Swift files: $($Swift.Count)"
 Write-Output "Approved boards: $($Approved.Count)"
-Write-Output 'Version: 0.1 (1)'
+Write-Output 'Version: 0.1.1 (1), iOS 16+'
 Write-Output 'Scope: iPhone, English, local-only, no accounts/ads/analytics/tracking'

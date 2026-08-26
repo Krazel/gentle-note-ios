@@ -1,4 +1,4 @@
-# Release data-flow inventory — source candidate 0.1 (1)
+# Release data-flow inventory — source candidate 0.1.1 (1)
 
 | Data | Source | Storage | Transmission | Retention/control | Recipient |
 |---|---|---|---|---|---|
@@ -9,7 +9,7 @@
 | Search terms | User typing | In memory only; no persisted query history | None | Cleared with UI/process | None |
 | App preferences | User controls | AES-GCM encrypted local preferences | None | Until reset/app removal | None |
 | Authentication | Face ID/Touch ID/passcode through iOS | App stores only enabled/delay preference | No biometric data received | iOS-controlled | Apple OS only |
-| Optional support transaction | StoreKit; feature flag off in 0.1 | Transaction state only when activated | Apple StoreKit | Apple policy | Apple |
+| Optional support transaction | StoreKit; feature flag off in 0.1.1 | Transaction state only when activated | Apple StoreKit | Apple policy | Apple |
 | Help links/calls | Explicit tap | Not stored by Gentle Note | Destination receives normal request/phone metadata, never journal content | Destination policy | 911/988/resource website |
 
 No account, developer backend, CloudKit, iCloud Documents, HealthKit, Photos,

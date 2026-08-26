@@ -1,7 +1,7 @@
 # Gates remaining before a publishable candidate
 
 - Generate the Xcode project and compile/test on macOS with Xcode 16+.
-- Run all unit and UI flows on iOS 17/18 hardware and simulator.
+- Run all unit and UI flows on iOS 16/17/18 hardware and simulator.
 - Capture every approved surface at matching size; compare against
   `design/approved/` and resolve visual differences.
 - Test Face ID/Touch ID/passcode fallback, background snapshots, all lock delays,

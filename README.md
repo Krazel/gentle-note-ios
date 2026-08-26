@@ -19,7 +19,7 @@ calorie, macro, or required meal logging.
 1. Use macOS with Xcode 16 or newer.
 2. Open `GentleNote.xcodeproj` after it is generated from `project.yml` with
    XcodeGen, or generate the project using `scripts/bootstrap-xcode.sh`.
-3. Select an iPhone simulator running iOS 17 or later.
+3. Select an iPhone simulator running iOS 16 or later.
 4. Build the `GentleNote` scheme.
 
 No third-party runtime dependency is used. Camera, microphone, Face ID/Touch ID,
@@ -38,7 +38,7 @@ App Store Connect and reads no signing secrets.
 
 ## Release boundary
 
-Version is `0.1`, build `1`. The source repository may be public, but the app is
+Version is `0.1.1`, build `1`. The source repository may be public, but the app is
 not uploaded to TestFlight, submitted to App Review, or connected to real
 StoreKit products.
 The visual runtime comparison, physical-device privacy tests, specialist/lived

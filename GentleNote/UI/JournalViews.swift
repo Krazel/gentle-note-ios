@@ -192,9 +192,9 @@ struct JournalComposerView: View {
         .linenScreen().navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { showDiscard = hasContent } } }
         .onAppear { load() }
-        .onChange(of: title) { _, _ in saveDraft() }
-        .onChange(of: entryText) { _, _ in saveDraft() }
-        .onChange(of: answers) { _, _ in saveDraft() }
+        .onChange(of: title) { _ in saveDraft() }
+        .onChange(of: entryText) { _ in saveDraft() }
+        .onChange(of: answers) { _ in saveDraft() }
         .confirmationDialog("Keep this draft?", isPresented: $showDiscard, titleVisibility: .visible) {
             Button("Keep Draft") { saveDraft(); dismiss() }
             Button("Discard Draft", role: .destructive) { model.saveJournalDraft(nil); dismiss() }

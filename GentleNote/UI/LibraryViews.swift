@@ -155,11 +155,11 @@ struct NoteComposerView: View {
         }
         .linenScreen().toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
         .onAppear { load() }
-        .onChange(of: title) { _, _ in saveDraft() }
-        .onChange(of: noteText) { _, _ in saveDraft() }
-        .onChange(of: kept) { _, _ in saveDraft() }
-        .onChange(of: collectionIDs) { _, _ in saveDraft() }
-        .onChange(of: tagIDs) { _, _ in saveDraft() }
+        .onChange(of: title) { _ in saveDraft() }
+        .onChange(of: noteText) { _ in saveDraft() }
+        .onChange(of: kept) { _ in saveDraft() }
+        .onChange(of: collectionIDs) { _ in saveDraft() }
+        .onChange(of: tagIDs) { _ in saveDraft() }
         .sheet(isPresented: $organize) {
             OrganizeView(collectionIDs: $collectionIDs, tagIDs: $tagIDs)
                 .environmentObject(model)
@@ -369,7 +369,7 @@ struct VideoRecorderView: View {
         .linenScreen().navigationBarBackButtonHidden(recorder.isRecording)
         .onAppear { recorder.configure() }
         .onDisappear { recorder.stopSession() }
-        .onChange(of: recorder.errorMessage) { _, value in error = value }
+        .onChange(of: recorder.errorMessage) { value in error = value }
         .sheet(isPresented: $organize) { OrganizeView(collectionIDs: $collectionIDs, tagIDs: $tagIDs).environmentObject(model) }
         .alert("Recording interrupted", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
             Button("Review Recording") { error = nil }
@@ -444,7 +444,7 @@ struct AudioRecorderView: View {
             }.padding(20).frame(maxWidth: 680)
         }
         .linenScreen().sheet(isPresented: $organize) { OrganizeView(collectionIDs: $collectionIDs, tagIDs: $tagIDs).environmentObject(model) }
-        .onChange(of: recorder.errorMessage) { _, value in error = value }
+        .onChange(of: recorder.errorMessage) { value in error = value }
         .alert("Audio couldn’t be recorded", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
             Button("Done") { error = nil }
         } message: { Text(error ?? "Your saved items are unchanged.") }

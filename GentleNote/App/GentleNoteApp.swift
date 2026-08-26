@@ -10,7 +10,7 @@ struct GentleNoteApp: App {
             AppRootView()
                 .environmentObject(model)
                 .preferredColorScheme(nil)
-                .onChange(of: scenePhase) { _, phase in
+                .onChange(of: scenePhase) { phase in
                     switch phase {
                     case .background, .inactive: model.enteredBackground()
                     case .active: model.becameActive()

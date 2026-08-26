@@ -3,6 +3,12 @@ import StoreKit
 import SwiftUI
 import UIKit
 
+private let gentleNoteVersionText: String = {
+    let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
+    let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "—"
+    return "Version \(version) (\(build))"
+}()
+
 struct SettingsRootView: View {
     @EnvironmentObject private var model: AppModel
     @State private var destination: SettingsDestination?
@@ -24,7 +30,7 @@ struct SettingsRootView: View {
                     row(.terms, "Terms of Use", "text.document")
                     row(.about, "About Gentle Note", "info.circle")
                 }
-                Section { Text("Version 0.1 (1)").foregroundStyle(QuietLinen.muted) }
+                Section { Text(gentleNoteVersionText).foregroundStyle(QuietLinen.muted) }
                     footer: { Label("No account. No ads. No analytics.", systemImage: "leaf") }
             }
             .scrollContentBackground(.hidden).linenScreen().navigationTitle("Settings")
@@ -71,7 +77,7 @@ struct PrivacyLockView: View {
                 .tint(QuietLinen.forest)
                 Picker("Lock after leaving", selection: $model.preferences.lockDelay) {
                     ForEach(LockDelay.allCases) { Text($0.title).tag($0) }
-                }.onChange(of: model.preferences.lockDelay) { _, _ in model.savePreferences() }
+                }.onChange(of: model.preferences.lockDelay) { _ in model.savePreferences() }
             } footer: { Text("Require Face ID, Touch ID, or your iPhone passcode to open the journal and library.") }
             Section {
                 Toggle("Show Journal Previews", isOn: $model.preferences.showJournalPreviews)
@@ -79,7 +85,7 @@ struct PrivacyLockView: View {
                 Toggle("Show Video Thumbnails", isOn: $model.preferences.showVideoThumbnails)
                 Toggle("Show Guided Templates", isOn: $model.preferences.showGuidedTemplates)
             } footer: { Text("Turn off guided templates if they start to feel rigid or unhelpful. Your entries are not affected.") }
-            .onChange(of: model.preferences) { _, _ in model.savePreferences() }
+            .onChange(of: model.preferences) { _ in model.savePreferences() }
             Section("How your data is protected") {
                 Text("The app does not collect or sync your journal or library. Text, metadata, and recordings are encrypted locally and use iPhone file protection. App Lock uses iPhone authentication.")
                 Text("Gentle Note never receives your face, fingerprint, or passcode. Someone who knows your iPhone passcode may still be able to unlock it.")
@@ -317,7 +323,7 @@ struct AboutView: View {
                     .multilineTextAlignment(.center)
                 Text("Designed to complement—not replace—professional care and personal support.")
                     .multilineTextAlignment(.center).foregroundStyle(QuietLinen.muted)
-                Text("Version 0.1 (1)").font(.footnote)
+                Text(gentleNoteVersionText).font(.footnote)
             }.padding(28).frame(maxWidth: 620)
         }.linenScreen()
     }
