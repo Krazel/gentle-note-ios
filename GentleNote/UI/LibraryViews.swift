@@ -130,7 +130,7 @@ struct NoteComposerView: View {
     @Environment(\.dismiss) private var dismiss
     var existingID: UUID?
     @State private var title = ""
-    @State private var body = ""
+    @State private var noteText = ""
     @State private var kept = false
     @State private var collectionIDs: Set<UUID> = []
     @State private var tagIDs: Set<UUID> = []
@@ -141,7 +141,7 @@ struct NoteComposerView: View {
             VStack(spacing: 14) {
                 Text("New Note").font(.system(.title2, design: .serif))
                 TextField("Optional title", text: $title).textFieldStyle(.roundedBorder)
-                LinenTextEditor(prompt: "Write a note to return to later…", text: $body, minHeight: 330)
+                LinenTextEditor(prompt: "Write a note to return to later…", text: $noteText, minHeight: 330)
                 HStack {
                     Toggle(isOn: $kept) { Label("Keep", systemImage: kept ? "bookmark.fill" : "bookmark") }
                     Button { organize = true } label: { Label("Organize", systemImage: "folder") }
@@ -156,7 +156,7 @@ struct NoteComposerView: View {
         .linenScreen().toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
         .onAppear { load() }
         .onChange(of: title) { _, _ in saveDraft() }
-        .onChange(of: body) { _, _ in saveDraft() }
+        .onChange(of: noteText) { _, _ in saveDraft() }
         .onChange(of: kept) { _, _ in saveDraft() }
         .onChange(of: collectionIDs) { _, _ in saveDraft() }
         .onChange(of: tagIDs) { _, _ in saveDraft() }
@@ -168,20 +168,20 @@ struct NoteComposerView: View {
 
     private func load() {
         if let item = existingID.flatMap({ id in model.vault.libraryItems.first { $0.id == id } }) {
-            title = item.title; body = item.body; kept = item.isKept
+            title = item.title; noteText = item.body; kept = item.isKept
             collectionIDs = item.collectionIDs; tagIDs = item.tagIDs
         } else if let draft = model.vault.libraryDraft {
-            title = draft.title; body = draft.body; kept = draft.isKept
+            title = draft.title; noteText = draft.body; kept = draft.isKept
             collectionIDs = draft.collectionIDs; tagIDs = draft.tagIDs
         }
     }
 
     private func save() {
         guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+                !noteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         var item = existingID.flatMap { id in model.vault.libraryItems.first { $0.id == id } }
             ?? LibraryItem(kind: .note)
-        item.title = title; item.body = body; item.isKept = kept
+        item.title = title; item.body = noteText; item.isKept = kept
         item.collectionIDs = collectionIDs; item.tagIDs = tagIDs; item.updatedAt = Date()
         try? model.saveLibraryItem(item); dismiss()
     }
@@ -189,8 +189,8 @@ struct NoteComposerView: View {
     private func saveDraft() {
         guard existingID == nil,
               !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
-                !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        model.saveLibraryDraft(LibraryDraft(title: title, body: body, isKept: kept,
+                !noteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        model.saveLibraryDraft(LibraryDraft(title: title, body: noteText, isKept: kept,
                                             collectionIDs: collectionIDs, tagIDs: tagIDs,
                                             savedAt: Date()))
     }
@@ -248,7 +248,7 @@ struct VideoPermissionPrimer: View {
     @State private var denied = false
     var body: some View {
         PermissionPrimer(title: "Record a private video",
-                         body: "Gentle Note needs camera and microphone access only while you record. Videos stay inside the app unless you export them.",
+                         message: "Gentle Note needs camera and microphone access only while you record. Videos stay inside the app unless you export them.",
                          rows: [("Camera", "video.fill", MediaPermissions.camera()),
                                 ("Microphone", "mic.fill", MediaPermissions.microphone())],
                          footer: "Nothing is saved to Photos.") {
@@ -272,7 +272,7 @@ struct AudioPermissionPrimer: View {
     @State private var denied = false
     var body: some View {
         PermissionPrimer(title: "Record a private audio note",
-                         body: "Gentle Note needs microphone access only while you record. Audio stays inside the app unless you export it.",
+                         message: "Gentle Note needs microphone access only while you record. Audio stays inside the app unless you export it.",
                          rows: [("Microphone", "mic.fill", MediaPermissions.microphone())],
                          footer: "Nothing is saved to Photos.") {
             Task {
@@ -291,7 +291,7 @@ struct AudioPermissionPrimer: View {
 
 struct PermissionPrimer: View {
     let title: String
-    let body: String
+    let message: String
     let rows: [(String, String, MediaPermissionState)]
     let footer: String
     let action: () -> Void
@@ -300,7 +300,7 @@ struct PermissionPrimer: View {
             PaperBackground()
             VStack(spacing: 20) {
                 Spacer(); BotanicalSprig(); Text(title).editorialTitle()
-                Text(body).multilineTextAlignment(.center)
+                Text(message).multilineTextAlignment(.center)
                 LinenCard { VStack { ForEach(Array(rows.enumerated()), id: \.offset) { _, row in PermissionStatusRow(title: row.0, icon: row.1, state: row.2) } } }
                 Button("Continue", action: action).buttonStyle(PrimaryButtonStyle())
                 Label(footer, systemImage: "lock").font(.footnote).foregroundStyle(QuietLinen.muted)

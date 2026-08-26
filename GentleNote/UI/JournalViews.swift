@@ -158,7 +158,7 @@ struct JournalComposerView: View {
     let templateID: JournalTemplateID
     var existingID: UUID?
     @State private var title = ""
-    @State private var body = ""
+    @State private var entryText = ""
     @State private var answers: [String] = []
     @State private var kept = false
     @State private var showDiscard = false
@@ -176,7 +176,7 @@ struct JournalComposerView: View {
                 TextField("Optional title", text: $title)
                     .textFieldStyle(.roundedBorder).accessibilityLabel("Optional title")
                 if templateID == .blank {
-                    LinenTextEditor(prompt: "Write whatever feels useful…", text: $body, minHeight: 330)
+                    LinenTextEditor(prompt: "Write whatever feels useful…", text: $entryText, minHeight: 330)
                 } else {
                     ForEach(Array(templateID.prompts.enumerated()), id: \.offset) { index, prompt in
                         LinenTextEditor(prompt: prompt, text: binding(for: index), minHeight: 96)
@@ -193,7 +193,7 @@ struct JournalComposerView: View {
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { showDiscard = hasContent } } }
         .onAppear { load() }
         .onChange(of: title) { _, _ in saveDraft() }
-        .onChange(of: body) { _, _ in saveDraft() }
+        .onChange(of: entryText) { _, _ in saveDraft() }
         .onChange(of: answers) { _, _ in saveDraft() }
         .confirmationDialog("Keep this draft?", isPresented: $showDiscard, titleVisibility: .visible) {
             Button("Keep Draft") { saveDraft(); dismiss() }
@@ -206,7 +206,7 @@ struct JournalComposerView: View {
     }
 
     private var hasContent: Bool {
-        !title.isEmpty || !body.isEmpty || answers.contains(where: { !$0.isEmpty })
+        !title.isEmpty || !entryText.isEmpty || answers.contains(where: { !$0.isEmpty })
     }
 
     private func binding(for index: Int) -> Binding<String> {
@@ -220,22 +220,22 @@ struct JournalComposerView: View {
     private func load() {
         answers = Array(repeating: "", count: templateID.prompts.count)
         if let existingID, let entry = model.vault.journalEntries.first(where: { $0.id == existingID }) {
-            title = entry.title; body = entry.body; answers = entry.answers; kept = entry.isKept
+            title = entry.title; entryText = entry.body; answers = entry.answers; kept = entry.isKept
         } else if let draft = model.vault.journalDraft, draft.templateID == templateID {
-            title = draft.title; body = draft.body; answers = draft.answers; kept = draft.isKept
+            title = draft.title; entryText = draft.body; answers = draft.answers; kept = draft.isKept
         }
     }
 
     private func saveDraft() {
         guard existingID == nil, hasContent else { return }
-        model.saveJournalDraft(JournalDraft(templateID: templateID, title: title, body: body,
+        model.saveJournalDraft(JournalDraft(templateID: templateID, title: title, body: entryText,
                                             answers: answers, isKept: kept, savedAt: Date()))
     }
 
     private func save() {
         var entry = existingID.flatMap { id in model.vault.journalEntries.first { $0.id == id } }
             ?? JournalEntry(templateID: templateID)
-        entry.title = title; entry.body = body; entry.answers = answers; entry.isKept = kept; entry.updatedAt = Date()
+        entry.title = title; entry.body = entryText; entry.answers = answers; entry.isKept = kept; entry.updatedAt = Date()
         guard !entry.isEmpty else { error = "There is nothing to save yet."; return }
         do { try model.saveJournalEntry(entry); dismiss() }
         catch { self.error = error.localizedDescription }
