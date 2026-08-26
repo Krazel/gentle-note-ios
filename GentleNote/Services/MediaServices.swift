@@ -189,11 +189,13 @@ final class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
             finishedURL = nil
             elapsed = 0
             timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-                guard let self else { return }
-                self.recorder?.updateMeters()
-                self.elapsed = self.recorder?.currentTime ?? 0
-                let power = self.recorder?.averagePower(forChannel: 0) ?? -60
-                self.level = max(0.05, min(1, (power + 60) / 60))
+                Task { @MainActor in
+                    guard let self else { return }
+                    self.recorder?.updateMeters()
+                    self.elapsed = self.recorder?.currentTime ?? 0
+                    let power = self.recorder?.averagePower(forChannel: 0) ?? -60
+                    self.level = max(0.05, min(1, (power + 60) / 60))
+                }
             }
         } catch { errorMessage = error.localizedDescription }
     }

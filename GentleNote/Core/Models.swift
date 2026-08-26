@@ -160,7 +160,7 @@ struct LibraryItem: Identifiable, Codable, Hashable {
     var displayTitle: String {
         let clean = title.trimmingCharacters(in: .whitespacesAndNewlines)
         if !clean.isEmpty { return clean }
-        switch kind {
+        return switch kind {
         case .note: "Untitled Note"
         case .video: "Untitled Video"
         case .audio: "Untitled Audio"
