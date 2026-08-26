@@ -1,0 +1,59 @@
+name: GentleNote
+options:
+  bundleIdPrefix: com.krazel
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: 5.10
+    MARKETING_VERSION: 0.1
+    CURRENT_PROJECT_VERSION: 1
+    PRODUCT_BUNDLE_IDENTIFIER: com.krazel.gentlenote
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+targets:
+  GentleNote:
+    type: application
+    platform: iOS
+    sources:
+      - path: GentleNote
+    resources:
+      - path: GentleNote/Resources
+    info:
+      path: GentleNote/Info.plist
+      properties:
+        CFBundleDisplayName: Gentle Note
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        NSFaceIDUsageDescription: Use Face ID to protect your private journal and library.
+        NSCameraUsageDescription: Gentle Note uses the camera only when you choose to record a private video.
+        NSMicrophoneUsageDescription: Gentle Note uses the microphone only when you choose to record private audio or video.
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        TARGETED_DEVICE_FAMILY: 1
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true
+  GentleNoteTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: GentleNoteTests
+    dependencies:
+      - target: GentleNote
+schemes:
+  GentleNote:
+    build:
+      targets:
+        GentleNote: all
+        GentleNoteTests: [test]
+    test:
+      targets:
+        - GentleNoteTests

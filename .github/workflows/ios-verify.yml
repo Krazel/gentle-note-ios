@@ -1,0 +1,33 @@
+name: iOS Verify (manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
+      - name: Build and test
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project GentleNote.xcodeproj \
+            -scheme GentleNote \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
+            -derivedDataPath DerivedData \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Preserve test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GentleNote-0.1-build-1-test-evidence
+          path: DerivedData/Logs/Test/*.xcresult
+          if-no-files-found: warn
+          retention-days: 14

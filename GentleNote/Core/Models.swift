@@ -1,0 +1,261 @@
+import Foundation
+
+enum JournalTemplateID: String, Codable, CaseIterable, Identifiable {
+    case blank
+    case gentleCheckIn
+    case balancedThought
+    case selfCompassionPause
+    case valuesCompass
+    case presentMoment
+    case prepareToTalk
+    case noticeSomethingSmall
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .blank: "Blank Entry"
+        case .gentleCheckIn: "Gentle Check-In"
+        case .balancedThought: "A Balanced Thought"
+        case .selfCompassionPause: "Self-Compassion Pause"
+        case .valuesCompass: "Values Compass"
+        case .presentMoment: "Present-Moment Reflection"
+        case .prepareToTalk: "Prepare to Talk"
+        case .noticeSomethingSmall: "Notice Something Small"
+        }
+    }
+
+    var subtitle: String? {
+        switch self {
+        case .balancedThought: "CBT-inspired"
+        case .valuesCompass: "Values-based"
+        case .presentMoment: "Grounding-inspired"
+        default: nil
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .blank: "square.and.pencil"
+        case .gentleCheckIn: "leaf"
+        case .balancedThought: "scale.3d"
+        case .selfCompassionPause: "hands.sparkles"
+        case .valuesCompass: "safari"
+        case .presentMoment: "camera.macro"
+        case .prepareToTalk: "heart.text.square"
+        case .noticeSomethingSmall: "sprout"
+        }
+    }
+
+    var intro: String {
+        switch self {
+        case .blank: "Write whatever feels useful right now."
+        case .gentleCheckIn: "Answer any question, in any order. Leave anything blank."
+        case .balancedThought: "A gentle, non-scored reflection. Every prompt is optional."
+        case .selfCompassionPause: "Make room for difficulty without needing to fix it."
+        case .valuesCompass: "Notice what matters without turning it into a target."
+        case .presentMoment: "Notice the present without needing to change it."
+        case .prepareToTalk: "Gather words for yourself, someone you trust, or your care team."
+        case .noticeSomethingSmall: "This is not a score or achievement."
+        }
+    }
+
+    var prompts: [String] {
+        switch self {
+        case .blank:
+            []
+        case .gentleCheckIn:
+            ["What happened?",
+             "What did you notice—thoughts, feelings, sensations, or context?",
+             "What did you need then? What do you need now?",
+             "What helped, even a little?",
+             "Is there something you want to acknowledge?"]
+        case .balancedThought:
+            ["What happened?",
+             "What did you notice in your thoughts, feelings, or body?",
+             "What seems to support the thought?",
+             "What does not fully fit the thought?",
+             "Is there a more balanced or neutral way to see this?",
+             "What do you notice now?"]
+        case .selfCompassionPause:
+            ["What feels difficult right now?",
+             "How might you remember that struggling is human?",
+             "What would you say to someone you care about?",
+             "What kind words do you need right now?"]
+        case .valuesCompass:
+            ["What matters to you in this situation?",
+             "What kind of person do you want to be here?",
+             "What small action could reflect that value?",
+             "What thoughts or feelings might you need to make room for?"]
+        case .presentMoment:
+            ["What can you notice around you?",
+             "What can you notice in your body, without needing to change it?",
+             "What feels steady or supportive right now?",
+             "What is a gentle next step, if any?"]
+        case .prepareToTalk:
+            ["What do you want someone to understand?",
+             "What would you like support with?",
+             "Is there anything you are not ready to discuss yet?",
+             "Is there an entry you may want to share?"]
+        case .noticeSomethingSmall:
+            ["Is there a small act of care, honesty, flexibility, or courage you’d like to notice?",
+             "What helped make room for it?"]
+        }
+    }
+}
+
+struct JournalEntry: Identifiable, Codable, Hashable {
+    var id = UUID()
+    var templateID: JournalTemplateID
+    var title = ""
+    var body = ""
+    var answers: [String] = []
+    var isKept = false
+    var createdAt = Date()
+    var updatedAt = Date()
+
+    var displayTitle: String {
+        let clean = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        return clean.isEmpty ? templateID.title : clean
+    }
+
+    var searchableText: String {
+        ([displayTitle, body] + answers).joined(separator: " ")
+    }
+
+    var isEmpty: Bool {
+        title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        answers.allSatisfy { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    }
+}
+
+enum LibraryItemKind: String, Codable, CaseIterable, Identifiable {
+    case note, video, audio
+    var id: String { rawValue }
+    var title: String { rawValue.capitalized }
+    var icon: String {
+        switch self {
+        case .note: "doc"
+        case .video: "video.fill"
+        case .audio: "mic.fill"
+        }
+    }
+}
+
+struct LibraryItem: Identifiable, Codable, Hashable {
+    var id = UUID()
+    var kind: LibraryItemKind
+    var title = ""
+    var body = ""
+    var encryptedMediaFilename: String?
+    var mediaFileExtension: String?
+    var duration: TimeInterval?
+    var collectionIDs: Set<UUID> = []
+    var tagIDs: Set<UUID> = []
+    var isKept = false
+    var createdAt = Date()
+    var updatedAt = Date()
+
+    var displayTitle: String {
+        let clean = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !clean.isEmpty { return clean }
+        switch kind {
+        case .note: "Untitled Note"
+        case .video: "Untitled Video"
+        case .audio: "Untitled Audio"
+        }
+    }
+}
+
+enum CollectionSymbol: String, Codable, CaseIterable, Identifiable {
+    case leaf = "leaf"
+    case sprig = "camera.macro"
+    case flower = "camera.macro.circle"
+    case sun = "sun.max"
+    var id: String { rawValue }
+}
+
+enum CollectionColor: String, Codable, CaseIterable, Identifiable {
+    case forest, sage, ochre, clay
+    var id: String { rawValue }
+}
+
+struct LibraryCollection: Identifiable, Codable, Hashable {
+    var id = UUID()
+    var name: String
+    var symbol: CollectionSymbol = .leaf
+    var color: CollectionColor = .forest
+    var createdAt = Date()
+}
+
+struct LibraryTag: Identifiable, Codable, Hashable {
+    var id = UUID()
+    var name: String
+    var createdAt = Date()
+}
+
+struct JournalDraft: Codable, Equatable {
+    var templateID: JournalTemplateID
+    var title: String
+    var body: String
+    var answers: [String]
+    var isKept: Bool
+    var savedAt: Date
+}
+
+struct LibraryDraft: Codable, Equatable {
+    var title: String
+    var body: String
+    var isKept: Bool
+    var collectionIDs: Set<UUID>
+    var tagIDs: Set<UUID>
+    var savedAt: Date
+}
+
+struct VaultSnapshot: Codable, Equatable {
+    var schemaVersion = 1
+    var journalEntries: [JournalEntry] = []
+    var libraryItems: [LibraryItem] = []
+    var collections: [LibraryCollection] = []
+    var tags: [LibraryTag] = []
+    var journalDraft: JournalDraft?
+    var libraryDraft: LibraryDraft?
+}
+
+enum LockDelay: String, Codable, CaseIterable, Identifiable {
+    case immediately
+    case oneMinute
+    case fiveMinutes
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .immediately: "Immediately"
+        case .oneMinute: "After 1 Minute"
+        case .fiveMinutes: "After 5 Minutes"
+        }
+    }
+    var seconds: TimeInterval {
+        switch self {
+        case .immediately: 0
+        case .oneMinute: 60
+        case .fiveMinutes: 300
+        }
+    }
+}
+
+struct AppPreferences: Codable, Equatable {
+    var onboardingComplete = false
+    var appLockEnabled = true
+    var lockDelay: LockDelay = .immediately
+    var showJournalPreviews = false
+    var showLibraryPreviews = false
+    var showVideoThumbnails = false
+    var showGuidedTemplates = true
+}
+
+enum LibraryFilter: String, CaseIterable, Identifiable {
+    case all, notes, videos, audio, kept
+    var id: String { rawValue }
+    var title: String { rawValue.capitalized }
+}
