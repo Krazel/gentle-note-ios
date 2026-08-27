@@ -120,7 +120,7 @@ final class GentleNoteTests: XCTestCase {
         XCTAssertTrue(image.belongs(to: collectionID))
         XCTAssertFalse(image.belongs(to: UUID()))
         XCTAssertTrue(image.belongs(to: nil))
-        XCTAssertEqual(image.displayTitle, "Untitled Image")
+        XCTAssertEqual(image.displayTitle, "Untitled Image".gentleLocalized)
     }
 
     func testLibraryIntroductionIsVisibleUntilExplicitlyHidden() {
