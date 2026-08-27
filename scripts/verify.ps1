@@ -12,6 +12,7 @@ function Require-File([string]$RelativePath) {
 $Required = @(
     'GentleNote.xcodeproj\project.pbxproj',
     'GentleNote.xcodeproj\xcshareddata\xcschemes\GentleNote.xcscheme',
+    '.github\workflows\ios-verify.yml',
     'GentleNote\Info.plist',
     'GentleNote\Resources\PrivacyInfo.xcprivacy',
     'GentleNote\Resources\es.lproj\Localizable.strings',
@@ -96,6 +97,11 @@ foreach ($LocalizedResource in @('Localizable.strings','InfoPlist.strings','know
 if (-not $Pbx.Contains('MARKETING_VERSION = 0.4')) { $Failures.Add('Marketing version is not 0.4') }
 if (-not $Pbx.Contains('CURRENT_PROJECT_VERSION = 1')) { $Failures.Add('Build number is not 1') }
 if (-not $Pbx.Contains('IPHONEOS_DEPLOYMENT_TARGET = 16.0')) { $Failures.Add('Minimum iOS version is not 16.0') }
+
+$Workflow = Get-Content -LiteralPath (Join-Path $ProjectRoot '.github\workflows\ios-verify.yml') -Raw
+foreach ($VersionMarker in @('GentleNote-0.4-build-1-${SHORT_SHA}-Local-QA-unsigned','"marketingVersion": "0.4"','GentleNote-0.4-build-1-test-evidence')) {
+    if (-not $Workflow.Contains($VersionMarker)) { $Failures.Add("Workflow version marker missing: $VersionMarker") }
+}
 
 if ($Failures.Count -gt 0) {
     Write-Output 'VERIFY: FAIL'
