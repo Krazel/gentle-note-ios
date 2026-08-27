@@ -214,11 +214,12 @@ struct JournalEntry: Identifiable, Codable, Hashable {
 }
 
 enum LibraryItemKind: String, Codable, CaseIterable, Identifiable {
-    case note, video, audio
+    case note, image, video, audio
     var id: String { rawValue }
     var title: String {
         switch self {
         case .note: "Note".gentleLocalized
+        case .image: "Image".gentleLocalized
         case .video: "Video".gentleLocalized
         case .audio: "Audio".gentleLocalized
         }
@@ -226,6 +227,7 @@ enum LibraryItemKind: String, Codable, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .note: "doc"
+        case .image: "photo.fill"
         case .video: "video.fill"
         case .audio: "mic.fill"
         }
@@ -251,9 +253,26 @@ struct LibraryItem: Identifiable, Codable, Hashable {
         if !clean.isEmpty { return clean }
         return switch kind {
         case .note: "Untitled Note".gentleLocalized
+        case .image: "Untitled Image".gentleLocalized
         case .video: "Untitled Video".gentleLocalized
         case .audio: "Untitled Audio".gentleLocalized
         }
+    }
+
+    func matches(_ filter: LibraryFilter) -> Bool {
+        switch filter {
+        case .all: true
+        case .notes: kind == .note
+        case .images: kind == .image
+        case .videos: kind == .video
+        case .audio: kind == .audio
+        case .kept: isKept
+        }
+    }
+
+    func belongs(to collectionID: UUID?) -> Bool {
+        guard let collectionID else { return true }
+        return collectionIDs.contains(collectionID)
     }
 }
 
@@ -413,15 +432,27 @@ struct TrustedContact: Codable, Equatable {
 }
 
 enum LibraryFilter: String, CaseIterable, Identifiable {
-    case all, notes, videos, audio, kept
+    case all, notes, images, videos, audio, kept
     var id: String { rawValue }
     var title: String {
         switch self {
         case .all: "All".gentleLocalized
         case .notes: "Notes".gentleLocalized
+        case .images: "Images".gentleLocalized
         case .videos: "Videos".gentleLocalized
         case .audio: "Audio".gentleLocalized
         case .kept: "Kept".gentleLocalized
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .all: "square.grid.2x2"
+        case .notes: "doc"
+        case .images: "photo"
+        case .videos: "video"
+        case .audio: "waveform"
+        case .kept: "bookmark"
         }
     }
 }

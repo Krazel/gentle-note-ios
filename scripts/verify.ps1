@@ -65,7 +65,7 @@ if ($Info.Contains('NSPhotoLibraryUsageDescription')) { $Failures.Add('Photos pe
 $Swift = Get-ChildItem -LiteralPath (Join-Path $ProjectRoot 'GentleNote') -Filter '*.swift' -Recurse |
     ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw }
 $AllSwift = $Swift -join "`n"
-foreach ($RequiredText in @('Journal History','Record Video','Record Audio','Data Not Collected','deviceOwnerAuthentication','AES.GCM','isExcludedFromBackup','enteredInactive','MFMessageComposeViewController','tel:112','tel:024','trustedContact','requireAuthenticationForDeletion','KeyboardDismissInstaller','DefaultCollectionKind','Helpful Reminders','languageOverride','showLibraryIntroduction','template.summary')) {
+foreach ($RequiredText in @('Journal History','Record Video','Record Audio','Add Image','PhotosPicker','selectedCollectionID','Data Not Collected','deviceOwnerAuthentication','AES.GCM','isExcludedFromBackup','enteredInactive','MFMessageComposeViewController','tel:112','tel:024','trustedContact','requireAuthenticationForDeletion','KeyboardDismissInstaller','DefaultCollectionKind','Helpful Reminders','languageOverride','showLibraryIntroduction','template.summary')) {
     if (-not $AllSwift.Contains($RequiredText) -and $RequiredText -ne 'Data Not Collected') {
         $Failures.Add("Expected implementation marker missing: $RequiredText")
     }
@@ -94,12 +94,12 @@ foreach ($Source in @('GentleNoteApp.swift','Models.swift','SecureStore.swift','
 foreach ($LocalizedResource in @('Localizable.strings','InfoPlist.strings','knownRegions = (en, es, Base)')) {
     if (-not $Pbx.Contains($LocalizedResource)) { $Failures.Add("Xcode project omits localization marker: $LocalizedResource") }
 }
-if (-not $Pbx.Contains('MARKETING_VERSION = 0.4')) { $Failures.Add('Marketing version is not 0.4') }
+if (-not $Pbx.Contains('MARKETING_VERSION = 0.5')) { $Failures.Add('Marketing version is not 0.5') }
 if (-not $Pbx.Contains('CURRENT_PROJECT_VERSION = 1')) { $Failures.Add('Build number is not 1') }
 if (-not $Pbx.Contains('IPHONEOS_DEPLOYMENT_TARGET = 16.0')) { $Failures.Add('Minimum iOS version is not 16.0') }
 
 $Workflow = Get-Content -LiteralPath (Join-Path $ProjectRoot '.github\workflows\ios-verify.yml') -Raw
-foreach ($VersionMarker in @('GentleNote-0.4-build-1-${SHORT_SHA}-Local-QA-unsigned','"marketingVersion": "0.4"','GentleNote-0.4-build-1-test-evidence')) {
+foreach ($VersionMarker in @('GentleNote-0.5-build-1-${SHORT_SHA}-Local-QA-unsigned','"marketingVersion": "0.5"','GentleNote-0.5-build-1-test-evidence')) {
     if (-not $Workflow.Contains($VersionMarker)) { $Failures.Add("Workflow version marker missing: $VersionMarker") }
 }
 
@@ -112,5 +112,5 @@ if ($Failures.Count -gt 0) {
 Write-Output 'VERIFY: PASS'
 Write-Output "Swift files: $($Swift.Count)"
 Write-Output "Approved boards: $($Approved.Count)"
-Write-Output 'Version: 0.4 (1), iOS 16+'
+Write-Output 'Version: 0.5 (1), iOS 16+'
 Write-Output 'Scope: iPhone, English and Spanish, local-only, no accounts/ads/analytics/tracking'

@@ -11,7 +11,7 @@ enum SecureStoreError: LocalizedError {
         switch self {
         case .keychain: "The private storage key is unavailable.".gentleLocalized
         case .invalidEnvelope: "The private journal file could not be opened.".gentleLocalized
-        case .mediaCorrupt: "This private recording could not be opened.".gentleLocalized
+        case .mediaCorrupt: "This private media item could not be opened.".gentleLocalized
         }
     }
 }
@@ -129,7 +129,7 @@ final class SecureVaultStore {
         return try JSONDecoder.gentle.decode(type, from: plain)
     }
 
-    func importRecording(from source: URL, extension ext: String) throws -> String {
+    func importMedia(from source: URL, extension ext: String) throws -> String {
         let name = UUID().uuidString + "." + ext + ".gnm"
         let destination = mediaURL.appendingPathComponent(name)
         let staging = temporaryURL.appendingPathComponent(UUID().uuidString + ".gnm")
@@ -211,15 +211,22 @@ final class SecureVaultStore {
         let notes = Int64((try? JSONEncoder.gentle.encode(vault.libraryItems.filter { $0.kind == .note }).count) ?? 0)
             + Int64((try? JSONEncoder.gentle.encode(vault.collections).count) ?? 0)
             + Int64((try? JSONEncoder.gentle.encode(vault.tags).count) ?? 0)
+        var images: Int64 = 0
         var videos: Int64 = 0
         var audio: Int64 = 0
         for item in vault.libraryItems where item.kind != .note {
             guard let filename = item.encryptedMediaFilename else { continue }
             let size = fileSize(mediaURL.appendingPathComponent(filename))
-            if item.kind == .video { videos += size } else { audio += size }
+            switch item.kind {
+            case .image: images += size
+            case .video: videos += size
+            case .audio: audio += size
+            case .note: break
+            }
         }
         let temporary = directorySize(temporaryURL)
-        return StorageBreakdown(journal: journal, notes: notes, videos: videos, audio: audio, temporary: temporary)
+        return StorageBreakdown(journal: journal, notes: notes, images: images,
+                                videos: videos, audio: audio, temporary: temporary)
     }
 
     private func protect(_ url: URL) throws {
@@ -250,10 +257,11 @@ final class SecureVaultStore {
 struct StorageBreakdown {
     let journal: Int64
     let notes: Int64
+    let images: Int64
     let videos: Int64
     let audio: Int64
     let temporary: Int64
-    var total: Int64 { journal + notes + videos + audio + temporary }
+    var total: Int64 { journal + notes + images + videos + audio + temporary }
 }
 
 extension JSONEncoder {

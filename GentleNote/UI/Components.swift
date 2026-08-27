@@ -107,7 +107,18 @@ struct MediaPlayerView: View {
 
     var body: some View {
         Group {
-            if kind == .video {
+            if kind == .image {
+                if let image = UIImage(contentsOfFile: url.path) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .accessibilityLabel("Saved image")
+                } else {
+                    Label("This image couldn’t be opened", systemImage: "photo.badge.exclamationmark")
+                        .foregroundStyle(QuietLinen.muted)
+                }
+            } else if kind == .video {
                 VideoPlayer(player: player)
                     .aspectRatio(4 / 3, contentMode: .fit)
                     .clipShape(RoundedRectangle(cornerRadius: 12))

@@ -10,8 +10,9 @@ calorie, macro, or required meal logging.
 - **Journal**: two explicit paths—blank writing or seven optional,
   non-quantified reflection templates with a short purpose summary—plus
   `Journal History`, local search, Keep, edit, export, and deletion.
-- **Library**: clearly separated from Journal for standalone notes, private
-  video, and private audio; four included collections plus custom collections,
+- **Library**: standalone notes, selected images, private video, and private
+  audio; four included collections plus custom collections that also act as
+  filters,
   tags, Keep, local search, playback, export, and deletion. Its dismissible
   introduction explains how the Library can preserve words and reminders that
   feel clear now but may be harder to remember later.
@@ -45,7 +46,7 @@ App Store Connect and reads no signing secrets.
 
 ## Release boundary
 
-Version is `0.4`, build `1`. The source repository may be public, but the app is
+Source candidate version is `0.5`, build `1`. The source repository may be public, but the app is
 not uploaded to TestFlight, submitted to App Review, or connected to real
 StoreKit products.
 The visual runtime comparison, physical-device privacy tests, specialist/lived

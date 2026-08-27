@@ -17,6 +17,12 @@
   and deletion failure paths on a physical iPhone.
 - Verify encrypted vault/media, complete file protection, backup exclusion,
   uninstall behavior, temporary-file cleanup, and zero journal transmission.
+- Verify image selection through the iOS system photo picker, encrypted local
+  storage, detail rendering, export, deletion, and that the app receives only
+  the item explicitly selected without requesting full photo-library access.
+- Verify tapping every included and custom collection filters Library items,
+  empty collections show an explicit empty result, clearing the filter restores
+  all items, and the separate pencil action still edits custom collections.
 - Test VoiceOver, Voice Control, Switch Control, AX5, Increase Contrast, Reduce
   Motion, Reduce Transparency, and both system appearances.
 - Obtain eating-disorder clinical, crisis, ARFID/neurodivergence, and diverse

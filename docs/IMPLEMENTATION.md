@@ -1,4 +1,4 @@
-# Implementation handoff — 0.4 (1)
+# Implementation handoff — 0.5 (1)
 
 ## Implemented
 
@@ -10,7 +10,8 @@
   with purpose summaries and reachable cancellation, drafts, Journal History,
   local search/filtering, previews-off default, Keep, detail, editing, PDF/text
   export, individual deletion, and total erase.
-- Separate Library for notes, video, and audio with just-in-time permissions,
+- Library for notes, user-selected images, video, and audio with collection
+  filtering, the system photo picker, and just-in-time recording permissions,
   custom camera preview/recording, audio metering/waveform, review before save,
   local playback, Keep, four included collections, user-created collections,
   tags, metadata search, export, and delete. Library has a dismissible

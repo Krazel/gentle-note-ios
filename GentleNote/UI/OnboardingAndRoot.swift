@@ -60,7 +60,7 @@ struct OnboardingView: View {
     private let pages = [
         OnboardingPage(icon: nil,
                        title: "A private place for your story.",
-                       body: "Use a journal when you want structure. Keep notes, videos, and audio in your private library.",
+                       body: "Use a journal when you want structure. Keep notes, images, videos, and audio in your private library.",
                        note: "There is no schedule to keep."),
         OnboardingPage(icon: "lock.fill",
                        title: "Protect your private space.",

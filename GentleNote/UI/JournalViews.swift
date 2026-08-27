@@ -18,7 +18,7 @@ struct JournalRootView: View {
                 VStack(spacing: 20) {
                     BotanicalSprig()
                     Text("Your journal").editorialTitle()
-                    Text("Start blank or choose a structure that feels useful.\nNothing is due.")
+                    Text("Start blank or choose a template to help you get started.\nNothing is due.")
                         .multilineTextAlignment(.center).foregroundStyle(QuietLinen.muted)
 
                     if let draft = model.vault.journalDraft {

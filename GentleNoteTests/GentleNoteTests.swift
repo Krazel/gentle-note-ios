@@ -47,6 +47,7 @@ final class GentleNoteTests: XCTestCase {
         XCTAssertEqual(spanish.localizedString(forKey: "Settings", value: nil, table: nil), "Ajustes")
         XCTAssertEqual(spanish.localizedString(forKey: "Gentle Check-In", value: nil, table: nil), "Pausa para escucharte")
         XCTAssertEqual(spanish.localizedString(forKey: "Record Audio", value: nil, table: nil), "Grabar audio")
+        XCTAssertEqual(spanish.localizedString(forKey: "Add Image", value: nil, table: nil), "Añadir imagen")
         XCTAssertEqual(spanish.localizedString(forKey: "Call 112", value: nil, table: nil), "Llamar al 112")
         XCTAssertEqual(spanish.localizedString(forKey: "Call 024", value: nil, table: nil), "Llamar al 024")
         XCTAssertEqual(spanish.localizedString(forKey: "Trusted Contact", value: nil, table: nil), "Contacto de confianza")
@@ -106,6 +107,20 @@ final class GentleNoteTests: XCTestCase {
         let snapshot = VaultSnapshot()
         XCTAssertEqual(Set(snapshot.collections.compactMap(\.defaultKind)), Set(DefaultCollectionKind.allCases))
         XCTAssertTrue(snapshot.collections.allSatisfy { !$0.displayName.isEmpty })
+    }
+
+    func testImagesAndCollectionFilteringAreRepresentedInTheModel() {
+        let collectionID = UUID()
+        var image = LibraryItem(kind: .image)
+        image.collectionIDs = [collectionID]
+
+        XCTAssertTrue(image.matches(.all))
+        XCTAssertTrue(image.matches(.images))
+        XCTAssertFalse(image.matches(.notes))
+        XCTAssertTrue(image.belongs(to: collectionID))
+        XCTAssertFalse(image.belongs(to: UUID()))
+        XCTAssertTrue(image.belongs(to: nil))
+        XCTAssertEqual(image.displayTitle, "Untitled Image")
     }
 
     func testLibraryIntroductionIsVisibleUntilExplicitlyHidden() {

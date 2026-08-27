@@ -1,5 +1,8 @@
 import AVFoundation
+import PhotosUI
 import SwiftUI
+import UniformTypeIdentifiers
+import UIKit
 
 struct LibraryRootView: View {
     @EnvironmentObject private var model: AppModel
@@ -9,18 +12,16 @@ struct LibraryRootView: View {
     @State private var showAdd = false
     @State private var showCollections = false
     @State private var showTags = false
+    @State private var selectedCollectionID: UUID?
+
+    private var selectedCollection: LibraryCollection? {
+        model.vault.collections.first { $0.id == selectedCollectionID }
+    }
 
     private var items: [LibraryItem] {
         model.vault.libraryItems
-            .filter {
-                switch filter {
-                case .all: true
-                case .notes: $0.kind == .note
-                case .videos: $0.kind == .video
-                case .audio: $0.kind == .audio
-                case .kept: $0.isKept
-                }
-            }
+            .filter { $0.matches(filter) }
+            .filter { $0.belongs(to: selectedCollection?.id) }
             .filter { item in
                 guard !query.isEmpty else { return true }
                 let collectionNames = model.vault.collections.filter { item.collectionIDs.contains($0.id) }.map(\.displayName)
@@ -48,7 +49,7 @@ struct LibraryRootView: View {
                                 .foregroundStyle(QuietLinen.forest)
                             VStack(alignment: .leading, spacing: 5) {
                                 Text("Keep what you may want to remember").font(.headline)
-                                Text("Library is separate from your journal. Save notes and private recordings you may want to return to—words, reminders, or things that feel clear now but may become harder to remember later. Organize them with collections and tags. Nothing is added automatically.")
+                                Text("Save notes, images, and private recordings you may want to return to—words, reminders, or things that feel clear now but may become harder to remember later. Organize them with collections and tags.")
                                     .font(.footnote).foregroundStyle(QuietLinen.muted)
                             }
                             Spacer(minLength: 4)
@@ -69,7 +70,7 @@ struct LibraryRootView: View {
                 if model.vault.libraryItems.isEmpty {
                     Spacer()
                     BotanicalSprig()
-                    Text("Keep a note or recording without creating a journal entry.")
+                    Text("Keep a note, image, or recording without creating a journal entry.")
                         .multilineTextAlignment(.center)
                     addButtons
                     Text("Nothing here yet.").font(.footnote).foregroundStyle(QuietLinen.muted)
@@ -78,18 +79,58 @@ struct LibraryRootView: View {
                     TextField("Search your library", text: $query)
                         .textFieldStyle(.roundedBorder).padding(.horizontal, 20)
                         .accessibilityHint("Searches notes, titles, collections, and tags on this iPhone")
-                    Picker("Library filter", selection: $filter) {
-                        ForEach(LibraryFilter.allCases) { Text($0.title).tag($0) }
-                    }.pickerStyle(.segmented).padding(.horizontal, 20)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(LibraryFilter.allCases) { option in
+                                Button {
+                                    filter = option
+                                } label: {
+                                    Label(option.title, systemImage: option.icon)
+                                        .font(.footnote.weight(.medium))
+                                        .padding(.horizontal, 12)
+                                        .frame(minHeight: 38)
+                                        .background(filter == option ? QuietLinen.forest : QuietLinen.paperRaised,
+                                                    in: Capsule())
+                                        .foregroundStyle(filter == option ? Color.white : QuietLinen.ink)
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityAddTraits(filter == option ? .isSelected : [])
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                    }
+                    if let selectedCollection {
+                        HStack(spacing: 8) {
+                            Label(selectedCollection.displayName,
+                                  systemImage: selectedCollection.symbol.rawValue)
+                                .font(.footnote.weight(.medium))
+                            Button {
+                                selectedCollectionID = nil
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Clear collection filter")
+                        }
+                        .padding(.horizontal, 12).frame(minHeight: 36)
+                        .background(QuietLinen.sage.opacity(0.3), in: Capsule())
+                    }
                     if !model.preferences.showLibraryPreviews {
                         Label("Previews are hidden.", systemImage: "lock.fill")
                             .font(.footnote).foregroundStyle(QuietLinen.muted)
                     }
-                    List(items) { item in
-                        NavigationLink(value: item) { LibraryRow(item: item) }
-                            .listRowBackground(QuietLinen.paperRaised.opacity(0.75))
+                    if items.isEmpty {
+                        Spacer()
+                        Text((selectedCollection == nil ? "No items match this filter." : "No items in this collection.").gentleLocalized)
+                            .font(.footnote).foregroundStyle(QuietLinen.muted)
+                        Spacer()
+                    } else {
+                        List(items) { item in
+                            NavigationLink(value: item) { LibraryRow(item: item) }
+                                .listRowBackground(QuietLinen.paperRaised.opacity(0.75))
+                        }
+                        .scrollContentBackground(.hidden)
                     }
-                    .scrollContentBackground(.hidden)
                     HStack {
                         Button("Collections") { showCollections = true }
                         Spacer(); Button("Tags") { showTags = true }
@@ -101,6 +142,7 @@ struct LibraryRootView: View {
         }
         .confirmationDialog("Add to your private library", isPresented: $showAdd) {
             Button("New Note") { addChoice = .note }
+            Button("Add Image") { addChoice = .image }
             Button("Record Video") { addChoice = .video }
             Button("Record Audio") { addChoice = .audio }
             Button("Cancel", role: .cancel) {}
@@ -108,17 +150,22 @@ struct LibraryRootView: View {
         .sheet(item: $addChoice) { choice in
             switch choice {
             case .note: NavigationStack { NoteComposerView() }
+            case .image: NavigationStack { ImageImportView() }
             case .video: NavigationStack { VideoPermissionPrimer() }
             case .audio: NavigationStack { AudioPermissionPrimer() }
             }
         }
-        .sheet(isPresented: $showCollections) { NavigationStack { CollectionsView() } }
+        .sheet(isPresented: $showCollections) {
+            NavigationStack { CollectionsView(selectedCollectionID: $selectedCollectionID) }
+        }
         .sheet(isPresented: $showTags) { NavigationStack { TagsView() } }
     }
 
     private var addButtons: some View {
         VStack(spacing: 10) {
             Button { addChoice = .note } label: { Label("New Note", systemImage: "leaf") }
+                .buttonStyle(SecondaryButtonStyle())
+            Button { addChoice = .image } label: { Label("Add Image", systemImage: "photo.fill") }
                 .buttonStyle(SecondaryButtonStyle())
             Button { addChoice = .video } label: { Label("Record Video", systemImage: "video.fill") }
                 .buttonStyle(SecondaryButtonStyle())
@@ -267,6 +314,129 @@ struct OrganizeView: View {
     }
 }
 
+struct ImageImportView: View {
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedPhoto: PhotosPickerItem?
+    @State private var imageData: Data?
+    @State private var fileExtension = "jpg"
+    @State private var title = ""
+    @State private var kept = false
+    @State private var collectionIDs: Set<UUID> = []
+    @State private var tagIDs: Set<UUID> = []
+    @State private var organize = false
+    @State private var isLoading = false
+    @State private var error: String?
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 18) {
+                Text("Add an Image").editorialTitle()
+                Text("Choose one image to keep in your private library.")
+                    .multilineTextAlignment(.center).foregroundStyle(QuietLinen.muted)
+
+                if isLoading {
+                    ProgressView("Opening image…")
+                        .frame(minHeight: 220)
+                } else if let imageData, let image = UIImage(data: imageData) {
+                    Image(uiImage: image)
+                        .resizable().scaledToFit()
+                        .frame(maxHeight: 460)
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                        .accessibilityLabel("Selected image")
+                    TextField("Optional title", text: $title).textFieldStyle(.roundedBorder)
+                    HStack {
+                        Toggle(isOn: $kept) { Label("Keep", systemImage: "bookmark") }
+                        Button { organize = true } label: {
+                            Label("Organize", systemImage: "folder")
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                    Button("Save Image") { saveImage() }.buttonStyle(PrimaryButtonStyle())
+                    PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                        Label("Choose a Different Image", systemImage: "photo.on.rectangle")
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                } else {
+                    BotanicalSprig()
+                    PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                        Label("Choose Image", systemImage: "photo.on.rectangle")
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                }
+
+                Label("Gentle Note receives only the image you choose.", systemImage: "lock")
+                    .font(.footnote).foregroundStyle(QuietLinen.muted)
+            }
+            .padding(20).frame(maxWidth: 680)
+        }
+        .linenScreen()
+        .navigationTitle("Image")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+        .sheet(isPresented: $organize) {
+            OrganizeView(collectionIDs: $collectionIDs, tagIDs: $tagIDs).environmentObject(model)
+        }
+        .onChange(of: selectedPhoto) { item in load(item) }
+        .alert("This image couldn’t be added", isPresented: Binding(
+            get: { error != nil }, set: { if !$0 { error = nil } }
+        )) {
+            Button("Done") { error = nil }
+        } message: {
+            Text(error ?? "Try another image.".gentleLocalized)
+        }
+    }
+
+    private func load(_ item: PhotosPickerItem?) {
+        guard let item else { return }
+        isLoading = true
+        Task {
+            do {
+                guard let data = try await item.loadTransferable(type: Data.self),
+                      UIImage(data: data) != nil else {
+                    throw CocoaError(.fileReadCorruptFile)
+                }
+                let ext = item.supportedContentTypes
+                    .first(where: { $0.conforms(to: .image) })?
+                    .preferredFilenameExtension ?? "jpg"
+                await MainActor.run {
+                    imageData = data
+                    fileExtension = ext
+                    isLoading = false
+                }
+            } catch {
+                await MainActor.run {
+                    isLoading = false
+                    self.error = error.localizedDescription
+                }
+            }
+        }
+    }
+
+    private func saveImage() {
+        guard let imageData else { return }
+        do {
+            let source = model.store.temporaryURL
+                .appendingPathComponent(UUID().uuidString + "." + fileExtension)
+            try imageData.write(to: source, options: .atomic)
+            try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete],
+                                                  ofItemAtPath: source.path)
+            let filename = try model.store.importMedia(from: source, extension: fileExtension)
+            var item = LibraryItem(kind: .image)
+            item.title = title
+            item.isKept = kept
+            item.collectionIDs = collectionIDs
+            item.tagIDs = tagIDs
+            item.encryptedMediaFilename = filename
+            item.mediaFileExtension = fileExtension
+            try model.saveLibraryItem(item)
+            dismiss()
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+}
+
 struct VideoPermissionPrimer: View {
     @Environment(\.dismiss) private var dismiss
     @State private var continueToRecorder = false
@@ -406,7 +576,7 @@ struct VideoRecorderView: View {
         guard let url = recorder.finishedURL else { return }
         do {
             let seconds = AVURLAsset(url: url).duration.seconds
-            let filename = try model.store.importRecording(from: url, extension: "mov")
+            let filename = try model.store.importMedia(from: url, extension: "mov")
             var item = LibraryItem(kind: .video)
             item.title = title; item.isKept = kept; item.collectionIDs = collectionIDs; item.tagIDs = tagIDs
             item.encryptedMediaFilename = filename; item.mediaFileExtension = "mov"
@@ -478,7 +648,7 @@ struct AudioRecorderView: View {
     private func saveAudio() {
         guard let url = recorder.finishedURL else { return }
         do {
-            let filename = try model.store.importRecording(from: url, extension: "m4a")
+            let filename = try model.store.importMedia(from: url, extension: "m4a")
             var item = LibraryItem(kind: .audio)
             item.title = title; item.isKept = kept; item.collectionIDs = collectionIDs; item.tagIDs = tagIDs
             item.encryptedMediaFilename = filename; item.mediaFileExtension = "m4a"; item.duration = recorder.elapsed
@@ -517,7 +687,7 @@ struct LibraryDetailView: View {
                         MediaPlayerView(url: readableURL, kind: item.kind)
                         if let duration = item.duration { Text(duration.clockString).font(.caption).foregroundStyle(QuietLinen.muted) }
                     } else {
-                        ProgressView("Opening private recording…")
+                        ProgressView("Opening private media…")
                     }
                     metadata(for: item)
                     Button { toggleKept(item) } label: { Label((item.isKept ? "Remove from Kept" : "Keep").gentleLocalized, systemImage: "bookmark") }
@@ -585,26 +755,41 @@ struct LibraryDetailView: View {
 struct CollectionsView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
+    @Binding var selectedCollectionID: UUID?
     @State private var editing: LibraryCollection?
+
+    private var hasActiveSelection: Bool {
+        guard let selectedCollectionID else { return false }
+        return model.vault.collections.contains { $0.id == selectedCollectionID }
+    }
     var body: some View {
         List {
-            Section("Included collections") {
-                ForEach(model.vault.collections.filter { $0.defaultKind != nil }) { collection in
+            Section {
+                Button {
+                    selectedCollectionID = nil
+                    dismiss()
+                } label: {
                     LinenCard {
                         HStack {
-                            Image(systemName: collection.symbol.rawValue)
-                            Text(collection.displayName).font(.system(.title3, design: .serif))
+                            Image(systemName: "square.grid.2x2")
+                            Text("All Library Items").font(.system(.title3, design: .serif))
                             Spacer()
-                            Text("Included").font(.caption).foregroundStyle(QuietLinen.muted)
+                            Text(model.vault.libraryItems.count.formatted())
+                                .font(.caption).foregroundStyle(QuietLinen.muted)
+                            if !hasActiveSelection { Image(systemName: "checkmark") }
                         }
                     }
+                }
+                .buttonStyle(.plain)
+            }
+            Section("Included collections") {
+                ForEach(model.vault.collections.filter { $0.defaultKind != nil }) { collection in
+                    collectionRow(collection, editable: false)
                 }
             }
             Section {
                 ForEach(model.vault.collections.filter { $0.defaultKind == nil }) { collection in
-                    Button { editing = collection } label: {
-                        LinenCard { HStack { Image(systemName: collection.symbol.rawValue); Text(collection.displayName).font(.system(.title3, design: .serif)); Spacer(); Image(systemName: "chevron.right") } }
-                    }.buttonStyle(.plain)
+                    collectionRow(collection, editable: true)
                 }
                 Button { editing = LibraryCollection(name: "") } label: { Label("New Collection", systemImage: "plus") }
             } header: {
@@ -616,6 +801,45 @@ struct CollectionsView: View {
         .scrollContentBackground(.hidden).linenScreen().navigationTitle("Collections")
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         .sheet(item: $editing) { collection in NavigationStack { EditCollectionView(collection: collection) } }
+    }
+
+    private func select(_ collection: LibraryCollection) {
+        selectedCollectionID = collection.id
+        dismiss()
+    }
+
+    private func count(for collection: LibraryCollection) -> Int {
+        model.vault.libraryItems.filter { $0.collectionIDs.contains(collection.id) }.count
+    }
+
+    @ViewBuilder
+    private func collectionRow(_ collection: LibraryCollection, editable: Bool) -> some View {
+        LinenCard {
+            HStack(spacing: 10) {
+                Button { select(collection) } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: collection.symbol.rawValue)
+                        Text(collection.displayName).font(.system(.title3, design: .serif))
+                        Spacer()
+                        Text(count(for: collection).formatted())
+                            .font(.caption).foregroundStyle(QuietLinen.muted)
+                        if selectedCollectionID == collection.id { Image(systemName: "checkmark") }
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Filters the Library by this collection")
+
+                if editable {
+                    Button { editing = collection } label: {
+                        Image(systemName: "pencil")
+                            .frame(width: 44, height: 44)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Edit %@".gentleLocalizedFormat(collection.displayName))
+                }
+            }
+        }
     }
 }
 

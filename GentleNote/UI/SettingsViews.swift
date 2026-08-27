@@ -31,7 +31,7 @@ struct SettingsRootView: View {
                     Text("System Default follows your iPhone language.")
                 }
                 Section("Library") {
-                    Text("Use Library for notes and private recordings you may want to return to—especially words, reminders, or things that feel clear now but may become harder to remember later.")
+                    Text("Use Library for notes, images, and private recordings you may want to return to—especially words, reminders, or things that feel clear now but may become harder to remember later.")
                     Toggle("Show Library Introduction", isOn: Binding(
                         get: { model.showsLibraryIntroduction },
                         set: { model.setLibraryIntroductionVisible($0) }
@@ -122,7 +122,7 @@ struct PrivacyLockView: View {
             } footer: { Text("Turn off guided templates if they start to feel rigid or unhelpful. Your entries are not affected.") }
             .onChange(of: model.preferences) { _ in model.savePreferences() }
             Section("How your data is protected") {
-                Text("The app does not collect or sync your journal or library. Text, metadata, and recordings are encrypted locally and use iPhone file protection. App Lock uses iPhone authentication.")
+                Text("The app does not collect or sync your journal or library. Text, metadata, images, and recordings are encrypted locally and use iPhone file protection. App Lock uses iPhone authentication.")
                 Text("Gentle Note never receives your face, fingerprint, or passcode. Someone who knows your iPhone passcode may still be able to unlock it.")
                 Text("There is no automatic recovery. Exports are separate files controlled by the destination you choose.")
             }
@@ -142,7 +142,7 @@ struct MediaPermissionsView: View {
             PermissionStatusRow(title: "Microphone", icon: "mic", state: MediaPermissions.microphone())
             HStack { Image(systemName: "photo").frame(width: 28); Text("Photos"); Spacer(); Text("Not Requested").foregroundStyle(QuietLinen.muted) }
             Section {
-                Text("Gentle Note asks only when you choose to record. Nothing is saved to Photos automatically.")
+                Text("Camera and microphone access are requested only when you choose to record. The iOS photo picker gives Gentle Note only the image you select. Nothing is saved to Photos automatically.")
                     .multilineTextAlignment(.center).frame(maxWidth: .infinity)
                 Button("Open iPhone Settings") { UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!) }
                     .buttonStyle(PrimaryButtonStyle())
@@ -162,17 +162,19 @@ struct StorageView: View {
                     HStack(spacing: 1) {
                         storageSegment(breakdown.journal, total: breakdown.total, color: QuietLinen.forest, width: proxy.size.width)
                         storageSegment(breakdown.notes, total: breakdown.total, color: QuietLinen.clay, width: proxy.size.width)
+                        storageSegment(breakdown.images, total: breakdown.total, color: QuietLinen.muted, width: proxy.size.width)
                         storageSegment(breakdown.videos, total: breakdown.total, color: QuietLinen.ochre, width: proxy.size.width)
                         storageSegment(breakdown.audio, total: breakdown.total, color: QuietLinen.sage, width: proxy.size.width)
                     }.clipShape(RoundedRectangle(cornerRadius: 5))
                 }.frame(height: 22).accessibilityHidden(true)
                 storageRow("Journal", breakdown.journal, QuietLinen.forest)
                 storageRow("Notes", breakdown.notes, QuietLinen.clay)
+                storageRow("Images", breakdown.images, QuietLinen.muted)
                 storageRow("Videos", breakdown.videos, QuietLinen.ochre)
                 storageRow("Audio", breakdown.audio, QuietLinen.sage)
                 storageRow("Temporary Files", breakdown.temporary, QuietLinen.muted)
                 HStack { Text("Total").fontWeight(.semibold); Spacer(); Text(size(breakdown.total)).foregroundStyle(QuietLinen.muted) }
-                Text("Videos and audio can use substantial device storage. Gentle Note will not overwrite anything you saved.")
+                Text("Images, videos, and audio can use substantial device storage. Gentle Note will not overwrite anything you saved.")
             }
             Section {
                 HStack { Text("Video Quality"); Spacer(); Text("Space Saver · 720p").foregroundStyle(QuietLinen.muted) }
@@ -184,7 +186,7 @@ struct StorageView: View {
     }
 
     private func storageSegment(_ value: Int64, total: Int64, color: Color, width: CGFloat) -> some View {
-        color.frame(width: total > 0 ? max(2, width * CGFloat(value) / CGFloat(total)) : width / 4)
+        color.frame(width: total > 0 ? max(2, width * CGFloat(value) / CGFloat(total)) : width / 5)
     }
 
     private func storageRow(_ title: LocalizedStringKey, _ bytes: Int64, _ color: Color) -> some View {
@@ -208,7 +210,7 @@ struct ExportView: View {
             Section("Choose content") {
                 Label("Journal Entries", systemImage: "book.closed")
                 Label("Library Notes", systemImage: "doc")
-                Text("Videos and audio are exported individually from their detail screen.").font(.footnote).foregroundStyle(QuietLinen.muted)
+                Text("Images, videos, and audio are exported individually from their detail screen.").font(.footnote).foregroundStyle(QuietLinen.muted)
             }
             Section("Choose a format") {
                 Picker("Format", selection: $format) {
@@ -250,7 +252,7 @@ struct EraseAllView: View {
             VStack(spacing: 18) {
                 Image(systemName: "trash").font(.system(size: 42)).foregroundStyle(QuietLinen.danger)
                 Text("Erase your journal and library").editorialTitle()
-                Text("This permanently deletes every journal entry, note, video, audio recording, collection, tag, draft, and search record stored by Gentle Note on this iPhone.")
+                Text("This permanently deletes every journal entry, note, image, video, audio recording, collection, tag, draft, and search record stored by Gentle Note on this iPhone.")
                     .multilineTextAlignment(.center)
                 Text("It does not delete files you previously exported. Gentle Note cannot recover your content after erasing it.")
                     .multilineTextAlignment(.center).foregroundStyle(QuietLinen.muted)
@@ -275,7 +277,7 @@ struct EraseAllView: View {
             Button("Cancel", role: .cancel) {}
         } message: { Text("All content on this iPhone will be deleted now.") }
         .alert("Journal and library erased", isPresented: $completed) { Button("Done") {} }
-            message: { Text("No entries, notes, recordings, drafts, collections, or tags remain in Gentle Note. Previously exported files were not changed.") }
+            message: { Text("No entries, notes, images, recordings, drafts, collections, or tags remain in Gentle Note. Previously exported files were not changed.") }
         .alert("Gentle Note couldn’t finish erasing", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
             Button("Done") { error = nil }
         } message: { Text("Some private data may still be on this iPhone. Close the app and try again. Do not assume it has been deleted.") }
