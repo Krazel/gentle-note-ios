@@ -1,4 +1,4 @@
-# Implementation handoff — 0.5 (2)
+# Implementation handoff — 0.5 (3)
 
 ## Implemented
 

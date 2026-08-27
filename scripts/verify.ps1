@@ -95,7 +95,8 @@ foreach ($LocalizedResource in @('Localizable.strings','InfoPlist.strings','know
     if (-not $Pbx.Contains($LocalizedResource)) { $Failures.Add("Xcode project omits localization marker: $LocalizedResource") }
 }
 if (-not $Pbx.Contains('MARKETING_VERSION = 0.5')) { $Failures.Add('Marketing version is not 0.5') }
-if (-not $Pbx.Contains('CURRENT_PROJECT_VERSION = 2')) { $Failures.Add('Build number is not 2') }
+if (-not $Pbx.Contains('CURRENT_PROJECT_VERSION = 3')) { $Failures.Add('Build number is not 3') }
+if (-not $Pbx.Contains('ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon')) { $Failures.Add('Xcode target does not select the AppIcon asset catalog') }
 if (-not $Pbx.Contains('IPHONEOS_DEPLOYMENT_TARGET = 16.0')) { $Failures.Add('Minimum iOS version is not 16.0') }
 if (-not $Pbx.Contains('PRODUCT_BUNDLE_IDENTIFIER = com.krazel.gentlenote.B2X6D3A9J9')) { $Failures.Add('App Store bundle identifier is not configured') }
 if (-not $Pbx.Contains('DEVELOPMENT_TEAM = B2X6D3A9J9')) { $Failures.Add('Apple development team is not configured') }
@@ -103,13 +104,15 @@ if (-not $Pbx.Contains('DEVELOPMENT_TEAM = B2X6D3A9J9')) { $Failures.Add('Apple 
 $InfoPlist = Get-Content -LiteralPath (Join-Path $ProjectRoot 'GentleNote\Info.plist') -Raw
 if (-not $InfoPlist.Contains('<key>CFBundleIconName</key>')) { $Failures.Add('Info.plist is missing CFBundleIconName') }
 if (-not $InfoPlist.Contains('<string>AppIcon</string>')) { $Failures.Add('Info.plist does not select AppIcon') }
+if (-not $InfoPlist.Contains('<key>CFBundleIcons</key>')) { $Failures.Add('Info.plist is missing CFBundleIcons') }
+if (-not $InfoPlist.Contains('<key>CFBundlePrimaryIcon</key>')) { $Failures.Add('Info.plist is missing CFBundlePrimaryIcon') }
 $AppIconPath = Join-Path $ProjectRoot 'GentleNote\Resources\Assets.xcassets\AppIcon.appiconset\AppIcon-1024.png'
 $AppIconContents = Get-Content -LiteralPath (Join-Path $ProjectRoot 'GentleNote\Resources\Assets.xcassets\AppIcon.appiconset\Contents.json') -Raw
 if (-not (Test-Path -LiteralPath $AppIconPath)) { $Failures.Add('AppIcon-1024.png is missing') }
 if (-not $AppIconContents.Contains('"filename" : "AppIcon-1024.png"')) { $Failures.Add('App icon catalog does not reference AppIcon-1024.png') }
 
 $Workflow = Get-Content -LiteralPath (Join-Path $ProjectRoot '.github\workflows\ios-verify.yml') -Raw
-foreach ($VersionMarker in @('runs-on: macos-26','GentleNote-0.5-build-2-${SHORT_SHA}-Local-QA-unsigned','"marketingVersion": "0.5"','"build": "2"','GentleNote-0.5-build-2-test-evidence')) {
+foreach ($VersionMarker in @('runs-on: macos-26','GentleNote-0.5-build-3-${SHORT_SHA}-Local-QA-unsigned','"marketingVersion": "0.5"','"build": "3"','GentleNote-0.5-build-3-test-evidence')) {
     if (-not $Workflow.Contains($VersionMarker)) { $Failures.Add("Workflow version marker missing: $VersionMarker") }
 }
 
@@ -125,8 +128,8 @@ if (-not (Test-Path -LiteralPath $TestFlightWorkflowPath)) {
         'APP_STORE_CONNECT_API_KEY_BASE64',
         'com.krazel.gentlenote.B2X6D3A9J9',
         'runs-on: macos-26',
-        'CFBundleIconName',
-        'GentleNote-0.5-build-2-signed-${{ github.sha }}'
+        'CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName',
+        'GentleNote-0.5-build-3-signed-${{ github.sha }}'
     )) {
         if (-not $TestFlightWorkflow.Contains($Marker)) {
             $Failures.Add("TestFlight workflow is missing marker: $Marker")
@@ -143,5 +146,5 @@ if ($Failures.Count -gt 0) {
 Write-Output 'VERIFY: PASS'
 Write-Output "Swift files: $($Swift.Count)"
 Write-Output "Approved boards: $($Approved.Count)"
-Write-Output 'Version: 0.5 (2), iOS 16+'
+Write-Output 'Version: 0.5 (3), iOS 16+'
 Write-Output 'Scope: iPhone, English and Spanish, local-only, no accounts/ads/analytics/tracking'

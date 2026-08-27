@@ -136,8 +136,18 @@ jobs:
           APP_PATH="$RUNNER_TEMP/GentleNote.xcarchive/Products/Applications/GentleNote.app"
           test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$APP_PATH/Info.plist")" = "$APP_BUNDLE_ID"
           test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$APP_PATH/Info.plist")" = "0.5"
-          test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' "$APP_PATH/Info.plist")" = "2"
-          test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIconName' "$APP_PATH/Info.plist")" = "AppIcon"
+          test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' "$APP_PATH/Info.plist")" = "3"
+          test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName' "$APP_PATH/Info.plist")" = "AppIcon"
+          ICON_120_PATH=""
+          while IFS= read -r ICON_PATH; do
+            ICON_WIDTH=$(sips -g pixelWidth "$ICON_PATH" | awk '/pixelWidth/ {print $2}')
+            ICON_HEIGHT=$(sips -g pixelHeight "$ICON_PATH" | awk '/pixelHeight/ {print $2}')
+            if [[ "$ICON_WIDTH" = "120" && "$ICON_HEIGHT" = "120" ]]; then
+              ICON_120_PATH="$ICON_PATH"
+              break
+            fi
+          done < <(find "$APP_PATH" -maxdepth 1 -type f -name 'AppIcon*.png' -print)
+          test -n "$ICON_120_PATH"
           codesign --verify --deep --strict --verbose=2 "$APP_PATH"
           ARCHIVE_PROFILE_PLIST="$RUNNER_TEMP/GentleNote-Archive-Profile.plist"
           security cms -D -i "$APP_PATH/embedded.mobileprovision" > "$ARCHIVE_PROFILE_PLIST"
@@ -168,7 +178,7 @@ jobs:
         if: ${{ always() && env.IPA_PATH != '' }}
         uses: actions/upload-artifact@v4
         with:
-          name: GentleNote-0.5-build-2-signed-${{ github.sha }}
+          name: GentleNote-0.5-build-3-signed-${{ github.sha }}
           path: |
             ${{ runner.temp }}/TestFlightExport/*.ipa
             ${{ runner.temp }}/TestFlightExport/*.sha256
@@ -179,7 +189,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: GentleNote-0.5-build-2-test-evidence-${{ github.sha }}
+          name: GentleNote-0.5-build-3-test-evidence-${{ github.sha }}
           path: ${{ runner.temp }}/SimulatorDerivedData/Logs/Test/*.xcresult
           if-no-files-found: warn
           retention-days: 14
