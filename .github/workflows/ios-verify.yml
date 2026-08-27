@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   build-test-and-package:
-    runs-on: macos-15
+    runs-on: macos-15-intel
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
