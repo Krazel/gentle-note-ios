@@ -33,6 +33,7 @@
   availability, signing, age rating, export compliance, and App Privacy.
 - Keep optional StoreKit support hidden until products and owner authorization
   exist. Run the complete App Review preflight on the exact submitted build.
-- A public source repository and one manual Local-QA unsigned IPA build were
-  authorized on 2026-08-26. TestFlight, App Review, IAP creation, signing-secret
-  use, and public App Store release remain explicitly unauthorized.
+- A public source repository and manual Local-QA unsigned IPA builds were
+  authorized on 2026-08-26. App Store Connect app creation, dedicated signing
+  secrets, and a TestFlight upload were authorized on 2026-08-27. App Review,
+  IAP creation, and public App Store release remain explicitly unauthorized.

@@ -65,7 +65,7 @@ jobs:
             "purpose": "Local-QA",
             "signed": false,
             "minimumIOS": "16.0",
-            "bundleIdentifier": "com.krazel.gentlenote",
+            "bundleIdentifier": "com.krazel.gentlenote.B2X6D3A9J9",
             "installability": "Requires a sideloading or re-signing tool with a valid Apple identity/profile. This IPA is not directly installable as a normally signed app."
           }
           JSON

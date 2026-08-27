@@ -45,12 +45,17 @@
 
 ## Deliberately not claimed complete
 
-This Windows host has no Swift toolchain, Xcode, iOS Simulator, signing identity,
-or physical iPhone session. GitHub Actions is the compilation and XCTest gate;
+This Windows host has no Swift toolchain, Xcode, iOS Simulator, or physical
+iPhone session. A dedicated Apple Distribution identity and App Store profile
+are consumed only as encrypted secrets in a private companion CI repository,
+never in this public source repository. GitHub Actions is the compilation,
+XCTest, signed archive, and TestFlight upload gate;
 runtime behavior on a physical device, accessibility, backup, network, deletion,
 and visual 1:1 gates remain unexecuted. The final app icon,
 specialist/lived-experience review, legal/support endpoints, product name
-clearance, signing, and App Store configuration also remain outside this handoff.
+clearance, and full App Store submission metadata remain incomplete.
 
-The owner authorized dispatching this workflow on 2026-08-26. It never uploads
-to TestFlight or App Store Connect and does not consume signing secrets.
+The owner authorized the unsigned Local-QA workflow on 2026-08-26 and explicitly
+authorized App Store Connect app creation, signing, and TestFlight preparation
+on 2026-08-27. The TestFlight workflow remains manual and never submits to App
+Review or releases the app publicly.

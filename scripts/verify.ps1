@@ -97,6 +97,8 @@ foreach ($LocalizedResource in @('Localizable.strings','InfoPlist.strings','know
 if (-not $Pbx.Contains('MARKETING_VERSION = 0.5')) { $Failures.Add('Marketing version is not 0.5') }
 if (-not $Pbx.Contains('CURRENT_PROJECT_VERSION = 1')) { $Failures.Add('Build number is not 1') }
 if (-not $Pbx.Contains('IPHONEOS_DEPLOYMENT_TARGET = 16.0')) { $Failures.Add('Minimum iOS version is not 16.0') }
+if (-not $Pbx.Contains('PRODUCT_BUNDLE_IDENTIFIER = com.krazel.gentlenote.B2X6D3A9J9')) { $Failures.Add('App Store bundle identifier is not configured') }
+if (-not $Pbx.Contains('DEVELOPMENT_TEAM = B2X6D3A9J9')) { $Failures.Add('Apple development team is not configured') }
 
 $Workflow = Get-Content -LiteralPath (Join-Path $ProjectRoot '.github\workflows\ios-verify.yml') -Raw
 foreach ($VersionMarker in @('GentleNote-0.5-build-1-${SHORT_SHA}-Local-QA-unsigned','"marketingVersion": "0.5"','GentleNote-0.5-build-1-test-evidence')) {

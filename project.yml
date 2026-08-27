@@ -7,10 +7,10 @@ options:
 settings:
   base:
     SWIFT_VERSION: 5.10
-    MARKETING_VERSION: 0.4
+    MARKETING_VERSION: 0.5
     CURRENT_PROJECT_VERSION: 1
-    PRODUCT_BUNDLE_IDENTIFIER: com.krazel.gentlenote
-    DEVELOPMENT_TEAM: ""
+    PRODUCT_BUNDLE_IDENTIFIER: com.krazel.gentlenote.B2X6D3A9J9
+    DEVELOPMENT_TEAM: B2X6D3A9J9
     CODE_SIGN_STYLE: Automatic
 targets:
   GentleNote:

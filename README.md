@@ -41,14 +41,22 @@ device `.app` without Apple signing, and packages it as a clearly labeled
 
 The unsigned IPA is intended for a sideloading or re-signing service that adds
 a valid Apple identity and provisioning profile. It is not directly installable
-as a normally signed iPhone app. The workflow never uploads to TestFlight or
-App Store Connect and reads no signing secrets.
+as a normally signed iPhone app. That Local-QA workflow never uploads to
+TestFlight or App Store Connect and reads no signing secrets.
+
+A separate, manual TestFlight workflow in a private companion CI repository was
+authorized on 2026-08-27. It checks out a pinned public source commit, runs the
+same source and XCTest gates, imports dedicated encrypted secrets into a
+temporary keychain, archives with the registered App Store identifier, verifies
+the signature, and uploads only to TestFlight. No signing secret is stored in
+this public repository. The workflow does not submit a version to App Review or
+release the app publicly.
 
 ## Release boundary
 
-Source candidate version is `0.5`, build `1`. The source repository may be public, but the app is
-not uploaded to TestFlight, submitted to App Review, or connected to real
-StoreKit products.
+Source candidate version is `0.5`, build `1`. The source repository is public
+and TestFlight preparation/upload is authorized. App Review submission, public
+App Store release, and real StoreKit products are not authorized by that step.
 The visual runtime comparison, physical-device privacy tests, specialist/lived
 experience copy review, final app icon, legal URLs, signing, and release
 preflight remain required before a candidate can be called publishable.
