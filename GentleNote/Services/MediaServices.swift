@@ -7,6 +7,7 @@ enum MediaPermissionState: String {
     case notRequested = "Not Requested"
     case allowed = "Allowed"
     case denied = "Off"
+    var title: String { rawValue.gentleLocalized }
 }
 
 enum MediaPermissions {
@@ -56,14 +57,14 @@ final class VideoRecorder: NSObject, ObservableObject, AVCaptureFileOutputRecord
                                                            position: .front),
                       let microphone = AVCaptureDevice.default(for: .audio) else {
                     throw NSError(domain: "GentleNote.Camera", code: 1,
-                                  userInfo: [NSLocalizedDescriptionKey: "Camera or microphone is unavailable."])
+                                  userInfo: [NSLocalizedDescriptionKey: "Camera or microphone is unavailable.".gentleLocalized])
                 }
                 for input in self.session.inputs { self.session.removeInput(input) }
                 let cameraInput = try AVCaptureDeviceInput(device: camera)
                 let microphoneInput = try AVCaptureDeviceInput(device: microphone)
                 guard self.session.canAddInput(cameraInput), self.session.canAddInput(microphoneInput) else {
                     throw NSError(domain: "GentleNote.Camera", code: 2,
-                                  userInfo: [NSLocalizedDescriptionKey: "Camera inputs could not be prepared."])
+                                  userInfo: [NSLocalizedDescriptionKey: "Camera inputs could not be prepared.".gentleLocalized])
                 }
                 self.session.addInput(cameraInput)
                 self.session.addInput(microphoneInput)

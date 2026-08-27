@@ -6,7 +6,7 @@ import UIKit
 private let gentleNoteVersionText: String = {
     let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
     let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "—"
-    return "Version \(version) (\(build))"
+    return "Version %@ (%@)".gentleLocalizedFormat(version, build)
 }()
 
 struct SettingsRootView: View {
@@ -50,7 +50,7 @@ struct SettingsRootView: View {
         }
     }
 
-    private func row(_ destination: SettingsDestination, _ title: String, _ icon: String, destructive: Bool = false) -> some View {
+    private func row(_ destination: SettingsDestination, _ title: LocalizedStringKey, _ icon: String, destructive: Bool = false) -> some View {
         NavigationLink(value: destination) {
             HStack { Image(systemName: icon).frame(width: 26); Text(title); Spacer() }
                 .frame(minHeight: 44).foregroundStyle(destructive ? QuietLinen.danger : QuietLinen.ink)
@@ -152,7 +152,7 @@ struct StorageView: View {
         color.frame(width: total > 0 ? max(2, width * CGFloat(value) / CGFloat(total)) : width / 4)
     }
 
-    private func storageRow(_ title: String, _ bytes: Int64, _ color: Color) -> some View {
+    private func storageRow(_ title: LocalizedStringKey, _ bytes: Int64, _ color: Color) -> some View {
         HStack { Circle().fill(color).frame(width: 9, height: 9); Text(title); Spacer(); Text(size(bytes)).foregroundStyle(QuietLinen.muted) }
             .accessibilityElement(children: .combine)
     }
@@ -192,12 +192,12 @@ struct ExportView: View {
         .sheet(isPresented: $share) { if let exportURL { ActivitySheet(items: [exportURL]) { try? model.store.clearTemporaryFiles() } } }
         .alert("The export couldn’t be created", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
             Button("Done") { error = nil }
-        } message: { Text(error ?? "Nothing was shared. Try again.") }
+        } message: { Text(error ?? "Nothing was shared. Try again.".gentleLocalized) }
     }
 
     private func createExport() {
         Task {
-            guard await model.authenticateSensitiveAction(reason: "Confirm export of your private journal and notes.") else { return }
+            guard await model.authenticateSensitiveAction(reason: "Confirm export of your private journal and notes.".gentleLocalized) else { return }
             do { exportURL = try ExportService(store: model.store).allReadable(vault: model.vault, format: format); share = true }
             catch { self.error = error.localizedDescription }
         }
@@ -227,7 +227,7 @@ struct EraseAllView: View {
         .confirmationDialog("Erase everything?", isPresented: $firstConfirm, titleVisibility: .visible) {
             Button("Continue", role: .destructive) {
                 Task {
-                    guard await model.authenticateSensitiveAction(reason: "Confirm permanent deletion of your private journal and library.") else { return }
+                    guard await model.authenticateSensitiveAction(reason: "Confirm permanent deletion of your private journal and library.".gentleLocalized) else { return }
                     finalConfirm = true
                 }
             }
@@ -279,7 +279,7 @@ struct HelpSafetyView: View {
         } message: { Text("This website has its own privacy practices. Gentle Note does not send your journal or library.") }
     }
 
-    private func external(_ title: String, _ url: String) -> some View {
+    private func external(_ title: LocalizedStringKey, _ url: String) -> some View {
         Button { externalURL = URL(string: url); showExternal = true } label: { Label(title, systemImage: "arrow.up.right.square") }
     }
 }
@@ -297,7 +297,7 @@ struct PrivacyNoticeView: View {
         .scrollContentBackground(.hidden).linenScreen().navigationTitle("Privacy Notice")
     }
 
-    private func notice(_ title: String, _ body: String, _ icon: String) -> some View {
+    private func notice(_ title: LocalizedStringKey, _ body: LocalizedStringKey, _ icon: String) -> some View {
         Section { Text(body) } header: { Label(title, systemImage: icon) }
     }
 }

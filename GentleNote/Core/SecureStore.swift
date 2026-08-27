@@ -9,9 +9,9 @@ enum SecureStoreError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .keychain: "The private storage key is unavailable."
-        case .invalidEnvelope: "The private journal file could not be opened."
-        case .mediaCorrupt: "This private recording could not be opened."
+        case .keychain: "The private storage key is unavailable.".gentleLocalized
+        case .invalidEnvelope: "The private journal file could not be opened.".gentleLocalized
+        case .mediaCorrupt: "This private recording could not be opened.".gentleLocalized
         }
     }
 }

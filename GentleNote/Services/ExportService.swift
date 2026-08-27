@@ -7,6 +7,7 @@ enum ExportFormat: String, CaseIterable, Identifiable {
     case text = "Plain Text"
     case originalMedia = "Original Media"
     var id: String { rawValue }
+    var title: String { rawValue.gentleLocalized }
 }
 
 struct ExportService {
@@ -38,7 +39,7 @@ struct ExportService {
     func allReadable(vault: VaultSnapshot, format: ExportFormat) throws -> URL {
         var sections = vault.journalEntries.sorted { $0.createdAt < $1.createdAt }.map(render)
         sections += vault.libraryItems.filter { $0.kind == .note }.map {
-            "LIBRARY NOTE\n\($0.displayTitle)\n\($0.createdAt.formatted(date: .long, time: .shortened))\n\n\($0.body)"
+            "LIBRARY NOTE".gentleLocalized + "\n\($0.displayTitle)\n\($0.createdAt.formatted(date: .long, time: .shortened))\n\n\($0.body)"
         }
         let text = sections.joined(separator: "\n\n————————————\n\n")
         return format == .pdf ? try writePDF(text, named: "Gentle Note Export")

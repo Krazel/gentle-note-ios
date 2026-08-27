@@ -1,5 +1,15 @@
 import Foundation
 
+extension String {
+    var gentleLocalized: String {
+        NSLocalizedString(self, tableName: nil, bundle: .main, value: self, comment: "")
+    }
+
+    func gentleLocalizedFormat(_ arguments: CVarArg...) -> String {
+        String(format: gentleLocalized, locale: Locale.current, arguments: arguments)
+    }
+}
+
 enum JournalTemplateID: String, Codable, CaseIterable, Identifiable {
     case blank
     case gentleCheckIn
@@ -13,7 +23,7 @@ enum JournalTemplateID: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
 
     var title: String {
-        switch self {
+        let key = switch self {
         case .blank: "Blank Entry"
         case .gentleCheckIn: "Gentle Check-In"
         case .balancedThought: "A Balanced Thought"
@@ -23,15 +33,17 @@ enum JournalTemplateID: String, Codable, CaseIterable, Identifiable {
         case .prepareToTalk: "Prepare to Talk"
         case .noticeSomethingSmall: "Notice Something Small"
         }
+        return key.gentleLocalized
     }
 
     var subtitle: String? {
-        switch self {
+        let key: String? = switch self {
         case .balancedThought: "CBT-inspired"
         case .valuesCompass: "Values-based"
         case .presentMoment: "Grounding-inspired"
         default: nil
         }
+        return key?.gentleLocalized
     }
 
     var icon: String {
@@ -48,7 +60,7 @@ enum JournalTemplateID: String, Codable, CaseIterable, Identifiable {
     }
 
     var intro: String {
-        switch self {
+        let key = switch self {
         case .blank: "Write whatever feels useful right now."
         case .gentleCheckIn: "Answer any question, in any order. Leave anything blank."
         case .balancedThought: "A gentle, non-scored reflection. Every prompt is optional."
@@ -58,10 +70,11 @@ enum JournalTemplateID: String, Codable, CaseIterable, Identifiable {
         case .prepareToTalk: "Gather words for yourself, someone you trust, or your care team."
         case .noticeSomethingSmall: "This is not a score or achievement."
         }
+        return key.gentleLocalized
     }
 
     var prompts: [String] {
-        switch self {
+        let keys: [String] = switch self {
         case .blank:
             []
         case .gentleCheckIn:
@@ -101,6 +114,7 @@ enum JournalTemplateID: String, Codable, CaseIterable, Identifiable {
             ["Is there a small act of care, honesty, flexibility, or courage you’d like to notice?",
              "What helped make room for it?"]
         }
+        return keys.map { $0.gentleLocalized }
     }
 }
 
@@ -133,7 +147,13 @@ struct JournalEntry: Identifiable, Codable, Hashable {
 enum LibraryItemKind: String, Codable, CaseIterable, Identifiable {
     case note, video, audio
     var id: String { rawValue }
-    var title: String { rawValue.capitalized }
+    var title: String {
+        switch self {
+        case .note: "Note".gentleLocalized
+        case .video: "Video".gentleLocalized
+        case .audio: "Audio".gentleLocalized
+        }
+    }
     var icon: String {
         switch self {
         case .note: "doc"
@@ -161,9 +181,9 @@ struct LibraryItem: Identifiable, Codable, Hashable {
         let clean = title.trimmingCharacters(in: .whitespacesAndNewlines)
         if !clean.isEmpty { return clean }
         return switch kind {
-        case .note: "Untitled Note"
-        case .video: "Untitled Video"
-        case .audio: "Untitled Audio"
+        case .note: "Untitled Note".gentleLocalized
+        case .video: "Untitled Video".gentleLocalized
+        case .audio: "Untitled Audio".gentleLocalized
         }
     }
 }
@@ -174,11 +194,27 @@ enum CollectionSymbol: String, Codable, CaseIterable, Identifiable {
     case flower = "camera.macro.circle"
     case sun = "sun.max"
     var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .leaf: "Leaf".gentleLocalized
+        case .sprig: "Sprig".gentleLocalized
+        case .flower: "Flower".gentleLocalized
+        case .sun: "Sun".gentleLocalized
+        }
+    }
 }
 
 enum CollectionColor: String, Codable, CaseIterable, Identifiable {
     case forest, sage, ochre, clay
     var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .forest: "Forest".gentleLocalized
+        case .sage: "Sage".gentleLocalized
+        case .ochre: "Ochre".gentleLocalized
+        case .clay: "Clay".gentleLocalized
+        }
+    }
 }
 
 struct LibraryCollection: Identifiable, Codable, Hashable {
@@ -229,11 +265,12 @@ enum LockDelay: String, Codable, CaseIterable, Identifiable {
     case fiveMinutes
     var id: String { rawValue }
     var title: String {
-        switch self {
+        let key = switch self {
         case .immediately: "Immediately"
         case .oneMinute: "After 1 Minute"
         case .fiveMinutes: "After 5 Minutes"
         }
+        return key.gentleLocalized
     }
     var seconds: TimeInterval {
         switch self {
@@ -257,5 +294,13 @@ struct AppPreferences: Codable, Equatable {
 enum LibraryFilter: String, CaseIterable, Identifiable {
     case all, notes, videos, audio, kept
     var id: String { rawValue }
-    var title: String { rawValue.capitalized }
+    var title: String {
+        switch self {
+        case .all: "All".gentleLocalized
+        case .notes: "Notes".gentleLocalized
+        case .videos: "Videos".gentleLocalized
+        case .audio: "Audio".gentleLocalized
+        case .kept: "Kept".gentleLocalized
+        }
+    }
 }

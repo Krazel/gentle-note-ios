@@ -1,9 +1,10 @@
-# Implementation handoff — 0.1.1 (1)
+# Implementation handoff — 0.2 (1)
 
 ## Implemented
 
 - Native SwiftUI iPhone app with the approved Quiet Linen language.
-- Four-step onboarding, care limits, privacy/loss warning, optional device lock,
+- Two-step onboarding (welcome and optional device lock); detailed privacy and
+  care limits remain available in Settings and Help & Safety,
   background privacy cover, and Help & Safety access from the locked screen.
 - Journal Home, blank entry, seven optional templates, drafts, Journal History,
   local search/filtering, previews-off default, Keep, detail, editing, PDF/text
@@ -19,7 +20,8 @@
   terms, and About.
 - Optional one-time StoreKit support code behind a disabled feature flag. No
   products, prices, transactions, or store configuration are active.
-- Privacy manifest, purpose strings, English-only resources, manual Xcode
+- Privacy manifest, localized purpose strings, English and Spanish resources,
+  automatic system-language selection, manual Xcode
   project, shared scheme, unit tests, static verifier, and a manual-only macOS
   workflow that tests and packages a labeled unsigned Local-QA IPA.
 

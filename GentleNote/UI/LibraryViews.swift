@@ -121,7 +121,7 @@ struct LibraryRow: View {
         }
         .frame(minHeight: 52)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(item.displayTitle), \(item.kind.title), \(item.createdAt.gentleDate)\(item.isKept ? ", Kept" : "")")
+        .accessibilityLabel("\(item.displayTitle), \(item.kind.title), \(item.createdAt.gentleDate)\(item.isKept ? ", " + "Kept".gentleLocalized : "")")
     }
 }
 
@@ -147,7 +147,7 @@ struct NoteComposerView: View {
                     Button { organize = true } label: { Label("Organize", systemImage: "folder") }
                         .buttonStyle(.bordered).tint(QuietLinen.forest)
                 }
-                Button(existingID == nil ? "Save Note" : "Save Changes") { save() }
+                Button((existingID == nil ? "Save Note" : "Save Changes").gentleLocalized) { save() }
                     .buttonStyle(PrimaryButtonStyle())
                 Label("Stored in your private library.", systemImage: "lock")
                     .font(.footnote).foregroundStyle(QuietLinen.muted)
@@ -290,10 +290,10 @@ struct AudioPermissionPrimer: View {
 }
 
 struct PermissionPrimer: View {
-    let title: String
-    let message: String
-    let rows: [(String, String, MediaPermissionState)]
-    let footer: String
+    let title: LocalizedStringKey
+    let message: LocalizedStringKey
+    let rows: [(LocalizedStringKey, String, MediaPermissionState)]
+    let footer: LocalizedStringKey
     let action: () -> Void
     var body: some View {
         ZStack {
@@ -324,7 +324,7 @@ struct VideoRecorderView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                Text(recorder.finishedURL == nil ? (recorder.isRecording ? "Recording" : "Record Video") : "Review Video")
+                Text((recorder.finishedURL == nil ? (recorder.isRecording ? "Recording" : "Record Video") : "Review Video").gentleLocalized)
                     .font(.system(.title2, design: .serif))
                 CameraPreview(session: recorder.session)
                     .frame(maxWidth: .infinity).aspectRatio(4 / 3, contentMode: .fit)
@@ -348,7 +348,7 @@ struct VideoRecorderView: View {
                                 .font(.system(size: 62)).foregroundStyle(QuietLinen.clay)
                         }
                         .disabled(!recorder.isReady && !recorder.isRecording)
-                        .accessibilityLabel(recorder.isRecording ? "Stop recording" : "Start recording")
+                        .accessibilityLabel((recorder.isRecording ? "Stop recording" : "Start recording").gentleLocalized)
                         Spacer()
                         Label("Mic On", systemImage: "mic.fill")
                     }
@@ -374,7 +374,7 @@ struct VideoRecorderView: View {
         .alert("Recording interrupted", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
             Button("Review Recording") { error = nil }
             Button("Delete Partial Recording", role: .destructive) { discardRecording(); error = nil }
-        } message: { Text(error ?? "Your saved items are unchanged.") }
+        } message: { Text(error ?? "Your saved items are unchanged.".gentleLocalized) }
     }
 
     private func saveVideo() {
@@ -419,7 +419,7 @@ struct AudioRecorderView: View {
                     HStack(spacing: 26) {
                         if recorder.isRecording {
                             Button { recorder.pauseOrResume() } label: {
-                                Label(recorder.isPaused ? "Resume" : "Pause", systemImage: recorder.isPaused ? "play.fill" : "pause.fill")
+                                Label((recorder.isPaused ? "Resume" : "Pause").gentleLocalized, systemImage: recorder.isPaused ? "play.fill" : "pause.fill")
                             }.buttonStyle(.bordered).tint(QuietLinen.forest)
                         }
                         Button {
@@ -427,7 +427,7 @@ struct AudioRecorderView: View {
                         } label: {
                             Image(systemName: recorder.isRecording ? "stop.circle.fill" : "record.circle")
                                 .font(.system(size: 66)).foregroundStyle(QuietLinen.clay)
-                        }.accessibilityLabel(recorder.isRecording ? "Stop recording" : "Start recording")
+                        }.accessibilityLabel((recorder.isRecording ? "Stop recording" : "Start recording").gentleLocalized)
                     }
                 } else {
                     TextField("Optional title", text: $title).textFieldStyle(.roundedBorder)
@@ -447,7 +447,7 @@ struct AudioRecorderView: View {
         .onChange(of: recorder.errorMessage) { value in error = value }
         .alert("Audio couldn’t be recorded", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
             Button("Done") { error = nil }
-        } message: { Text(error ?? "Your saved items are unchanged.") }
+        } message: { Text(error ?? "Your saved items are unchanged.".gentleLocalized) }
     }
 
     private func saveAudio() {
@@ -495,11 +495,11 @@ struct LibraryDetailView: View {
                         ProgressView("Opening private recording…")
                     }
                     metadata(for: item)
-                    Button { toggleKept(item) } label: { Label(item.isKept ? "Remove from Kept" : "Keep", systemImage: "bookmark") }
+                    Button { toggleKept(item) } label: { Label((item.isKept ? "Remove from Kept" : "Keep").gentleLocalized, systemImage: "bookmark") }
                         .buttonStyle(SecondaryButtonStyle())
                     if item.kind == .note { Button("Edit Details") { edit = true }.buttonStyle(SecondaryButtonStyle()) }
-                    Button("Export \(item.kind.title)") { export(item) }.buttonStyle(SecondaryButtonStyle())
-                    Button(role: .destructive) { confirmDelete = true } label: { Label("Delete \(item.kind.title)", systemImage: "trash") }
+                    Button("Export %@".gentleLocalizedFormat(item.kind.title)) { export(item) }.buttonStyle(SecondaryButtonStyle())
+                    Button(role: .destructive) { confirmDelete = true } label: { Label("Delete %@".gentleLocalizedFormat(item.kind.title), systemImage: "trash") }
                         .buttonStyle(SecondaryButtonStyle()).foregroundStyle(QuietLinen.danger)
                     Label("Stored on this iPhone.", systemImage: "iphone")
                         .font(.footnote).foregroundStyle(QuietLinen.muted)
@@ -510,10 +510,10 @@ struct LibraryDetailView: View {
         .onDisappear { try? model.store.clearTemporaryFiles() }
         .sheet(isPresented: $edit) { if item?.kind == .note { NavigationStack { NoteComposerView(existingID: itemID) } } }
         .sheet(isPresented: $share) { if let exportURL { ActivitySheet(items: [exportURL]) { try? model.store.clearTemporaryFiles() } } }
-        .confirmationDialog("Delete this \(item?.kind.title.lowercased() ?? "item")?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete \(item?.kind.title ?? "Item")", role: .destructive) {
+        .confirmationDialog("Delete this %@?".gentleLocalizedFormat(item?.kind.title.lowercased() ?? "item".gentleLocalized), isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete %@".gentleLocalizedFormat(item?.kind.title ?? "Item".gentleLocalized), role: .destructive) {
                 Task {
-                    guard await model.authenticateSensitiveAction(reason: "Confirm deletion of this private library item.") else { return }
+                    guard await model.authenticateSensitiveAction(reason: "Confirm deletion of this private library item.".gentleLocalized) else { return }
                     do { try model.deleteLibraryItem(itemID); dismiss() } catch { self.error = error.localizedDescription }
                 }
             }
@@ -521,7 +521,7 @@ struct LibraryDetailView: View {
         } message: { Text("This permanently deletes it from this iPhone. It cannot be undone.") }
         .alert("This item couldn’t be opened", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
             Button("Done") { error = nil }
-        } message: { Text(error ?? "Try again.") }
+        } message: { Text(error ?? "Try again.".gentleLocalized) }
     }
 
     private func metadata(for item: LibraryItem) -> some View {
@@ -548,7 +548,7 @@ struct LibraryDetailView: View {
 
     private func export(_ item: LibraryItem) {
         Task {
-            guard await model.authenticateSensitiveAction(reason: "Confirm export of this private \(item.kind.title.lowercased()).") else { return }
+            guard await model.authenticateSensitiveAction(reason: "Confirm export of this private %@.".gentleLocalizedFormat(item.kind.title.lowercased())) else { return }
             do {
                 exportURL = try ExportService(store: model.store).libraryItem(item, format: item.kind == .note ? .pdf : .originalMedia)
                 share = true
@@ -585,9 +585,9 @@ struct EditCollectionView: View {
         Form {
             Section("Collection name") { TextField("Things to Remember", text: $collection.name) }
             Section("Symbol") {
-                Picker("Symbol", selection: $collection.symbol) { ForEach(CollectionSymbol.allCases) { Label($0.rawValue, systemImage: $0.rawValue).tag($0) } }
+                Picker("Symbol", selection: $collection.symbol) { ForEach(CollectionSymbol.allCases) { Label($0.title, systemImage: $0.rawValue).tag($0) } }
             }
-            Section("Color") { Picker("Color", selection: $collection.color) { ForEach(CollectionColor.allCases) { Text($0.rawValue.capitalized).tag($0) } } }
+            Section("Color") { Picker("Color", selection: $collection.color) { ForEach(CollectionColor.allCases) { Text($0.title).tag($0) } } }
             Button("Save Collection") { guard !collection.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }; try? model.addCollection(collection); dismiss() }
             if model.vault.collections.contains(where: { $0.id == collection.id }) {
                 Button("Delete Collection", role: .destructive) { confirmDelete = true }

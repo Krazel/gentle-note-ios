@@ -6,10 +6,10 @@ final class AuthenticationService: ObservableObject {
 
     func authenticate(reason: String) async -> Bool {
         let context = LAContext()
-        context.localizedCancelTitle = "Cancel"
+        context.localizedCancelTitle = "Cancel".gentleLocalized
         var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-            lastError = "Set up a passcode, Face ID, or Touch ID in iPhone Settings, then try again."
+            lastError = "Set up a passcode, Face ID, or Touch ID in iPhone Settings, then try again.".gentleLocalized
             return false
         }
         do {

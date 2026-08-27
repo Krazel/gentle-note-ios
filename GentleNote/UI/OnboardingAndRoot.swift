@@ -47,29 +47,20 @@ struct MainShell: View {
 
 private struct OnboardingPage {
     let icon: String?
-    let title: String
-    let body: String
-    let note: String?
+    let title: LocalizedStringKey
+    let body: LocalizedStringKey
+    let note: LocalizedStringKey?
 }
 
 struct OnboardingView: View {
     @EnvironmentObject private var model: AppModel
     @State private var page = 0
-    @State private var understood = false
 
     private let pages = [
         OnboardingPage(icon: nil,
                        title: "A private place for your story.",
                        body: "Use a journal when you want structure. Keep notes, videos, and audio in your private library.",
                        note: "There is no schedule to keep."),
-        OnboardingPage(icon: "lock.shield",
-                       title: "Your words and recordings stay with you.",
-                       body: "The app does not collect or sync your journal, notes, videos, or audio. They stay in this app unless you choose to export them.",
-                       note: "No account. No ads. No analytics."),
-        OnboardingPage(icon: "heart",
-                       title: "A note about care.",
-                       body: "Gentle Note is a private reflection tool. It does not diagnose, monitor, or treat an eating disorder, and nobody reviews what you save.",
-                       note: "It cannot respond in an emergency."),
         OnboardingPage(icon: "lock.fill",
                        title: "Protect your private space.",
                        body: "Use Face ID, Touch ID, or your iPhone passcode. Someone who knows your iPhone passcode may still be able to unlock Gentle Note.",
@@ -86,7 +77,7 @@ struct OnboardingView: View {
                 if let icon = pages[page].icon {
                     Image(systemName: icon)
                         .font(.system(size: 36))
-                        .foregroundStyle(page == 2 ? QuietLinen.clay : QuietLinen.forest)
+                        .foregroundStyle(QuietLinen.forest)
                         .padding(22)
                         .background(QuietLinen.sage.opacity(0.2), in: Circle())
                 }
@@ -96,22 +87,15 @@ struct OnboardingView: View {
                 if let note = pages[page].note {
                     Text(note).font(.footnote).foregroundStyle(QuietLinen.muted).multilineTextAlignment(.center)
                 }
-                if page == 2 {
-                    Toggle("I understand what this journal can and cannot do.", isOn: $understood)
-                        .toggleStyle(.switch).tint(QuietLinen.forest)
-                }
                 Spacer()
-                Button(page == 3 ? "Turn On App Lock" : "Continue") { advance() }
+                Button((page == pages.count - 1 ? "Turn On App Lock" : "Continue").gentleLocalized) { advance() }
                     .buttonStyle(PrimaryButtonStyle())
-                    .disabled(page == 2 && !understood)
-                    .opacity(page == 2 && !understood ? 0.45 : 1)
-                if page == 3 {
+                if page == pages.count - 1 {
                     Button("Not Now") {
                         model.preferences.appLockEnabled = false
                         model.setOnboardingComplete()
                     }.buttonStyle(SecondaryButtonStyle())
                 }
-                if page == 2 { NavigationLinkSupport() }
             }
             .padding(28)
             .frame(maxWidth: 560)
@@ -119,7 +103,7 @@ struct OnboardingView: View {
     }
 
     private func advance() {
-        if page < 3 { withAnimation(.easeInOut(duration: 0.2)) { page += 1 } }
+        if page < pages.count - 1 { withAnimation(.easeInOut(duration: 0.2)) { page += 1 } }
         else {
             model.preferences.appLockEnabled = true
             model.setOnboardingComplete()

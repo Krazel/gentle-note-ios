@@ -35,7 +35,7 @@ final class AppModel: ObservableObject {
         savePreferences()
     }
 
-    func unlock(reason: String = "Unlock your private journal and library.") async -> Bool {
+    func unlock(reason: String = "Unlock your private journal and library.".gentleLocalized) async -> Bool {
         if !preferences.appLockEnabled {
             isUnlocked = true
             return true

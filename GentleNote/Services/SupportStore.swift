@@ -12,7 +12,7 @@ final class SupportStore: ObservableObject {
 
     func load() async {
         do { products = try await Product.products(for: Self.productIDs).sorted { $0.price < $1.price } }
-        catch { message = "Support options are not available right now." }
+        catch { message = "Support options are not available right now.".gentleLocalized }
     }
 
     func purchase(_ product: Product) async {
@@ -21,12 +21,12 @@ final class SupportStore: ObservableObject {
             case .success(let verification):
                 let transaction = try checkVerified(verification)
                 await transaction.finish()
-                message = "Thank you. Your support helps with maintenance and future updates."
-            case .pending: message = "The purchase is pending with Apple."
+                message = "Thank you. Your support helps with maintenance and future updates.".gentleLocalized
+            case .pending: message = "The purchase is pending with Apple.".gentleLocalized
             case .userCancelled: message = nil
-            @unknown default: message = "Support wasn’t completed."
+            @unknown default: message = "Support wasn’t completed.".gentleLocalized
             }
-        } catch { message = "The purchase was not completed. You can try again later." }
+        } catch { message = "The purchase was not completed. You can try again later.".gentleLocalized }
     }
 
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {

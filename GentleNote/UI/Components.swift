@@ -15,7 +15,7 @@ struct RootTabBar: View {
         .background(.ultraThinMaterial)
     }
 
-    private func tab(_ value: RootTab, _ title: String, _ icon: String) -> some View {
+    private func tab(_ value: RootTab, _ title: LocalizedStringKey, _ icon: String) -> some View {
         Button {
             selection = value
         } label: {
@@ -27,7 +27,7 @@ struct RootTabBar: View {
             .frame(maxWidth: .infinity, minHeight: 46)
             .foregroundStyle(selection == value ? QuietLinen.forest : QuietLinen.ink)
         }
-        .accessibilityLabel(title)
+        .accessibilityLabel(Text(title))
         .accessibilityAddTraits(selection == value ? .isSelected : [])
     }
 }
@@ -97,7 +97,7 @@ struct DecorativeWaveform: View {
 }
 
 struct PermissionStatusRow: View {
-    let title: String
+    let title: LocalizedStringKey
     let icon: String
     let state: MediaPermissionState
     var body: some View {
@@ -105,7 +105,7 @@ struct PermissionStatusRow: View {
             Image(systemName: icon).frame(width: 28)
             Text(title)
             Spacer()
-            Text(state.rawValue).foregroundStyle(QuietLinen.muted)
+            Text(state.title).foregroundStyle(QuietLinen.muted)
         }
         .frame(minHeight: 44)
         .accessibilityElement(children: .combine)

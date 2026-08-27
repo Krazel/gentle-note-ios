@@ -104,7 +104,7 @@ struct JournalRow: View {
             }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(entry.templateID.title), \(entry.createdAt.gentleDate)\(entry.isKept ? ", Kept" : "")")
+        .accessibilityLabel("\(entry.templateID.title), \(entry.createdAt.gentleDate)\(entry.isKept ? ", " + "Kept".gentleLocalized : "")")
     }
 }
 
@@ -202,7 +202,7 @@ struct JournalComposerView: View {
         } message: { Text("Your draft is stored only on this iPhone.") }
         .alert("This entry couldn’t be saved", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
             Button("Keep Editing") { error = nil }
-        } message: { Text(error ?? "Your previous saved version is unchanged. Keep this screen open and try again.") }
+        } message: { Text(error ?? "Your previous saved version is unchanged. Keep this screen open and try again.".gentleLocalized) }
     }
 
     private var hasContent: Bool {
@@ -266,9 +266,9 @@ struct JournalHistoryView: View {
                     Image(systemName: "leaf")
                         .font(.title2)
                         .foregroundStyle(QuietLinen.sage)
-                    Text(query.isEmpty ? "No entries yet" : "No entries matched")
+                    Text((query.isEmpty ? "No entries yet" : "No entries matched").gentleLocalized)
                         .font(.headline)
-                    Text(query.isEmpty ? "Write when it feels useful—there’s no schedule to keep." : "Try different words or clear the filters.")
+                    Text((query.isEmpty ? "Write when it feels useful—there’s no schedule to keep." : "Try different words or clear the filters.").gentleLocalized)
                         .font(.subheadline)
                         .foregroundStyle(QuietLinen.muted)
                         .multilineTextAlignment(.center)
@@ -324,7 +324,7 @@ struct JournalDetailView: View {
                         }
                     }
                     Button { toggleKept(entry) } label: {
-                        Label(entry.isKept ? "Remove from Kept" : "Keep", systemImage: entry.isKept ? "bookmark.fill" : "bookmark")
+                        Label((entry.isKept ? "Remove from Kept" : "Keep").gentleLocalized, systemImage: entry.isKept ? "bookmark.fill" : "bookmark")
                     }.buttonStyle(SecondaryButtonStyle())
                     Button("Edit") { edit = true }.buttonStyle(SecondaryButtonStyle())
                     Button("Export Entry") { export(entry) }.buttonStyle(SecondaryButtonStyle())
@@ -340,7 +340,7 @@ struct JournalDetailView: View {
         .confirmationDialog("Delete this entry?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete Entry", role: .destructive) {
                 Task {
-                    guard await model.authenticateSensitiveAction(reason: "Confirm deletion of this journal entry.") else { return }
+                    guard await model.authenticateSensitiveAction(reason: "Confirm deletion of this journal entry.".gentleLocalized) else { return }
                     try? model.deleteJournalEntry(entryID); dismiss()
                 }
             }
@@ -354,7 +354,7 @@ struct JournalDetailView: View {
 
     private func export(_ entry: JournalEntry) {
         Task {
-            guard await model.authenticateSensitiveAction(reason: "Confirm export of your private journal.") else { return }
+            guard await model.authenticateSensitiveAction(reason: "Confirm export of your private journal.".gentleLocalized) else { return }
             exportURL = try? ExportService(store: model.store).journalEntry(entry, format: .pdf)
             share = exportURL != nil
         }

@@ -1,6 +1,6 @@
 # Gentle Note
 
-Gentle Note is an English-first, iPhone-only private recovery journal. The MVP
+Gentle Note is an English-and-Spanish, iPhone-only private recovery journal. The MVP
 keeps Journal entries and a multimedia Library on the device, without accounts,
 analytics, advertising, tracking, social features, AI, scores, streaks, weight,
 calorie, macro, or required meal logging.
@@ -38,7 +38,7 @@ App Store Connect and reads no signing secrets.
 
 ## Release boundary
 
-Version is `0.1.1`, build `1`. The source repository may be public, but the app is
+Version is `0.2`, build `1`. The source repository may be public, but the app is
 not uploaded to TestFlight, submitted to App Review, or connected to real
 StoreKit products.
 The visual runtime comparison, physical-device privacy tests, specialist/lived
