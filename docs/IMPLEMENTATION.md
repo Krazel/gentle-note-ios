@@ -11,13 +11,20 @@
   export, individual deletion, and total erase.
 - Separate Library for notes, video, and audio with just-in-time permissions,
   custom camera preview/recording, audio metering/waveform, review before save,
-  local playback, Keep, collections, tags, metadata search, export, and delete.
+  local playback, Keep, four included collections, user-created collections,
+  tags, metadata search, export, and delete. Library explains that it is a
+  standalone archive rather than Journal history.
 - AES-GCM encrypted text/metadata and chunk-encrypted recordings, a random key
   in the device-only Keychain, complete iOS file protection, backup exclusion,
   protected temporary files, and cleanup at background/export/playback exit.
 - Settings for lock delay, preview controls, guided-template visibility,
   permission status, dynamic storage breakdown, export, erase, safety, privacy,
   terms, and About.
+- Authentication before deletion is a separate App Lock option and is off by
+  default. Confirmations remain visible; Face ID/Touch ID/passcode is requested
+  only when this option and App Lock are both enabled.
+- A global outside-tap handler dismisses active text fields and editors while
+  allowing the tapped control to continue receiving its action.
 - App-lock lifecycle handling distinguishes the temporary inactive state caused
   by the iOS authentication sheet from a real background transition and prevents
   concurrent authentication requests.

@@ -44,6 +44,56 @@ struct ActivitySheet: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
+struct KeyboardDismissInstaller: UIViewRepresentable {
+    func makeUIView(context: Context) -> KeyboardDismissHostingView {
+        KeyboardDismissHostingView()
+    }
+
+    func updateUIView(_ uiView: KeyboardDismissHostingView, context: Context) {}
+
+    static func dismantleUIView(_ uiView: KeyboardDismissHostingView, coordinator: Void) {
+        uiView.uninstall()
+    }
+}
+
+final class KeyboardDismissHostingView: UIView, UIGestureRecognizerDelegate {
+    private weak var installedWindow: UIWindow?
+    private lazy var recognizer: UITapGestureRecognizer = {
+        let recognizer = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        recognizer.cancelsTouchesInView = false
+        recognizer.delegate = self
+        return recognizer
+    }()
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        guard window !== installedWindow else { return }
+        uninstall()
+        installedWindow = window
+        window?.addGestureRecognizer(recognizer)
+    }
+
+    func uninstall() {
+        installedWindow?.removeGestureRecognizer(recognizer)
+        installedWindow = nil
+    }
+
+    @objc private func dismissKeyboard() {
+        installedWindow?.endEditing(true)
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        var touchedView = touch.view
+        while let current = touchedView {
+            if current is UITextField || current is UITextView { return false }
+            touchedView = current.superview
+        }
+        return true
+    }
+
+    deinit { uninstall() }
+}
+
 struct MediaPlayerView: View {
     let url: URL
     let kind: LibraryItemKind

@@ -223,6 +223,49 @@ struct LibraryCollection: Identifiable, Codable, Hashable {
     var symbol: CollectionSymbol = .leaf
     var color: CollectionColor = .forest
     var createdAt = Date()
+    var defaultKind: DefaultCollectionKind?
+
+    var displayName: String { defaultKind?.title ?? name }
+
+    static var defaults: [LibraryCollection] {
+        DefaultCollectionKind.allCases.map {
+            LibraryCollection(name: "", symbol: $0.symbol, color: $0.color, defaultKind: $0)
+        }
+    }
+}
+
+enum DefaultCollectionKind: String, Codable, CaseIterable {
+    case comfort
+    case helpfulReminders
+    case difficultMoments
+    case peopleAndPlaces
+
+    var title: String {
+        switch self {
+        case .comfort: "Comfort".gentleLocalized
+        case .helpfulReminders: "Helpful Reminders".gentleLocalized
+        case .difficultMoments: "For Difficult Moments".gentleLocalized
+        case .peopleAndPlaces: "People & Places".gentleLocalized
+        }
+    }
+
+    var symbol: CollectionSymbol {
+        switch self {
+        case .comfort: .flower
+        case .helpfulReminders: .leaf
+        case .difficultMoments: .sprig
+        case .peopleAndPlaces: .sun
+        }
+    }
+
+    var color: CollectionColor {
+        switch self {
+        case .comfort: .clay
+        case .helpfulReminders: .sage
+        case .difficultMoments: .forest
+        case .peopleAndPlaces: .ochre
+        }
+    }
 }
 
 struct LibraryTag: Identifiable, Codable, Hashable {
@@ -253,7 +296,7 @@ struct VaultSnapshot: Codable, Equatable {
     var schemaVersion = 1
     var journalEntries: [JournalEntry] = []
     var libraryItems: [LibraryItem] = []
-    var collections: [LibraryCollection] = []
+    var collections: [LibraryCollection] = LibraryCollection.defaults
     var tags: [LibraryTag] = []
     var journalDraft: JournalDraft?
     var libraryDraft: LibraryDraft?
@@ -290,6 +333,7 @@ struct AppPreferences: Codable, Equatable {
     var showVideoThumbnails = false
     var showGuidedTemplates = true
     var trustedContact: TrustedContact?
+    var requireAuthenticationForDeletion: Bool?
 }
 
 struct TrustedContact: Codable, Equatable {

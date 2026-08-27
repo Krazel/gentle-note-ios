@@ -19,7 +19,17 @@ final class AppModel: ObservableObject {
         do {
             store = try SecureVaultStore()
             preferences = try store.loadPreferences()
-            vault = try store.loadSnapshot()
+            var loadedVault = try store.loadSnapshot()
+            let missingDefaults = DefaultCollectionKind.allCases.filter { kind in
+                !loadedVault.collections.contains { $0.defaultKind == kind }
+            }
+            if !missingDefaults.isEmpty {
+                loadedVault.collections.append(contentsOf: missingDefaults.map {
+                    LibraryCollection(name: "", symbol: $0.symbol, color: $0.color, defaultKind: $0)
+                })
+                try store.saveSnapshot(loadedVault)
+            }
+            vault = loadedVault
             isUnlocked = !preferences.appLockEnabled
         } catch {
             fatalError("Gentle Note could not initialize private storage: \(error.localizedDescription)")
@@ -51,6 +61,12 @@ final class AppModel: ObservableObject {
 
     func authenticateSensitiveAction(reason: String) async -> Bool {
         await authenticator.authenticate(reason: reason)
+    }
+
+    func authorizeDeletion(reason: String) async -> Bool {
+        guard preferences.appLockEnabled,
+              preferences.requireAuthenticationForDeletion == true else { return true }
+        return await authenticator.authenticate(reason: reason)
     }
 
     func enteredInactive() {
@@ -132,6 +148,7 @@ final class AppModel: ObservableObject {
 
     func deleteCollection(_ id: UUID) throws {
         var changed = vault
+        guard changed.collections.first(where: { $0.id == id })?.defaultKind == nil else { return }
         changed.collections.removeAll { $0.id == id }
         for index in changed.libraryItems.indices { changed.libraryItems[index].collectionIDs.remove(id) }
         try commit(changed)

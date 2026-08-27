@@ -1,6 +1,17 @@
 /* Root navigation and shared actions */
 "Journal" = "Diario";
 "Library" = "Biblioteca";
+"A place for things you want to keep" = "Un lugar para lo que quieres conservar";
+"Library is separate from your journal. Save standalone notes, private videos, or audio you may want to return to, then organize them with collections and tags. Nothing is added automatically." = "La Biblioteca está separada de tu diario. Guarda notas independientes, vídeos privados o audios a los que quieras volver y organízalos con colecciones y etiquetas. Nada se añade automáticamente.";
+"Keep a note or recording without creating a journal entry." = "Guarda una nota o grabación sin crear una entrada del diario.";
+"Comfort" = "Consuelo";
+"Helpful Reminders" = "Recordatorios que ayudan";
+"For Difficult Moments" = "Para momentos difíciles";
+"People & Places" = "Personas y lugares";
+"Included collections" = "Colecciones incluidas";
+"Included" = "Incluida";
+"Your collections" = "Tus colecciones";
+"Included collections are always available. You can also create and delete your own collections." = "Las colecciones incluidas están siempre disponibles. También puedes crear y eliminar tus propias colecciones.";
 "Settings" = "Ajustes";
 "Continue" = "Continuar";
 "Cancel" = "Cancelar";
@@ -240,6 +251,8 @@
 "About Gentle Note" = "Acerca de Gentle Note";
 "No account. No ads. No analytics." = "Sin cuenta. Sin anuncios. Sin analítica.";
 "App Lock" = "Bloqueo de la app";
+"Require Authentication to Delete" = "Solicitar autenticación para eliminar";
+"Off by default. When enabled, deleting private content requires the same iPhone authentication used by App Lock." = "Está desactivado por defecto. Al activarlo, eliminar contenido privado exige la misma autenticación del iPhone que usa el bloqueo de la app.";
 "Lock after leaving" = "Bloquear al salir";
 "Immediately" = "Inmediatamente";
 "After 1 Minute" = "Después de 1 minuto";

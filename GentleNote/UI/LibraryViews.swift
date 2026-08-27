@@ -23,7 +23,7 @@ struct LibraryRootView: View {
             }
             .filter { item in
                 guard !query.isEmpty else { return true }
-                let collectionNames = model.vault.collections.filter { item.collectionIDs.contains($0.id) }.map(\.name)
+                let collectionNames = model.vault.collections.filter { item.collectionIDs.contains($0.id) }.map(\.displayName)
                 let tagNames = model.vault.tags.filter { item.tagIDs.contains($0.id) }.map(\.name)
                 return ([item.displayTitle, item.body] + collectionNames + tagNames)
                     .joined(separator: " ").localizedCaseInsensitiveContains(query)
@@ -41,10 +41,23 @@ struct LibraryRootView: View {
                         .buttonStyle(.bordered).tint(QuietLinen.forest)
                 }.padding(.horizontal, 20).padding(.top, 12)
 
+                LinenCard {
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: "books.vertical")
+                            .foregroundStyle(QuietLinen.forest)
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("A place for things you want to keep").font(.headline)
+                            Text("Library is separate from your journal. Save standalone notes, private videos, or audio you may want to return to, then organize them with collections and tags. Nothing is added automatically.")
+                                .font(.footnote).foregroundStyle(QuietLinen.muted)
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
+
                 if model.vault.libraryItems.isEmpty {
                     Spacer()
                     BotanicalSprig()
-                    Text("Keep private notes, videos,\nand audio to return to\nwhen you choose.")
+                    Text("Keep a note or recording without creating a journal entry.")
                         .multilineTextAlignment(.center)
                     addButtons
                     Text("Nothing here yet.").font(.footnote).foregroundStyle(QuietLinen.muted)
@@ -210,7 +223,7 @@ struct OrganizeView: View {
                     if model.vault.collections.isEmpty { Text("No collections yet").foregroundStyle(QuietLinen.muted) }
                     ForEach(model.vault.collections) { collection in
                         Button { toggle(collection.id, binding: $collectionIDs) } label: {
-                            HStack { Text(collection.name); Spacer(); if collectionIDs.contains(collection.id) { Image(systemName: "checkmark.circle.fill") } }
+                            HStack { Text(collection.displayName); Spacer(); if collectionIDs.contains(collection.id) { Image(systemName: "checkmark.circle.fill") } }
                         }.buttonStyle(.plain)
                     }
                 }
@@ -513,7 +526,7 @@ struct LibraryDetailView: View {
         .confirmationDialog("Delete this %@?".gentleLocalizedFormat(item?.kind.title.lowercased() ?? "item".gentleLocalized), isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete %@".gentleLocalizedFormat(item?.kind.title ?? "Item".gentleLocalized), role: .destructive) {
                 Task {
-                    guard await model.authenticateSensitiveAction(reason: "Confirm deletion of this private library item.".gentleLocalized) else { return }
+                    guard await model.authorizeDeletion(reason: "Confirm deletion of this private library item.".gentleLocalized) else { return }
                     do { try model.deleteLibraryItem(itemID); dismiss() } catch { self.error = error.localizedDescription }
                 }
             }
@@ -529,7 +542,7 @@ struct LibraryDetailView: View {
         let tags = model.vault.tags.filter { item.tagIDs.contains($0.id) }
         return ScrollView(.horizontal, showsIndicators: false) {
             HStack {
-                ForEach(collections) { Text($0.name).padding(.horizontal, 10).padding(.vertical, 6).background(QuietLinen.sage.opacity(0.28), in: Capsule()) }
+                ForEach(collections) { Text($0.displayName).padding(.horizontal, 10).padding(.vertical, 6).background(QuietLinen.sage.opacity(0.28), in: Capsule()) }
                 ForEach(tags) { Text($0.name).padding(.horizontal, 10).padding(.vertical, 6).background(QuietLinen.clay.opacity(0.2), in: Capsule()) }
             }
         }
@@ -563,12 +576,30 @@ struct CollectionsView: View {
     @State private var editing: LibraryCollection?
     var body: some View {
         List {
-            ForEach(model.vault.collections) { collection in
-                Button { editing = collection } label: {
-                    LinenCard { HStack { Image(systemName: collection.symbol.rawValue); Text(collection.name).font(.system(.title3, design: .serif)); Spacer(); Image(systemName: "chevron.right") } }
-                }.buttonStyle(.plain)
+            Section("Included collections") {
+                ForEach(model.vault.collections.filter { $0.defaultKind != nil }) { collection in
+                    LinenCard {
+                        HStack {
+                            Image(systemName: collection.symbol.rawValue)
+                            Text(collection.displayName).font(.system(.title3, design: .serif))
+                            Spacer()
+                            Text("Included").font(.caption).foregroundStyle(QuietLinen.muted)
+                        }
+                    }
+                }
             }
-            Button { editing = LibraryCollection(name: "") } label: { Label("New Collection", systemImage: "plus") }
+            Section {
+                ForEach(model.vault.collections.filter { $0.defaultKind == nil }) { collection in
+                    Button { editing = collection } label: {
+                        LinenCard { HStack { Image(systemName: collection.symbol.rawValue); Text(collection.displayName).font(.system(.title3, design: .serif)); Spacer(); Image(systemName: "chevron.right") } }
+                    }.buttonStyle(.plain)
+                }
+                Button { editing = LibraryCollection(name: "") } label: { Label("New Collection", systemImage: "plus") }
+            } header: {
+                Text("Your collections")
+            } footer: {
+                Text("Included collections are always available. You can also create and delete your own collections.")
+            }
         }
         .scrollContentBackground(.hidden).linenScreen().navigationTitle("Collections")
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
@@ -589,7 +620,8 @@ struct EditCollectionView: View {
             }
             Section("Color") { Picker("Color", selection: $collection.color) { ForEach(CollectionColor.allCases) { Text($0.title).tag($0) } } }
             Button("Save Collection") { guard !collection.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }; try? model.addCollection(collection); dismiss() }
-            if model.vault.collections.contains(where: { $0.id == collection.id }) {
+            if collection.defaultKind == nil,
+               model.vault.collections.contains(where: { $0.id == collection.id }) {
                 Button("Delete Collection", role: .destructive) { confirmDelete = true }
             }
         }

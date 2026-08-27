@@ -9,11 +9,12 @@ calorie, macro, or required meal logging.
 
 - **Journal**: blank writing or seven optional, non-quantified reflection
   templates; `Journal History`, local search, Keep, edit, export, and deletion.
-- **Library**: free-form notes, private video, and private audio; manual
-  collections, tags, Keep, local search, playback, export, and deletion.
+- **Library**: clearly separated from Journal for standalone notes, private
+  video, and private audio; four included collections plus custom collections,
+  tags, Keep, local search, playback, export, and deletion.
 - **Settings**: app lock, preview controls, just-in-time permission status,
   storage, export, erase all, region-aware Help & Safety, an optional local
-  trusted contact, privacy, and About.
+  trusted contact, optional authentication before deletion, privacy, and About.
 
 ## Open in Xcode
 

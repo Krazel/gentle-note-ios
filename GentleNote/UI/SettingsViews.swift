@@ -81,6 +81,19 @@ struct PrivacyLockView: View {
                 }.onChange(of: model.preferences.lockDelay) { _ in model.savePreferences() }
             } footer: { Text("Require Face ID, Touch ID, or your iPhone passcode to open the journal and library.") }
             Section {
+                Toggle("Require Authentication to Delete", isOn: Binding(
+                    get: { model.preferences.requireAuthenticationForDeletion == true },
+                    set: { value in
+                        model.preferences.requireAuthenticationForDeletion = value
+                        model.savePreferences()
+                    }
+                ))
+                .tint(QuietLinen.forest)
+                .disabled(!model.preferences.appLockEnabled)
+            } footer: {
+                Text("Off by default. When enabled, deleting private content requires the same iPhone authentication used by App Lock.")
+            }
+            Section {
                 Toggle("Show Journal Previews", isOn: $model.preferences.showJournalPreviews)
                 Toggle("Show Library Previews", isOn: $model.preferences.showLibraryPreviews)
                 Toggle("Show Video Thumbnails", isOn: $model.preferences.showVideoThumbnails)
@@ -228,7 +241,7 @@ struct EraseAllView: View {
         .confirmationDialog("Erase everything?", isPresented: $firstConfirm, titleVisibility: .visible) {
             Button("Continue", role: .destructive) {
                 Task {
-                    guard await model.authenticateSensitiveAction(reason: "Confirm permanent deletion of your private journal and library.".gentleLocalized) else { return }
+                    guard await model.authorizeDeletion(reason: "Confirm permanent deletion of your private journal and library.".gentleLocalized) else { return }
                     finalConfirm = true
                 }
             }

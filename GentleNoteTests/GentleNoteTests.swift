@@ -73,6 +73,7 @@ final class GentleNoteTests: XCTestCase {
         """
         let preferences = try JSONDecoder().decode(AppPreferences.self, from: Data(legacyJSON.utf8))
         XCTAssertNil(preferences.trustedContact)
+        XCTAssertNotEqual(preferences.requireAuthenticationForDeletion, true)
     }
 
     func testTrustedContactRoundTrip() throws {
@@ -80,5 +81,20 @@ final class GentleNoteTests: XCTestCase {
         preferences.trustedContact = TrustedContact(name: "Alex", phoneNumber: "+34123456789")
         let encoded = try JSONEncoder().encode(preferences)
         XCTAssertEqual(try JSONDecoder().decode(AppPreferences.self, from: encoded), preferences)
+    }
+
+    func testDefaultCollectionsAreAvailableWithoutCreatingThem() {
+        let snapshot = VaultSnapshot()
+        XCTAssertEqual(Set(snapshot.collections.compactMap(\.defaultKind)), Set(DefaultCollectionKind.allCases))
+        XCTAssertTrue(snapshot.collections.allSatisfy { !$0.displayName.isEmpty })
+    }
+
+    func testSpanishDefaultCollectionNamesArePackaged() throws {
+        let path = try XCTUnwrap(Bundle.main.path(forResource: "es", ofType: "lproj"))
+        let spanish = try XCTUnwrap(Bundle(path: path))
+        XCTAssertEqual(spanish.localizedString(forKey: "Comfort", value: nil, table: nil), "Consuelo")
+        XCTAssertEqual(spanish.localizedString(forKey: "Helpful Reminders", value: nil, table: nil), "Recordatorios que ayudan")
+        XCTAssertEqual(spanish.localizedString(forKey: "For Difficult Moments", value: nil, table: nil), "Para momentos difíciles")
+        XCTAssertEqual(spanish.localizedString(forKey: "People & Places", value: nil, table: nil), "Personas y lugares")
     }
 }

@@ -340,7 +340,7 @@ struct JournalDetailView: View {
         .confirmationDialog("Delete this entry?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete Entry", role: .destructive) {
                 Task {
-                    guard await model.authenticateSensitiveAction(reason: "Confirm deletion of this journal entry.".gentleLocalized) else { return }
+                    guard await model.authorizeDeletion(reason: "Confirm deletion of this journal entry.".gentleLocalized) else { return }
                     try? model.deleteJournalEntry(entryID); dismiss()
                 }
             }

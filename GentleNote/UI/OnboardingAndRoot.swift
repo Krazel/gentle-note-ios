@@ -20,6 +20,7 @@ struct AppRootView: View {
                 }
             }
         }
+        .background(KeyboardDismissInstaller())
         .alert("Something needs attention", isPresented: Binding(
             get: { model.lastError != nil },
             set: { if !$0 { model.lastError = nil } })) {

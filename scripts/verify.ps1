@@ -64,7 +64,7 @@ if ($Info.Contains('NSPhotoLibraryUsageDescription')) { $Failures.Add('Photos pe
 $Swift = Get-ChildItem -LiteralPath (Join-Path $ProjectRoot 'GentleNote') -Filter '*.swift' -Recurse |
     ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw }
 $AllSwift = $Swift -join "`n"
-foreach ($RequiredText in @('Journal History','Record Video','Record Audio','Data Not Collected','deviceOwnerAuthentication','AES.GCM','isExcludedFromBackup','enteredInactive','MFMessageComposeViewController','tel:112','tel:024','trustedContact')) {
+foreach ($RequiredText in @('Journal History','Record Video','Record Audio','Data Not Collected','deviceOwnerAuthentication','AES.GCM','isExcludedFromBackup','enteredInactive','MFMessageComposeViewController','tel:112','tel:024','trustedContact','requireAuthenticationForDeletion','KeyboardDismissInstaller','DefaultCollectionKind','Helpful Reminders')) {
     if (-not $AllSwift.Contains($RequiredText) -and $RequiredText -ne 'Data Not Collected') {
         $Failures.Add("Expected implementation marker missing: $RequiredText")
     }
@@ -79,7 +79,7 @@ foreach ($RemovedOnboardingCopy in @('Your words and recordings stay with you.',
 $SpanishCatalog = Get-Content -LiteralPath (Join-Path $ProjectRoot 'GentleNote\Resources\es.lproj\Localizable.strings') -Raw
 $SpanishKeys = [regex]::Matches($SpanishCatalog, '(?m)^"(?:\\.|[^"])*"\s*=')
 if ($SpanishKeys.Count -lt 360) { $Failures.Add("Spanish catalog is unexpectedly incomplete: $($SpanishKeys.Count) keys") }
-foreach ($RequiredSpanish in @('"Journal" = "Diario";','"Library" = "Biblioteca";','"Settings" = "Ajustes";','"Gentle Check-In" = "Pausa para escucharte";','"Call 112" = "Llamar al 112";','"Call 024" = "Llamar al 024";','"Trusted Contact" = "Contacto de confianza";')) {
+foreach ($RequiredSpanish in @('"Journal" = "Diario";','"Library" = "Biblioteca";','"Settings" = "Ajustes";','"Gentle Check-In" = "Pausa para escucharte";','"Call 112" = "Llamar al 112";','"Call 024" = "Llamar al 024";','"Trusted Contact" = "Contacto de confianza";','"Helpful Reminders" = "Recordatorios que ayudan";','"Require Authentication to Delete" = "Solicitar autenticación para eliminar";')) {
     if (-not $SpanishCatalog.Contains($RequiredSpanish)) { $Failures.Add("Missing required Spanish translation: $RequiredSpanish") }
 }
 
