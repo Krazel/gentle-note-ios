@@ -16,7 +16,7 @@ struct SettingsRootView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("Language") {
+                Section {
                     Picker("App Language", selection: Binding(
                         get: { model.preferences.languageOverride },
                         set: { model.setLanguage($0) }
@@ -25,6 +25,8 @@ struct SettingsRootView: View {
                         Text("English").tag(Optional(AppLanguage.english))
                         Text("Spanish").tag(Optional(AppLanguage.spanish))
                     }
+                } header: {
+                    Text("Language")
                 } footer: {
                     Text("System Default follows your iPhone language.")
                 }
@@ -532,7 +534,7 @@ struct AboutView: View {
                     .multilineTextAlignment(.center)
                 Text("Designed to complement—not replace—professional care and personal support.")
                     .multilineTextAlignment(.center).foregroundStyle(QuietLinen.muted)
-                Text(gentleNoteVersionText).font(.footnote)
+                Text(gentleNoteVersionText()).font(.footnote)
             }.padding(28).frame(maxWidth: 620)
         }.linenScreen()
     }
