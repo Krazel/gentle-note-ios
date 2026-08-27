@@ -256,7 +256,7 @@ struct HelpSafetyView: View {
     @State private var showMessageComposer = false
     @State private var messageError: String?
 
-    private var usesSpainResources: Bool { Locale.current.regionCode == "ES" }
+    private var usesSpainResources: Bool { Locale.current.region?.identifier == "ES" }
     private var supportMessage: String {
         "I need some support right now. Could you call or message me when you can?".gentleLocalized
     }
@@ -382,12 +382,14 @@ struct TrustedContactEditor: View {
 
     var body: some View {
         Form {
-            Section("Trusted contact") {
+            Section {
                 TextField("Name", text: $name)
                     .textContentType(.name)
                 TextField("Phone number", text: $phoneNumber)
                     .textContentType(.telephoneNumber)
                     .keyboardType(.phonePad)
+            } header: {
+                Text("Trusted contact")
             } footer: {
                 Text("The name and phone number are encrypted with your other local preferences. They are not uploaded or shared until you choose to message this person.")
             }
