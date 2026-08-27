@@ -41,18 +41,30 @@ struct LibraryRootView: View {
                         .buttonStyle(.bordered).tint(QuietLinen.forest)
                 }.padding(.horizontal, 20).padding(.top, 12)
 
-                LinenCard {
-                    HStack(alignment: .top, spacing: 12) {
-                        Image(systemName: "books.vertical")
-                            .foregroundStyle(QuietLinen.forest)
-                        VStack(alignment: .leading, spacing: 5) {
-                            Text("A place for things you want to keep").font(.headline)
-                            Text("Library is separate from your journal. Save standalone notes, private videos, or audio you may want to return to, then organize them with collections and tags. Nothing is added automatically.")
-                                .font(.footnote).foregroundStyle(QuietLinen.muted)
+                if model.showsLibraryIntroduction {
+                    LinenCard {
+                        HStack(alignment: .top, spacing: 12) {
+                            Image(systemName: "books.vertical")
+                                .foregroundStyle(QuietLinen.forest)
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text("Keep what you may want to remember").font(.headline)
+                                Text("Library is separate from your journal. Save notes and private recordings you may want to return to—words, reminders, or things that feel clear now but may become harder to remember later. Organize them with collections and tags. Nothing is added automatically.")
+                                    .font(.footnote).foregroundStyle(QuietLinen.muted)
+                            }
+                            Spacer(minLength: 4)
+                            Button {
+                                model.setLibraryIntroductionVisible(false)
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .frame(width: 44, height: 44)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Hide Library introduction")
+                            .accessibilityHint("You can show it again in Settings")
                         }
                     }
+                    .padding(.horizontal, 20)
                 }
-                .padding(.horizontal, 20)
 
                 if model.vault.libraryItems.isEmpty {
                     Spacer()

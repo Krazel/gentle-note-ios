@@ -18,7 +18,7 @@ struct JournalRootView: View {
                 VStack(spacing: 20) {
                     BotanicalSprig()
                     Text("Your journal").editorialTitle()
-                    Text("Start blank or choose a gentle template.\nNothing is due.")
+                    Text("Start blank or choose a structure that feels useful.\nNothing is due.")
                         .multilineTextAlignment(.center).foregroundStyle(QuietLinen.muted)
 
                     if let draft = model.vault.journalDraft {
@@ -41,11 +41,9 @@ struct JournalRootView: View {
                         .font(.system(size: 52)).foregroundStyle(QuietLinen.ochre)
                         .accessibilityHidden(true)
 
-                    Button("New Journal Entry") { showTemplates = model.preferences.showGuidedTemplates; showBlank = !showTemplates }
-                        .buttonStyle(PrimaryButtonStyle())
-                    HStack(spacing: 12) {
+                    VStack(spacing: 12) {
                         Button { showBlank = true } label: { Label("Start Blank", systemImage: "pencil") }
-                            .buttonStyle(SecondaryButtonStyle())
+                            .buttonStyle(PrimaryButtonStyle())
                         if model.preferences.showGuidedTemplates {
                             Button { showTemplates = true } label: { Label("Choose a Template", systemImage: "square.grid.2x2") }
                                 .buttonStyle(SecondaryButtonStyle())
@@ -118,11 +116,15 @@ struct TemplateLibraryView: View {
                     Button { selected = template } label: {
                         HStack {
                             Image(systemName: template.icon).foregroundStyle(QuietLinen.forest).frame(width: 28)
-                            VStack(alignment: .leading) {
-                                Text(template.title).font(.system(.body, design: .serif))
-                                if let subtitle = template.subtitle {
-                                    Text(subtitle).font(.caption).foregroundStyle(QuietLinen.muted)
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack(spacing: 6) {
+                                    Text(template.title).font(.system(.body, design: .serif))
+                                    if let subtitle = template.subtitle {
+                                        Text(subtitle).font(.caption2).foregroundStyle(QuietLinen.muted)
+                                    }
                                 }
+                                Text(template.summary)
+                                    .font(.caption).foregroundStyle(QuietLinen.muted)
                             }
                             Spacer(); Image(systemName: "chevron.right")
                         }
@@ -136,9 +138,6 @@ struct TemplateLibraryView: View {
                     Text("Use a structure, start blank, or leave. Every prompt is optional.")
                         .font(.footnote).multilineTextAlignment(.center)
                 }.textCase(nil).frame(maxWidth: .infinity)
-            } footer: {
-                Text("Reflection templates are not therapy or medical advice.")
-                    .multilineTextAlignment(.center).frame(maxWidth: .infinity)
             }
             Section {
                 Button("Start Blank") { selected = .blank }
@@ -147,7 +146,7 @@ struct TemplateLibraryView: View {
         }
         .scrollContentBackground(.hidden).linenScreen()
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } } }
+        .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
         .sheet(item: $selected) { template in NavigationStack { JournalComposerView(templateID: template) } }
     }
 }
@@ -190,7 +189,14 @@ struct JournalComposerView: View {
             }.padding(20).frame(maxWidth: 700)
         }
         .linenScreen().navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { showDiscard = hasContent } } }
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    if hasContent { showDiscard = true }
+                    else { dismiss() }
+                }
+            }
+        }
         .onAppear { load() }
         .onChange(of: title) { _ in saveDraft() }
         .onChange(of: entryText) { _ in saveDraft() }

@@ -19,6 +19,7 @@ final class AppModel: ObservableObject {
         do {
             store = try SecureVaultStore()
             preferences = try store.loadPreferences()
+            GentleLocalization.configure(preferences.languageOverride)
             var loadedVault = try store.loadSnapshot()
             let missingDefaults = DefaultCollectionKind.allCases.filter { kind in
                 !loadedVault.collections.contains { $0.defaultKind == kind }
@@ -39,6 +40,27 @@ final class AppModel: ObservableObject {
     func savePreferences() {
         do { try store.savePreferences(preferences) }
         catch { lastError = error.localizedDescription }
+    }
+
+    var interfaceLocale: Locale { GentleLocalization.locale }
+
+    var languageIdentity: String {
+        preferences.languageOverride?.rawValue ?? "system-\(Locale.autoupdatingCurrent.identifier)"
+    }
+
+    var showsLibraryIntroduction: Bool {
+        preferences.showLibraryIntroduction != false
+    }
+
+    func setLanguage(_ language: AppLanguage?) {
+        preferences.languageOverride = language
+        GentleLocalization.configure(language)
+        savePreferences()
+    }
+
+    func setLibraryIntroductionVisible(_ visible: Bool) {
+        preferences.showLibraryIntroduction = visible
+        savePreferences()
     }
 
     func setOnboardingComplete() {
@@ -173,10 +195,13 @@ final class AppModel: ObservableObject {
     }
 
     func eraseEverything() throws {
+        let languageOverride = preferences.languageOverride
         try store.eraseEverything()
         vault = VaultSnapshot()
         preferences = AppPreferences(onboardingComplete: true,
-                                     appLockEnabled: preferences.appLockEnabled)
+                                     appLockEnabled: preferences.appLockEnabled,
+                                     languageOverride: languageOverride)
+        GentleLocalization.configure(languageOverride)
         try store.savePreferences(preferences)
     }
 

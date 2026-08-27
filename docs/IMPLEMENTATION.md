@@ -1,4 +1,4 @@
-# Implementation handoff — 0.3 (1)
+# Implementation handoff — 0.4 (1)
 
 ## Implemented
 
@@ -6,18 +6,21 @@
 - Two-step onboarding (welcome and optional device lock); detailed privacy and
   care limits remain available in Settings and Help & Safety,
   background privacy cover, and Help & Safety access from the locked screen.
-- Journal Home, blank entry, seven optional templates, drafts, Journal History,
+- Journal Home with distinct blank/template paths, seven optional templates
+  with purpose summaries and reachable cancellation, drafts, Journal History,
   local search/filtering, previews-off default, Keep, detail, editing, PDF/text
   export, individual deletion, and total erase.
 - Separate Library for notes, video, and audio with just-in-time permissions,
   custom camera preview/recording, audio metering/waveform, review before save,
   local playback, Keep, four included collections, user-created collections,
-  tags, metadata search, export, and delete. Library explains that it is a
-  standalone archive rather than Journal history.
+  tags, metadata search, export, and delete. Library has a dismissible
+  introduction explaining that it is a standalone archive for words and
+  reminders the person may want to recover later; Settings can show it again.
 - AES-GCM encrypted text/metadata and chunk-encrypted recordings, a random key
   in the device-only Keychain, complete iOS file protection, backup exclusion,
   protected temporary files, and cleanup at background/export/playback exit.
-- Settings for lock delay, preview controls, guided-template visibility,
+- Settings for system-default/English/Spanish language selection, the Library
+  introduction, lock delay, preview controls, guided-template visibility,
   permission status, dynamic storage breakdown, export, erase, safety, privacy,
   terms, and About.
 - Authentication before deletion is a separate App Lock option and is off by
@@ -35,7 +38,7 @@
 - Optional one-time StoreKit support code behind a disabled feature flag. No
   products, prices, transactions, or store configuration are active.
 - Privacy manifest, localized purpose strings, English and Spanish resources,
-  automatic system-language selection, manual Xcode
+  automatic system-language selection with an in-app override, manual Xcode
   project, shared scheme, unit tests, static verifier, and a manual-only macOS
   workflow that tests and packages a labeled unsigned Local-QA IPA.
 

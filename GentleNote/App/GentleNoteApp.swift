@@ -9,6 +9,8 @@ struct GentleNoteApp: App {
         WindowGroup {
             AppRootView()
                 .environmentObject(model)
+                .environment(\.locale, model.interfaceLocale)
+                .id(model.languageIdentity)
                 .preferredColorScheme(nil)
                 .onChange(of: scenePhase) { phase in
                     switch phase {

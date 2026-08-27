@@ -7,14 +7,19 @@ calorie, macro, or required meal logging.
 
 ## Product structure
 
-- **Journal**: blank writing or seven optional, non-quantified reflection
-  templates; `Journal History`, local search, Keep, edit, export, and deletion.
+- **Journal**: two explicit paths—blank writing or seven optional,
+  non-quantified reflection templates with a short purpose summary—plus
+  `Journal History`, local search, Keep, edit, export, and deletion.
 - **Library**: clearly separated from Journal for standalone notes, private
   video, and private audio; four included collections plus custom collections,
-  tags, Keep, local search, playback, export, and deletion.
+  tags, Keep, local search, playback, export, and deletion. Its dismissible
+  introduction explains how the Library can preserve words and reminders that
+  feel clear now but may be harder to remember later.
 - **Settings**: app lock, preview controls, just-in-time permission status,
   storage, export, erase all, region-aware Help & Safety, an optional local
-  trusted contact, optional authentication before deletion, privacy, and About.
+  trusted contact, optional authentication before deletion, an in-app language
+  choice (system default, English, or Spanish), Library introduction control,
+  privacy, and About.
 
 ## Open in Xcode
 
@@ -40,7 +45,7 @@ App Store Connect and reads no signing secrets.
 
 ## Release boundary
 
-Version is `0.3`, build `1`. The source repository may be public, but the app is
+Version is `0.4`, build `1`. The source repository may be public, but the app is
 not uploaded to TestFlight, submitted to App Review, or connected to real
 StoreKit products.
 The visual runtime comparison, physical-device privacy tests, specialist/lived

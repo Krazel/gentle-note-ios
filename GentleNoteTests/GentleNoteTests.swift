@@ -6,6 +6,7 @@ final class GentleNoteTests: XCTestCase {
         for template in JournalTemplateID.allCases where template != .blank {
             XCTAssertFalse(template.prompts.isEmpty)
             XCTAssertTrue(template.prompts.allSatisfy { !$0.isEmpty })
+            XCTAssertFalse(template.summary.isEmpty)
         }
     }
 
@@ -49,6 +50,12 @@ final class GentleNoteTests: XCTestCase {
         XCTAssertEqual(spanish.localizedString(forKey: "Call 112", value: nil, table: nil), "Llamar al 112")
         XCTAssertEqual(spanish.localizedString(forKey: "Call 024", value: nil, table: nil), "Llamar al 024")
         XCTAssertEqual(spanish.localizedString(forKey: "Trusted Contact", value: nil, table: nil), "Contacto de confianza")
+        XCTAssertEqual(spanish.localizedString(forKey: "App Language", value: nil, table: nil), "Idioma de la app")
+        XCTAssertEqual(spanish.localizedString(forKey: "System Default", value: nil, table: nil), "Según el sistema")
+        XCTAssertEqual(
+            spanish.localizedString(forKey: "Show Library Introduction", value: nil, table: nil),
+            "Mostrar la introducción de la Biblioteca"
+        )
         XCTAssertEqual(
             spanish.localizedString(
                 forKey: "I need some support right now. Could you call or message me when you can?",
@@ -57,6 +64,16 @@ final class GentleNoteTests: XCTestCase {
             ),
             "Necesito apoyo ahora mismo. ¿Puedes llamarme o escribirme cuando puedas?"
         )
+    }
+
+    func testLanguageOverrideCanForceSpanishAndEnglish() {
+        defer { GentleLocalization.configure(nil) }
+
+        GentleLocalization.configure(.spanish)
+        XCTAssertEqual("Library".gentleLocalized, "Biblioteca")
+
+        GentleLocalization.configure(.english)
+        XCTAssertEqual("Library".gentleLocalized, "Library")
     }
 
     func testOlderPreferencesDecodeWithoutTrustedContact() throws {
@@ -74,6 +91,8 @@ final class GentleNoteTests: XCTestCase {
         let preferences = try JSONDecoder().decode(AppPreferences.self, from: Data(legacyJSON.utf8))
         XCTAssertNil(preferences.trustedContact)
         XCTAssertNotEqual(preferences.requireAuthenticationForDeletion, true)
+        XCTAssertNil(preferences.languageOverride)
+        XCTAssertNil(preferences.showLibraryIntroduction)
     }
 
     func testTrustedContactRoundTrip() throws {
@@ -87,6 +106,15 @@ final class GentleNoteTests: XCTestCase {
         let snapshot = VaultSnapshot()
         XCTAssertEqual(Set(snapshot.collections.compactMap(\.defaultKind)), Set(DefaultCollectionKind.allCases))
         XCTAssertTrue(snapshot.collections.allSatisfy { !$0.displayName.isEmpty })
+    }
+
+    func testLibraryIntroductionIsVisibleUntilExplicitlyHidden() {
+        let defaults = AppPreferences()
+        XCTAssertNotEqual(defaults.showLibraryIntroduction, false)
+
+        var hidden = defaults
+        hidden.showLibraryIntroduction = false
+        XCTAssertEqual(hidden.showLibraryIntroduction, false)
     }
 
     func testSpanishDefaultCollectionNamesArePackaged() throws {

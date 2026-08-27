@@ -4,11 +4,11 @@ import StoreKit
 import SwiftUI
 import UIKit
 
-private let gentleNoteVersionText: String = {
+private func gentleNoteVersionText() -> String {
     let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
     let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "—"
     return "Version %@ (%@)".gentleLocalizedFormat(version, build)
-}()
+}
 
 struct SettingsRootView: View {
     @EnvironmentObject private var model: AppModel
@@ -16,6 +16,26 @@ struct SettingsRootView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section("Language") {
+                    Picker("App Language", selection: Binding(
+                        get: { model.preferences.languageOverride },
+                        set: { model.setLanguage($0) }
+                    )) {
+                        Text("System Default").tag(Optional<AppLanguage>.none)
+                        Text("English").tag(Optional(AppLanguage.english))
+                        Text("Spanish").tag(Optional(AppLanguage.spanish))
+                    }
+                } footer: {
+                    Text("System Default follows your iPhone language.")
+                }
+                Section("Library") {
+                    Text("Use Library for notes and private recordings you may want to return to—especially words, reminders, or things that feel clear now but may become harder to remember later.")
+                    Toggle("Show Library Introduction", isOn: Binding(
+                        get: { model.showsLibraryIntroduction },
+                        set: { model.setLibraryIntroductionVisible($0) }
+                    ))
+                    .tint(QuietLinen.forest)
+                }
                 Section {
                     row(.privacy, "Privacy & Lock", "lock")
                     row(.permissions, "Media Permissions", "camera")
@@ -30,8 +50,7 @@ struct SettingsRootView: View {
                     row(.terms, "Terms of Use", "text.document")
                     row(.about, "About Gentle Note", "info.circle")
                 }
-                Section { Text(gentleNoteVersionText).foregroundStyle(QuietLinen.muted) }
-                    footer: { Label("No account. No ads. No analytics.", systemImage: "leaf") }
+                Section { Text(gentleNoteVersionText()).foregroundStyle(QuietLinen.muted) }
             }
             .scrollContentBackground(.hidden).linenScreen().navigationTitle("Settings")
             .navigationDestination(for: SettingsDestination.self) { destination in

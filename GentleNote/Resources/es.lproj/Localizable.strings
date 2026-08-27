@@ -1,8 +1,10 @@
 /* Root navigation and shared actions */
 "Journal" = "Diario";
 "Library" = "Biblioteca";
-"A place for things you want to keep" = "Un lugar para lo que quieres conservar";
-"Library is separate from your journal. Save standalone notes, private videos, or audio you may want to return to, then organize them with collections and tags. Nothing is added automatically." = "La Biblioteca está separada de tu diario. Guarda notas independientes, vídeos privados o audios a los que quieras volver y organízalos con colecciones y etiquetas. Nada se añade automáticamente.";
+"Keep what you may want to remember" = "Guarda lo que quizá quieras recordar";
+"Library is separate from your journal. Save notes and private recordings you may want to return to—words, reminders, or things that feel clear now but may become harder to remember later. Organize them with collections and tags. Nothing is added automatically." = "La Biblioteca está separada de tu diario. Guarda notas y grabaciones privadas a las que quieras volver: palabras, recordatorios o cosas que ahora tienes claras pero que con el tiempo podrían difuminarse. Organízalas con colecciones y etiquetas. Nada se añade automáticamente.";
+"Hide Library introduction" = "Ocultar la introducción a la Biblioteca";
+"You can show it again in Settings" = "Puedes volver a mostrarla desde Ajustes";
 "Keep a note or recording without creating a journal entry." = "Guarda una nota o grabación sin crear una entrada del diario.";
 "Comfort" = "Consuelo";
 "Helpful Reminders" = "Recordatorios que ayudan";
@@ -53,10 +55,9 @@
 
 /* Journal home and history */
 "Your journal" = "Tu diario";
-"Start blank or choose a gentle template.\nNothing is due." = "Empieza en blanco o elige una plantilla amable.\nNo hay nada pendiente.";
+"Start blank or choose a structure that feels useful.\nNothing is due." = "Empieza en blanco o elige una estructura que te resulte útil.\nNo hay nada pendiente.";
 "Continue Draft" = "Continuar borrador";
 "Saved on this iPhone · %@" = "Guardado en este iPhone · %@";
-"New Journal Entry" = "Nueva entrada del diario";
 "Start Blank" = "Empezar en blanco";
 "Choose a Template" = "Elegir una plantilla";
 "Recent entries" = "Entradas recientes";
@@ -64,7 +65,6 @@
 "Opens all saved journal entries" = "Abre todas las entradas guardadas del diario";
 "Choose a template" = "Elige una plantilla";
 "Use a structure, start blank, or leave. Every prompt is optional." = "Usa una estructura, empieza en blanco o sal. Todas las preguntas son opcionales.";
-"Reflection templates are not therapy or medical advice." = "Las plantillas de reflexión no son terapia ni consejo médico.";
 "Optional title" = "Título opcional";
 "Keep this entry easy to find" = "Marca esta entrada para encontrarla fácilmente";
 "Save Entry" = "Guardar entrada";
@@ -114,6 +114,14 @@
 "Notice the present without needing to change it." = "Observa el presente sin necesidad de cambiarlo.";
 "Gather words for yourself, someone you trust, or your care team." = "Reúne palabras para ti, para alguien de confianza o para tu equipo de atención.";
 "This is not a score or achievement." = "Esto no es una puntuación ni un logro.";
+"Write in your own way, without prompts or structure." = "Escribe a tu manera, sin preguntas ni estructura.";
+"Sort through what happened, what you noticed, what you needed, and what helped." = "Ordena lo que ocurrió, lo que notaste, lo que necesitabas y lo que te ayudó.";
+"Look at a difficult thought from more than one angle and make room for a steadier view." = "Mira un pensamiento difícil desde más de un ángulo y deja espacio para una perspectiva más equilibrada.";
+"Meet a difficult moment with the kindness you might offer someone you care about." = "Acompaña un momento difícil con la amabilidad que ofrecerías a alguien que te importa.";
+"Reconnect with what matters to you and consider one small action that reflects it." = "Vuelve a conectar con lo que te importa y piensa en un pequeño gesto coherente con ello.";
+"Notice your surroundings, your body, and what feels steady without trying to fix anything." = "Observa tu entorno, tu cuerpo y lo que te da estabilidad sin intentar arreglar nada.";
+"Organize what you want someone to understand and the support you may want to ask for." = "Ordena lo que quieres que otra persona entienda y el apoyo que quizá quieras pedir.";
+"Remember a small moment of care, honesty, flexibility, or courage." = "Guarda un pequeño momento de cuidado, sinceridad, flexibilidad o valentía.";
 "What happened?" = "¿Qué ha ocurrido?";
 "What did you notice—thoughts, feelings, sensations, or context?" = "¿Qué has notado: pensamientos, emociones, sensaciones o contexto?";
 "What did you need then? What do you need now?" = "¿Qué necesitabas entonces? ¿Qué necesitas ahora?";
@@ -239,6 +247,14 @@
 "Search tags" = "Buscar etiquetas";
 
 /* Settings, privacy and export */
+"Language" = "Idioma";
+"App Language" = "Idioma de la app";
+"System Default" = "Según el sistema";
+"English" = "Inglés";
+"Spanish" = "Español";
+"System Default follows your iPhone language." = "Según el sistema usa el idioma configurado en tu iPhone.";
+"Use Library for notes and private recordings you may want to return to—especially words, reminders, or things that feel clear now but may become harder to remember later." = "Usa la Biblioteca para guardar notas y grabaciones privadas a las que quieras volver, especialmente palabras, recordatorios o cosas que ahora tienes claras pero que con el tiempo podrían difuminarse.";
+"Show Library Introduction" = "Mostrar la introducción de la Biblioteca";
 "Privacy & Lock" = "Privacidad y bloqueo";
 "Media Permissions" = "Permisos multimedia";
 "Storage" = "Almacenamiento";
@@ -249,7 +265,6 @@
 "Privacy Notice" = "Aviso de privacidad";
 "Terms of Use" = "Condiciones de uso";
 "About Gentle Note" = "Acerca de Gentle Note";
-"No account. No ads. No analytics." = "Sin cuenta. Sin anuncios. Sin analítica.";
 "App Lock" = "Bloqueo de la app";
 "Require Authentication to Delete" = "Solicitar autenticación para eliminar";
 "Off by default. When enabled, deleting private content requires the same iPhone authentication used by App Lock." = "Está desactivado por defecto. Al activarlo, eliminar contenido privado exige la misma autenticación del iPhone que usa el bloqueo de la app.";

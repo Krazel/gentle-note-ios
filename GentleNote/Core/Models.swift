@@ -1,12 +1,59 @@
 import Foundation
 
+enum AppLanguage: String, Codable, CaseIterable, Identifiable {
+    case english = "en"
+    case spanish = "es"
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .english: "English".gentleLocalized
+        case .spanish: "Spanish".gentleLocalized
+        }
+    }
+}
+
+enum GentleLocalization {
+    private static let lock = NSLock()
+    private static var selectedLanguage: AppLanguage?
+
+    static func configure(_ language: AppLanguage?) {
+        lock.lock()
+        selectedLanguage = language
+        lock.unlock()
+    }
+
+    static var language: AppLanguage? {
+        lock.lock()
+        defer { lock.unlock() }
+        return selectedLanguage
+    }
+
+    static var locale: Locale {
+        language.map { Locale(identifier: $0.rawValue) } ?? .autoupdatingCurrent
+    }
+
+    static var bundle: Bundle {
+        guard let code = language?.rawValue,
+              let path = Bundle.main.path(forResource: code, ofType: "lproj"),
+              let bundle = Bundle(path: path) else { return .main }
+        return bundle
+    }
+
+    static func localizedString(for key: String) -> String {
+        if language == .english { return key }
+        return NSLocalizedString(key, tableName: nil, bundle: bundle, value: key, comment: "")
+    }
+}
+
 extension String {
     var gentleLocalized: String {
-        NSLocalizedString(self, tableName: nil, bundle: .main, value: self, comment: "")
+        GentleLocalization.localizedString(for: self)
     }
 
     func gentleLocalizedFormat(_ arguments: CVarArg...) -> String {
-        String(format: gentleLocalized, locale: Locale.current, arguments: arguments)
+        String(format: gentleLocalized, locale: GentleLocalization.locale, arguments: arguments)
     }
 }
 
@@ -69,6 +116,28 @@ enum JournalTemplateID: String, Codable, CaseIterable, Identifiable {
         case .presentMoment: "Notice the present without needing to change it."
         case .prepareToTalk: "Gather words for yourself, someone you trust, or your care team."
         case .noticeSomethingSmall: "This is not a score or achievement."
+        }
+        return key.gentleLocalized
+    }
+
+    var summary: String {
+        let key = switch self {
+        case .blank:
+            "Write in your own way, without prompts or structure."
+        case .gentleCheckIn:
+            "Sort through what happened, what you noticed, what you needed, and what helped."
+        case .balancedThought:
+            "Look at a difficult thought from more than one angle and make room for a steadier view."
+        case .selfCompassionPause:
+            "Meet a difficult moment with the kindness you might offer someone you care about."
+        case .valuesCompass:
+            "Reconnect with what matters to you and consider one small action that reflects it."
+        case .presentMoment:
+            "Notice your surroundings, your body, and what feels steady without trying to fix anything."
+        case .prepareToTalk:
+            "Organize what you want someone to understand and the support you may want to ask for."
+        case .noticeSomethingSmall:
+            "Remember a small moment of care, honesty, flexibility, or courage."
         }
         return key.gentleLocalized
     }
@@ -334,6 +403,8 @@ struct AppPreferences: Codable, Equatable {
     var showGuidedTemplates = true
     var trustedContact: TrustedContact?
     var requireAuthenticationForDeletion: Bool?
+    var languageOverride: AppLanguage?
+    var showLibraryIntroduction: Bool?
 }
 
 struct TrustedContact: Codable, Equatable {

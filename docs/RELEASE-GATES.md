@@ -2,6 +2,14 @@
 
 - Generate the Xcode project and compile/test on macOS with Xcode 16+.
 - Run all unit and UI flows on iOS 16/17/18 hardware and simulator.
+- On iOS 16 hardware, switch Settings between System Default, English, and
+  Spanish; verify every visible surface refreshes immediately and System Default
+  follows the iPhone language after relaunch.
+- Verify the Library introduction can be dismissed, remains hidden after
+  relaunch, and can be restored from Settings. Check its copy at large Dynamic
+  Type sizes and the 44-point dismiss target with VoiceOver.
+- Open and cancel the template chooser and every composer both before and after
+  typing. Confirm each template purpose summary wraps without truncation in EN/ES.
 - Capture every approved surface at matching size; compare against
   `design/approved/` and resolve visual differences.
 - Test Face ID/Touch ID/passcode fallback, background snapshots, all lock delays,
