@@ -47,9 +47,9 @@
 
 This Windows host has no Swift toolchain, Xcode, iOS Simulator, or physical
 iPhone session. A dedicated Apple Distribution identity and App Store profile
-are consumed only as encrypted secrets in a private companion CI repository,
-never in this public source repository. GitHub Actions is the compilation,
-XCTest, signed archive, and TestFlight upload gate;
+are consumed only as encrypted secrets in this public repository's protected
+`app-store-production` environment, never as source files, artifacts, or logs.
+GitHub Actions is the compilation, XCTest, signed archive, and TestFlight upload gate;
 runtime behavior on a physical device, accessibility, backup, network, deletion,
 and visual 1:1 gates remain unexecuted. The final app icon,
 specialist/lived-experience review, legal/support endpoints, product name

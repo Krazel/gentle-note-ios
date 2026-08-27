@@ -44,13 +44,14 @@ a valid Apple identity and provisioning profile. It is not directly installable
 as a normally signed iPhone app. That Local-QA workflow never uploads to
 TestFlight or App Store Connect and reads no signing secrets.
 
-A separate, manual TestFlight workflow in a private companion CI repository was
-authorized on 2026-08-27. It checks out a pinned public source commit, runs the
-same source and XCTest gates, imports dedicated encrypted secrets into a
-temporary keychain, archives with the registered App Store identifier, verifies
-the signature, and uploads only to TestFlight. No signing secret is stored in
-this public repository. The workflow does not submit a version to App Review or
-release the app publicly.
+A separate, manual TestFlight workflow in this public repository was authorized
+on 2026-08-27. Its release job is limited to the protected
+`app-store-production` environment. It runs the same source and XCTest gates,
+imports dedicated encrypted environment secrets into a temporary keychain,
+archives with the registered App Store identifier, verifies the signature, and
+uploads only when the manual `upload_to_testflight` input is enabled. No signing
+secret is stored in source, artifacts, or logs. The workflow does not submit a
+version to App Review or release the app publicly.
 
 ## Release boundary
 

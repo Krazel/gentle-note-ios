@@ -105,6 +105,25 @@ foreach ($VersionMarker in @('GentleNote-0.5-build-1-${SHORT_SHA}-Local-QA-unsig
     if (-not $Workflow.Contains($VersionMarker)) { $Failures.Add("Workflow version marker missing: $VersionMarker") }
 }
 
+$TestFlightWorkflowPath = Join-Path $ProjectRoot '.github\workflows\build-ios-testflight.yml'
+if (-not (Test-Path -LiteralPath $TestFlightWorkflowPath)) {
+    $Failures.Add('TestFlight workflow is missing')
+} else {
+    $TestFlightWorkflow = Get-Content -LiteralPath $TestFlightWorkflowPath -Raw
+    foreach ($Marker in @(
+        'environment: app-store-production',
+        'upload_to_testflight:',
+        'default: false',
+        'APP_STORE_CONNECT_API_KEY_BASE64',
+        'com.krazel.gentlenote.B2X6D3A9J9',
+        'GentleNote-0.5-build-1-signed-${{ github.sha }}'
+    )) {
+        if (-not $TestFlightWorkflow.Contains($Marker)) {
+            $Failures.Add("TestFlight workflow is missing marker: $Marker")
+        }
+    }
+}
+
 if ($Failures.Count -gt 0) {
     Write-Output 'VERIFY: FAIL'
     $Failures | ForEach-Object { Write-Output " - $_" }
