@@ -15,7 +15,7 @@ permissions:
 jobs:
   build-sign-and-upload:
     environment: app-store-production
-    runs-on: macos-15-intel
+    runs-on: macos-26
     timeout-minutes: 60
     env:
       APP_BUNDLE_ID: com.krazel.gentlenote.B2X6D3A9J9
@@ -31,6 +31,8 @@ jobs:
         run: |
           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
           xcodebuild -version
+          SDK_VERSION=$(xcrun --sdk iphoneos --show-sdk-version)
+          test "${SDK_VERSION%%.*}" -ge 26
           ./scripts/verify.ps1
 
       - name: Run XCTest suite
@@ -41,7 +43,7 @@ jobs:
           xcodebuild test \
             -project GentleNote.xcodeproj \
             -scheme GentleNote \
-            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
             -derivedDataPath "$RUNNER_TEMP/SimulatorDerivedData" \
             CODE_SIGNING_ALLOWED=NO
 
@@ -134,7 +136,8 @@ jobs:
           APP_PATH="$RUNNER_TEMP/GentleNote.xcarchive/Products/Applications/GentleNote.app"
           test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$APP_PATH/Info.plist")" = "$APP_BUNDLE_ID"
           test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$APP_PATH/Info.plist")" = "0.5"
-          test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' "$APP_PATH/Info.plist")" = "1"
+          test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' "$APP_PATH/Info.plist")" = "2"
+          test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIconName' "$APP_PATH/Info.plist")" = "AppIcon"
           codesign --verify --deep --strict --verbose=2 "$APP_PATH"
           ARCHIVE_PROFILE_PLIST="$RUNNER_TEMP/GentleNote-Archive-Profile.plist"
           security cms -D -i "$APP_PATH/embedded.mobileprovision" > "$ARCHIVE_PROFILE_PLIST"
@@ -162,9 +165,10 @@ jobs:
             --apiIssuer "$ASC_ISSUER_ID"
 
       - name: Preserve signed IPA and checksum
+        if: ${{ always() && env.IPA_PATH != '' }}
         uses: actions/upload-artifact@v4
         with:
-          name: GentleNote-0.5-build-1-signed-${{ github.sha }}
+          name: GentleNote-0.5-build-2-signed-${{ github.sha }}
           path: |
             ${{ runner.temp }}/TestFlightExport/*.ipa
             ${{ runner.temp }}/TestFlightExport/*.sha256
@@ -175,7 +179,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: GentleNote-0.5-build-1-test-evidence-${{ github.sha }}
+          name: GentleNote-0.5-build-2-test-evidence-${{ github.sha }}
           path: ${{ runner.temp }}/SimulatorDerivedData/Logs/Test/*.xcresult
           if-no-files-found: warn
           retention-days: 14
@@ -189,4 +193,3 @@ jobs:
           rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/${PROFILE_UUID:-}.mobileprovision"
           rm -f "$HOME/.appstoreconnect/private_keys/AuthKey_"*.p8
           rm -f "$RUNNER_TEMP/GentleNote-Distribution.p12" "$RUNNER_TEMP/GentleNote-AppStore.mobileprovision"
-
