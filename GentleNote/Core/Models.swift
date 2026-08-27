@@ -289,6 +289,12 @@ struct AppPreferences: Codable, Equatable {
     var showLibraryPreviews = false
     var showVideoThumbnails = false
     var showGuidedTemplates = true
+    var trustedContact: TrustedContact?
+}
+
+struct TrustedContact: Codable, Equatable {
+    var name: String
+    var phoneNumber: String
 }
 
 enum LibraryFilter: String, CaseIterable, Identifiable {

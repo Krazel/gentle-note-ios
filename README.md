@@ -12,7 +12,8 @@ calorie, macro, or required meal logging.
 - **Library**: free-form notes, private video, and private audio; manual
   collections, tags, Keep, local search, playback, export, and deletion.
 - **Settings**: app lock, preview controls, just-in-time permission status,
-  storage, export, erase all, Help & Safety, privacy, and About.
+  storage, export, erase all, region-aware Help & Safety, an optional local
+  trusted contact, privacy, and About.
 
 ## Open in Xcode
 
@@ -38,7 +39,7 @@ App Store Connect and reads no signing secrets.
 
 ## Release boundary
 
-Version is `0.2`, build `1`. The source repository may be public, but the app is
+Version is `0.3`, build `1`. The source repository may be public, but the app is
 not uploaded to TestFlight, submitted to App Review, or connected to real
 StoreKit products.
 The visual runtime comparison, physical-device privacy tests, specialist/lived

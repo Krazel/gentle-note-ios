@@ -115,6 +115,7 @@ struct OnboardingView: View {
 struct LockedView: View {
     @EnvironmentObject private var model: AppModel
     @State private var showHelp = false
+    @State private var requestedInitialUnlock = false
     var body: some View {
         ZStack {
             PaperBackground()
@@ -127,15 +128,26 @@ struct LockedView: View {
                 Text("Private space locked").editorialTitle()
                 Text("Unlock to open your journal and library.")
                     .multilineTextAlignment(.center)
-                Button("Unlock") { Task { _ = await model.unlock() } }
+                Button { Task { _ = await model.unlock() } } label: {
+                    if model.isAuthenticating {
+                        ProgressView().tint(.white)
+                    } else {
+                        Text("Unlock")
+                    }
+                }
                     .buttonStyle(PrimaryButtonStyle())
+                    .disabled(model.isAuthenticating)
                 Button("Need support now?") { showHelp = true }
                     .foregroundStyle(QuietLinen.ink).underline()
             }
             .padding(28).frame(maxWidth: 520)
         }
         .sheet(isPresented: $showHelp) { NavigationStack { HelpSafetyView() } }
-        .task { _ = await model.unlock() }
+        .task {
+            guard !requestedInitialUnlock else { return }
+            requestedInitialUnlock = true
+            _ = await model.unlock()
+        }
     }
 }
 

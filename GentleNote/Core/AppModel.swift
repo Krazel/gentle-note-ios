@@ -6,6 +6,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var vault = VaultSnapshot()
     @Published var preferences = AppPreferences()
     @Published var isUnlocked = false
+    @Published private(set) var isAuthenticating = false
     @Published var privacyCoverVisible = false
     @Published var lastError: String?
     @Published var selectedTab: RootTab = .journal
@@ -40,6 +41,9 @@ final class AppModel: ObservableObject {
             isUnlocked = true
             return true
         }
+        guard !isAuthenticating else { return false }
+        isAuthenticating = true
+        defer { isAuthenticating = false }
         let ok = await authenticator.authenticate(reason: reason)
         isUnlocked = ok
         return ok
@@ -49,9 +53,14 @@ final class AppModel: ObservableObject {
         await authenticator.authenticate(reason: reason)
     }
 
+    func enteredInactive() {
+        privacyCoverVisible = true
+        try? store.clearTemporaryFiles()
+    }
+
     func enteredBackground() {
         privacyCoverVisible = true
-        backgroundedAt = Date()
+        if backgroundedAt == nil { backgroundedAt = Date() }
         try? store.clearTemporaryFiles()
         if preferences.lockDelay == .immediately { isUnlocked = false }
     }

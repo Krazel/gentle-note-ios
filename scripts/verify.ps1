@@ -64,7 +64,7 @@ if ($Info.Contains('NSPhotoLibraryUsageDescription')) { $Failures.Add('Photos pe
 $Swift = Get-ChildItem -LiteralPath (Join-Path $ProjectRoot 'GentleNote') -Filter '*.swift' -Recurse |
     ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw }
 $AllSwift = $Swift -join "`n"
-foreach ($RequiredText in @('Journal History','Record Video','Record Audio','Data Not Collected','deviceOwnerAuthentication','AES.GCM','isExcludedFromBackup')) {
+foreach ($RequiredText in @('Journal History','Record Video','Record Audio','Data Not Collected','deviceOwnerAuthentication','AES.GCM','isExcludedFromBackup','enteredInactive','MFMessageComposeViewController','tel:112','tel:024','trustedContact')) {
     if (-not $AllSwift.Contains($RequiredText) -and $RequiredText -ne 'Data Not Collected') {
         $Failures.Add("Expected implementation marker missing: $RequiredText")
     }
@@ -78,8 +78,8 @@ foreach ($RemovedOnboardingCopy in @('Your words and recordings stay with you.',
 
 $SpanishCatalog = Get-Content -LiteralPath (Join-Path $ProjectRoot 'GentleNote\Resources\es.lproj\Localizable.strings') -Raw
 $SpanishKeys = [regex]::Matches($SpanishCatalog, '(?m)^"(?:\\.|[^"])*"\s*=')
-if ($SpanishKeys.Count -lt 330) { $Failures.Add("Spanish catalog is unexpectedly incomplete: $($SpanishKeys.Count) keys") }
-foreach ($RequiredSpanish in @('"Journal" = "Diario";','"Library" = "Biblioteca";','"Settings" = "Ajustes";','"Gentle Check-In" = "Pausa para escucharte";')) {
+if ($SpanishKeys.Count -lt 360) { $Failures.Add("Spanish catalog is unexpectedly incomplete: $($SpanishKeys.Count) keys") }
+foreach ($RequiredSpanish in @('"Journal" = "Diario";','"Library" = "Biblioteca";','"Settings" = "Ajustes";','"Gentle Check-In" = "Pausa para escucharte";','"Call 112" = "Llamar al 112";','"Call 024" = "Llamar al 024";','"Trusted Contact" = "Contacto de confianza";')) {
     if (-not $SpanishCatalog.Contains($RequiredSpanish)) { $Failures.Add("Missing required Spanish translation: $RequiredSpanish") }
 }
 
@@ -90,7 +90,7 @@ foreach ($Source in @('GentleNoteApp.swift','Models.swift','SecureStore.swift','
 foreach ($LocalizedResource in @('Localizable.strings','InfoPlist.strings','knownRegions = (en, es, Base)')) {
     if (-not $Pbx.Contains($LocalizedResource)) { $Failures.Add("Xcode project omits localization marker: $LocalizedResource") }
 }
-if (-not $Pbx.Contains('MARKETING_VERSION = 0.2')) { $Failures.Add('Marketing version is not 0.2') }
+if (-not $Pbx.Contains('MARKETING_VERSION = 0.3')) { $Failures.Add('Marketing version is not 0.3') }
 if (-not $Pbx.Contains('CURRENT_PROJECT_VERSION = 1')) { $Failures.Add('Build number is not 1') }
 if (-not $Pbx.Contains('IPHONEOS_DEPLOYMENT_TARGET = 16.0')) { $Failures.Add('Minimum iOS version is not 16.0') }
 
@@ -103,5 +103,5 @@ if ($Failures.Count -gt 0) {
 Write-Output 'VERIFY: PASS'
 Write-Output "Swift files: $($Swift.Count)"
 Write-Output "Approved boards: $($Approved.Count)"
-Write-Output 'Version: 0.2 (1), iOS 16+'
+Write-Output 'Version: 0.3 (1), iOS 16+'
 Write-Output 'Scope: iPhone, English and Spanish, local-only, no accounts/ads/analytics/tracking'

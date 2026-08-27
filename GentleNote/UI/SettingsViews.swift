@@ -1,4 +1,5 @@
 import AVFoundation
+import MessageUI
 import StoreKit
 import SwiftUI
 import UIKit
@@ -248,31 +249,66 @@ struct EraseAllView: View {
 }
 
 struct HelpSafetyView: View {
+    @EnvironmentObject private var model: AppModel
     @State private var externalURL: URL?
     @State private var showExternal = false
+    @State private var showContactEditor = false
+    @State private var showMessageComposer = false
+    @State private var messageError: String?
+
+    private var usesSpainResources: Bool { Locale.current.regionCode == "ES" }
+    private var supportMessage: String {
+        "I need some support right now. Could you call or message me when you can?".gentleLocalized
+    }
+
     var body: some View {
         List {
             Section {
                 Text("Gentle Note is a private journal. It cannot see or respond to what you write, and no one is monitoring your entries. It is not a crisis or medical service.")
             }
-            Section("Immediate danger or urgent physical symptoms") {
-                Text("If you may be in immediate danger, cannot stay safe, or have urgent physical symptoms—such as chest pain, trouble breathing, fainting or collapse, confusion, a seizure, uncontrolled vomiting, or blood in vomit or stool—call 911 or go to the nearest emergency department now. This is not a complete list.")
-                Link(destination: URL(string: "tel:911")!) { Label("Call 911", systemImage: "phone") }
-                Link(destination: URL(string: "tel:988")!) { Label("Call 988", systemImage: "phone") }
-                Link(destination: URL(string: "sms:988")!) { Label("Text 988", systemImage: "message") }
-                Text("The 988 Suicide & Crisis Lifeline offers free, confidential support in the United States, 24/7.").font(.footnote)
-            }
-            Section("Eating disorder support") {
-                external("Find Eating Disorder Support", "https://www.nationaleatingdisorders.org/get-help/")
-                external("Find Treatment Referrals", "https://www.allianceforeatingdisorders.com/find-treatment/")
+            if usesSpainResources {
+                spainResources
+            } else {
+                unitedStatesResources
             }
             Section("A person you trust") {
-                Text("You may want to contact someone you trust or a member of your care team. Gentle Note does not contact anyone for you.")
+                Text("You can prepare one trusted contact. Gentle Note stores their name and phone number only on this iPhone.")
+                if let contact = model.preferences.trustedContact {
+                    Button { openMessage() } label: {
+                        Label("Message %@".gentleLocalizedFormat(contact.name), systemImage: "message.fill")
+                    }
+                    Text("A message saying that you need support will be ready. iOS will ask you to confirm Send.")
+                        .font(.footnote).foregroundStyle(QuietLinen.muted)
+                    if model.isUnlocked {
+                        Button("Edit Trusted Contact") { showContactEditor = true }
+                    }
+                } else if model.isUnlocked {
+                    Button("Add Trusted Contact") { showContactEditor = true }
+                    Text("Add a name and phone number so a support message is one tap away.")
+                        .font(.footnote).foregroundStyle(QuietLinen.muted)
+                } else {
+                    Text("Add a trusted contact from Help & Safety after unlocking Gentle Note.")
+                        .font(.footnote).foregroundStyle(QuietLinen.muted)
+                }
                 LinenCard { Text("You deserve care and support.\nYou are not a burden.").font(.system(.body, design: .serif)).frame(maxWidth: .infinity) }
             }
-            Section { Text("Resources shown here are for the United States and must be checked before every app release.").font(.footnote) }
+            Section {
+                Text("Emergency resources are selected using your iPhone region. If you are elsewhere, contact local emergency services.")
+                    .font(.footnote)
+            }
         }
         .scrollContentBackground(.hidden).linenScreen().navigationTitle("Need support now?")
+        .sheet(isPresented: $showContactEditor) {
+            NavigationStack { TrustedContactEditor(contact: model.preferences.trustedContact) }
+        }
+        .sheet(isPresented: $showMessageComposer) {
+            if let contact = model.preferences.trustedContact {
+                MessageComposer(recipients: [contact.phoneNumber], body: supportMessage)
+            }
+        }
+        .alert("Message unavailable", isPresented: Binding(get: { messageError != nil }, set: { if !$0 { messageError = nil } })) {
+            Button("Done") { messageError = nil }
+        } message: { Text(messageError ?? "This iPhone cannot prepare a text message right now.".gentleLocalized) }
         .confirmationDialog("Open an external resource?", isPresented: $showExternal, titleVisibility: .visible) {
             Button("Open Website") { if let externalURL { UIApplication.shared.open(externalURL) } }
             Button("Cancel", role: .cancel) {}
@@ -282,12 +318,151 @@ struct HelpSafetyView: View {
     private func external(_ title: LocalizedStringKey, _ url: String) -> some View {
         Button { externalURL = URL(string: url); showExternal = true } label: { Label(title, systemImage: "arrow.up.right.square") }
     }
+
+    @ViewBuilder private var spainResources: some View {
+        Section("Immediate danger or urgent physical symptoms") {
+            Text("If you are in Spain and may be in immediate danger, cannot stay safe, or have urgent physical symptoms—such as chest pain, trouble breathing, fainting or collapse, confusion, a seizure, uncontrolled vomiting, or blood in vomit or stool—call 112 or go to the nearest emergency department now. This is not a complete list.")
+            Link(destination: URL(string: "tel:112")!) { Label("Call 112", systemImage: "phone") }
+        }
+        Section("Emotional crisis or suicidal thoughts") {
+            Link(destination: URL(string: "tel:024")!) { Label("Call 024", systemImage: "phone") }
+            external("Open the 024 online chat", "https://www.sanidad.gob.es/linea024/home.htm")
+            Text("Spain’s 024 line is national, free, confidential, and available 24 hours a day. It does not replace in-person healthcare when needed.")
+                .font(.footnote)
+        }
+        Section("Eating disorder support") {
+            Text("Contact your health centre or care team for assessment and support. In an urgent situation, go to urgent care or call 112.")
+            external("Find a public health centre in Spain", "https://www.sanidad.gob.es/ciudadanos/prestaciones/centrosServiciosSNS/centrosSalud/home.htm")
+        }
+    }
+
+    @ViewBuilder private var unitedStatesResources: some View {
+        Section("Immediate danger or urgent physical symptoms") {
+            Text("If you are in the United States and may be in immediate danger, cannot stay safe, or have urgent physical symptoms—such as chest pain, trouble breathing, fainting or collapse, confusion, a seizure, uncontrolled vomiting, or blood in vomit or stool—call 911 or go to the nearest emergency department now. This is not a complete list.")
+            Link(destination: URL(string: "tel:911")!) { Label("Call 911", systemImage: "phone") }
+            Link(destination: URL(string: "tel:988")!) { Label("Call 988", systemImage: "phone") }
+            Link(destination: URL(string: "sms:988")!) { Label("Text 988", systemImage: "message") }
+            Text("The 988 Suicide & Crisis Lifeline offers free, confidential support in the United States, 24/7.").font(.footnote)
+        }
+        Section("Eating disorder support") {
+            external("Find Eating Disorder Support", "https://www.nationaleatingdisorders.org/get-help/")
+            external("Find Treatment Referrals", "https://www.allianceforeatingdisorders.com/find-treatment/")
+        }
+    }
+
+    private func openMessage() {
+        guard MFMessageComposeViewController.canSendText() else {
+            messageError = "This iPhone cannot prepare a text message right now.".gentleLocalized
+            return
+        }
+        showMessageComposer = true
+    }
+}
+
+struct TrustedContactEditor: View {
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    @State private var name: String
+    @State private var phoneNumber: String
+    @State private var confirmRemoval = false
+
+    init(contact: TrustedContact?) {
+        _name = State(initialValue: contact?.name ?? "")
+        _phoneNumber = State(initialValue: contact?.phoneNumber ?? "")
+    }
+
+    private var normalizedPhoneNumber: String {
+        phoneNumber.filter { $0.isNumber || $0 == "+" }
+    }
+
+    private var canSave: Bool {
+        !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        normalizedPhoneNumber.filter { $0.isNumber }.count >= 6
+    }
+
+    var body: some View {
+        Form {
+            Section("Trusted contact") {
+                TextField("Name", text: $name)
+                    .textContentType(.name)
+                TextField("Phone number", text: $phoneNumber)
+                    .textContentType(.telephoneNumber)
+                    .keyboardType(.phonePad)
+            } footer: {
+                Text("The name and phone number are encrypted with your other local preferences. They are not uploaded or shared until you choose to message this person.")
+            }
+            Section("Prepared message") {
+                Text("I need some support right now. Could you call or message me when you can?")
+                Text("iOS always lets you review the message and requires you to tap Send.")
+                    .font(.footnote).foregroundStyle(QuietLinen.muted)
+            }
+            if model.preferences.trustedContact != nil {
+                Section {
+                    Button("Remove Trusted Contact", role: .destructive) { confirmRemoval = true }
+                }
+            }
+        }
+        .scrollContentBackground(.hidden).linenScreen().navigationTitle("Trusted Contact")
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Save") { save() }.disabled(!canSave)
+            }
+        }
+        .confirmationDialog("Remove trusted contact?", isPresented: $confirmRemoval, titleVisibility: .visible) {
+            Button("Remove", role: .destructive) {
+                model.preferences.trustedContact = nil
+                model.savePreferences()
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The saved name and phone number will be removed from Gentle Note.")
+        }
+    }
+
+    private func save() {
+        model.preferences.trustedContact = TrustedContact(
+            name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+            phoneNumber: normalizedPhoneNumber
+        )
+        model.savePreferences()
+        dismiss()
+    }
+}
+
+struct MessageComposer: UIViewControllerRepresentable {
+    let recipients: [String]
+    let body: String
+    @Environment(\.dismiss) private var dismiss
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    func makeUIViewController(context: Context) -> MFMessageComposeViewController {
+        let controller = MFMessageComposeViewController()
+        controller.messageComposeDelegate = context.coordinator
+        controller.recipients = recipients
+        controller.body = body
+        return controller
+    }
+
+    func updateUIViewController(_ uiViewController: MFMessageComposeViewController, context: Context) {}
+
+    final class Coordinator: NSObject, MFMessageComposeViewControllerDelegate {
+        var parent: MessageComposer
+        init(parent: MessageComposer) { self.parent = parent }
+        func messageComposeViewController(_ controller: MFMessageComposeViewController,
+                                          didFinishWith result: MessageComposeResult) {
+            parent.dismiss()
+        }
+    }
 }
 
 struct PrivacyNoticeView: View {
     var body: some View {
         List {
             notice("Journal and Library", "Your entries, notes, and media are stored only on this iPhone. Gentle Note does not create an account or sync this data to a developer server.", "books.vertical")
+            notice("Trusted Contact", "If you add a trusted contact, their name and phone number are encrypted on this iPhone. Gentle Note does not access your Contacts. The recipient and prepared text leave the app only when you choose to open Messages.", "person.crop.circle")
             notice("Face ID and Touch ID", "Authentication is handled by iOS. Gentle Note receives only whether authentication succeeded. It does not receive your face, fingerprint, or passcode.", "faceid")
             notice("Exporting", "When you export, you choose an external destination. The exported file is no longer protected or controlled by Gentle Note.", "square.and.arrow.up")
             notice("Retention and deletion", "Content remains on this iPhone until you delete an item, erase all data, or remove the app. The developer cannot retrieve or delete it remotely.", "trash")
