@@ -17,12 +17,14 @@
   and deletion failure paths on a physical iPhone.
 - Verify encrypted vault/media, complete file protection, backup exclusion,
   uninstall behavior, temporary-file cleanup, and zero journal transmission.
-- Verify image selection through the iOS system photo picker, encrypted local
-  storage, detail rendering, export, deletion, and that the app receives only
-  the item explicitly selected without requesting full photo-library access.
-- Verify tapping every included and custom collection filters Library items,
-  empty collections show an explicit empty result, clearing the filter restores
-  all items, and the separate pencil action still edits custom collections.
+- Verify image capture and photo selection, video recording and photo-library
+  selection, and audio recording and file selection. Confirm encrypted local
+  storage, detail playback/rendering, export, deletion, cancellation cleanup,
+  and that system pickers transfer only the explicitly selected item.
+- Upgrade a populated schema-v1 vault and verify every legacy collection becomes
+  a tag without losing assignments. Tap every included and custom tag to filter,
+  verify empty results and filter clearing, then create, rename, and delete a
+  custom tag without deleting its Library items.
 - Test VoiceOver, Voice Control, Switch Control, AX5, Increase Contrast, Reduce
   Motion, Reduce Transparency, and both system appearances.
 - Obtain eating-disorder clinical, crisis, ARFID/neurodivergence, and diverse

@@ -1,4 +1,4 @@
 "CFBundleDisplayName" = "Gentle Note";
 "NSFaceIDUsageDescription" = "Usa Face ID para proteger tu diario y tu biblioteca privados.";
-"NSCameraUsageDescription" = "Gentle Note usa la cámara únicamente cuando decides grabar un vídeo privado.";
+"NSCameraUsageDescription" = "Gentle Note usa la cámara únicamente cuando decides hacer una foto privada o grabar un vídeo privado.";
 "NSMicrophoneUsageDescription" = "Gentle Note usa el micrófono únicamente cuando decides grabar audio o vídeo privado.";

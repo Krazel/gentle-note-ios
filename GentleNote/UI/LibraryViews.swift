@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreTransferable
 import PhotosUI
 import SwiftUI
 import UniformTypeIdentifiers
@@ -10,23 +11,21 @@ struct LibraryRootView: View {
     @State private var query = ""
     @State private var addChoice: LibraryItemKind?
     @State private var showAdd = false
-    @State private var showCollections = false
     @State private var showTags = false
-    @State private var selectedCollectionID: UUID?
+    @State private var selectedTagID: UUID?
 
-    private var selectedCollection: LibraryCollection? {
-        model.vault.collections.first { $0.id == selectedCollectionID }
+    private var selectedTag: LibraryTag? {
+        model.vault.tags.first { $0.id == selectedTagID }
     }
 
     private var items: [LibraryItem] {
         model.vault.libraryItems
             .filter { $0.matches(filter) }
-            .filter { $0.belongs(to: selectedCollection?.id) }
+            .filter { $0.hasTag(selectedTag?.id) }
             .filter { item in
                 guard !query.isEmpty else { return true }
-                let collectionNames = model.vault.collections.filter { item.collectionIDs.contains($0.id) }.map(\.displayName)
-                let tagNames = model.vault.tags.filter { item.tagIDs.contains($0.id) }.map(\.name)
-                return ([item.displayTitle, item.body] + collectionNames + tagNames)
+                let tagNames = model.vault.tags.filter { item.tagIDs.contains($0.id) }.map(\.displayName)
+                return ([item.displayTitle, item.body] + tagNames)
                     .joined(separator: " ").localizedCaseInsensitiveContains(query)
             }
             .sorted { $0.createdAt > $1.createdAt }
@@ -49,7 +48,7 @@ struct LibraryRootView: View {
                                 .foregroundStyle(QuietLinen.forest)
                             VStack(alignment: .leading, spacing: 5) {
                                 Text("Keep what you may want to remember").font(.headline)
-                                Text("Save notes, images, and private recordings you may want to return to—words, reminders, or things that feel clear now but may become harder to remember later. Organize them with collections and tags.")
+                                Text("Save notes, images, and private recordings you may want to return to—words, reminders, or things that feel clear now but may become harder to remember later.")
                                     .font(.footnote).foregroundStyle(QuietLinen.muted)
                             }
                             Spacer(minLength: 4)
@@ -78,7 +77,7 @@ struct LibraryRootView: View {
                 } else {
                     TextField("Search your library", text: $query)
                         .textFieldStyle(.roundedBorder).padding(.horizontal, 20)
-                        .accessibilityHint("Searches notes, titles, collections, and tags on this iPhone")
+                        .accessibilityHint("Searches notes, titles, and tags on this iPhone")
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
                             ForEach(LibraryFilter.allCases) { option in
@@ -99,18 +98,17 @@ struct LibraryRootView: View {
                         }
                         .padding(.horizontal, 20)
                     }
-                    if let selectedCollection {
+                    if let selectedTag {
                         HStack(spacing: 8) {
-                            Label(selectedCollection.displayName,
-                                  systemImage: selectedCollection.symbol.rawValue)
+                            Label(selectedTag.displayName, systemImage: "tag")
                                 .font(.footnote.weight(.medium))
                             Button {
-                                selectedCollectionID = nil
+                                selectedTagID = nil
                             } label: {
                                 Image(systemName: "xmark.circle.fill")
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel("Clear collection filter")
+                            .accessibilityLabel("Clear tag filter")
                         }
                         .padding(.horizontal, 12).frame(minHeight: 36)
                         .background(QuietLinen.sage.opacity(0.3), in: Capsule())
@@ -121,7 +119,7 @@ struct LibraryRootView: View {
                     }
                     if items.isEmpty {
                         Spacer()
-                        Text((selectedCollection == nil ? "No items match this filter." : "No items in this collection.").gentleLocalized)
+                        Text((selectedTag == nil ? "No items match this filter." : "No items with this tag.").gentleLocalized)
                             .font(.footnote).foregroundStyle(QuietLinen.muted)
                         Spacer()
                     } else {
@@ -131,10 +129,10 @@ struct LibraryRootView: View {
                         }
                         .scrollContentBackground(.hidden)
                     }
-                    HStack {
-                        Button("Collections") { showCollections = true }
-                        Spacer(); Button("Tags") { showTags = true }
-                    }.padding(.horizontal, 28).padding(.bottom, 8)
+                    Button { showTags = true } label: {
+                        Label("Filter and manage tags", systemImage: "tag")
+                    }
+                    .padding(.bottom, 8)
                 }
             }
             .linenScreen()
@@ -143,8 +141,8 @@ struct LibraryRootView: View {
         .confirmationDialog("Add to your private library", isPresented: $showAdd) {
             Button("New Note") { addChoice = .note }
             Button("Add Image") { addChoice = .image }
-            Button("Record Video") { addChoice = .video }
-            Button("Record Audio") { addChoice = .audio }
+            Button("Add Video") { addChoice = .video }
+            Button("Add Audio") { addChoice = .audio }
             Button("Cancel", role: .cancel) {}
         }
         .sheet(item: $addChoice) { choice in
@@ -155,10 +153,9 @@ struct LibraryRootView: View {
             case .audio: NavigationStack { AudioPermissionPrimer() }
             }
         }
-        .sheet(isPresented: $showCollections) {
-            NavigationStack { CollectionsView(selectedCollectionID: $selectedCollectionID) }
+        .sheet(isPresented: $showTags) {
+            NavigationStack { TagsView(selectedTagID: $selectedTagID) }
         }
-        .sheet(isPresented: $showTags) { NavigationStack { TagsView() } }
     }
 
     private var addButtons: some View {
@@ -167,9 +164,9 @@ struct LibraryRootView: View {
                 .buttonStyle(SecondaryButtonStyle())
             Button { addChoice = .image } label: { Label("Add Image", systemImage: "photo.fill") }
                 .buttonStyle(SecondaryButtonStyle())
-            Button { addChoice = .video } label: { Label("Record Video", systemImage: "video.fill") }
+            Button { addChoice = .video } label: { Label("Add Video", systemImage: "video.fill") }
                 .buttonStyle(SecondaryButtonStyle())
-            Button { addChoice = .audio } label: { Label("Record Audio", systemImage: "mic.fill") }
+            Button { addChoice = .audio } label: { Label("Add Audio", systemImage: "mic.fill") }
                 .buttonStyle(SecondaryButtonStyle())
         }.frame(maxWidth: 430).padding(.horizontal, 24)
     }
@@ -204,7 +201,6 @@ struct NoteComposerView: View {
     @State private var title = ""
     @State private var noteText = ""
     @State private var kept = false
-    @State private var collectionIDs: Set<UUID> = []
     @State private var tagIDs: Set<UUID> = []
     @State private var organize = false
 
@@ -216,7 +212,7 @@ struct NoteComposerView: View {
                 LinenTextEditor(prompt: "Write a note to return to later…", text: $noteText, minHeight: 330)
                 HStack {
                     Toggle(isOn: $kept) { Label("Keep", systemImage: kept ? "bookmark.fill" : "bookmark") }
-                    Button { organize = true } label: { Label("Organize", systemImage: "folder") }
+                    Button { organize = true } label: { Label("Tags", systemImage: "tag") }
                         .buttonStyle(.bordered).tint(QuietLinen.forest)
                 }
                 Button((existingID == nil ? "Save Note" : "Save Changes").gentleLocalized) { save() }
@@ -230,10 +226,9 @@ struct NoteComposerView: View {
         .onChange(of: title) { _ in saveDraft() }
         .onChange(of: noteText) { _ in saveDraft() }
         .onChange(of: kept) { _ in saveDraft() }
-        .onChange(of: collectionIDs) { _ in saveDraft() }
         .onChange(of: tagIDs) { _ in saveDraft() }
         .sheet(isPresented: $organize) {
-            OrganizeView(collectionIDs: $collectionIDs, tagIDs: $tagIDs)
+            OrganizeView(tagIDs: $tagIDs)
                 .environmentObject(model)
         }
     }
@@ -241,10 +236,10 @@ struct NoteComposerView: View {
     private func load() {
         if let item = existingID.flatMap({ id in model.vault.libraryItems.first { $0.id == id } }) {
             title = item.title; noteText = item.body; kept = item.isKept
-            collectionIDs = item.collectionIDs; tagIDs = item.tagIDs
+            tagIDs = item.tagIDs
         } else if let draft = model.vault.libraryDraft {
             title = draft.title; noteText = draft.body; kept = draft.isKept
-            collectionIDs = draft.collectionIDs; tagIDs = draft.tagIDs
+            tagIDs = draft.tagIDs
         }
     }
 
@@ -254,7 +249,7 @@ struct NoteComposerView: View {
         var item = existingID.flatMap { id in model.vault.libraryItems.first { $0.id == id } }
             ?? LibraryItem(kind: .note)
         item.title = title; item.body = noteText; item.isKept = kept
-        item.collectionIDs = collectionIDs; item.tagIDs = tagIDs; item.updatedAt = Date()
+        item.tagIDs = tagIDs; item.updatedAt = Date()
         try? model.saveLibraryItem(item); dismiss()
     }
 
@@ -263,7 +258,7 @@ struct NoteComposerView: View {
               !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
                 !noteText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         model.saveLibraryDraft(LibraryDraft(title: title, body: noteText, isKept: kept,
-                                            collectionIDs: collectionIDs, tagIDs: tagIDs,
+                                            collectionIDs: [], tagIDs: tagIDs,
                                             savedAt: Date()))
     }
 }
@@ -271,25 +266,16 @@ struct NoteComposerView: View {
 struct OrganizeView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
-    @Binding var collectionIDs: Set<UUID>
     @Binding var tagIDs: Set<UUID>
     @State private var newTag = ""
 
     var body: some View {
         NavigationStack {
             List {
-                Section("Collections") {
-                    if model.vault.collections.isEmpty { Text("No collections yet").foregroundStyle(QuietLinen.muted) }
-                    ForEach(model.vault.collections) { collection in
-                        Button { toggle(collection.id, binding: $collectionIDs) } label: {
-                            HStack { Text(collection.displayName); Spacer(); if collectionIDs.contains(collection.id) { Image(systemName: "checkmark.circle.fill") } }
-                        }.buttonStyle(.plain)
-                    }
-                }
                 Section("Tags") {
                     ForEach(model.vault.tags) { tag in
                         Button { toggle(tag.id, binding: $tagIDs) } label: {
-                            HStack { Text(tag.name); Spacer(); if tagIDs.contains(tag.id) { Image(systemName: "checkmark.circle.fill") } }
+                            HStack { Text(tag.displayName); Spacer(); if tagIDs.contains(tag.id) { Image(systemName: "checkmark.circle.fill") } }
                         }.buttonStyle(.plain)
                     }
                     HStack {
@@ -302,7 +288,7 @@ struct OrganizeView: View {
                     }
                 }
             }
-            .scrollContentBackground(.hidden).linenScreen().navigationTitle("Organize")
+            .scrollContentBackground(.hidden).linenScreen().navigationTitle("Tags")
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         }
     }
@@ -322,9 +308,10 @@ struct ImageImportView: View {
     @State private var fileExtension = "jpg"
     @State private var title = ""
     @State private var kept = false
-    @State private var collectionIDs: Set<UUID> = []
     @State private var tagIDs: Set<UUID> = []
     @State private var organize = false
+    @State private var showCamera = false
+    @State private var cameraDenied = false
     @State private var isLoading = false
     @State private var error: String?
 
@@ -332,7 +319,7 @@ struct ImageImportView: View {
         ScrollView {
             VStack(spacing: 18) {
                 Text("Add an Image").editorialTitle()
-                Text("Choose one image to keep in your private library.")
+                Text("Take a photo or choose one from your library.")
                     .multilineTextAlignment(.center).foregroundStyle(QuietLinen.muted)
 
                 if isLoading {
@@ -348,7 +335,7 @@ struct ImageImportView: View {
                     HStack {
                         Toggle(isOn: $kept) { Label("Keep", systemImage: "bookmark") }
                         Button { organize = true } label: {
-                            Label("Organize", systemImage: "folder")
+                            Label("Tags", systemImage: "tag")
                         }
                         .buttonStyle(.bordered)
                     }
@@ -357,12 +344,20 @@ struct ImageImportView: View {
                         Label("Choose a Different Image", systemImage: "photo.on.rectangle")
                     }
                     .buttonStyle(SecondaryButtonStyle())
+                    Button { openCamera() } label: {
+                        Label("Take a Different Photo", systemImage: "camera")
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
                 } else {
                     BotanicalSprig()
-                    PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                        Label("Choose Image", systemImage: "photo.on.rectangle")
+                    Button { openCamera() } label: {
+                        Label("Take Photo", systemImage: "camera")
                     }
                     .buttonStyle(PrimaryButtonStyle())
+                    PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                        Label("Choose from Photos", systemImage: "photo.on.rectangle")
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
                 }
 
                 Label("Gentle Note receives only the image you choose.", systemImage: "lock")
@@ -375,7 +370,18 @@ struct ImageImportView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
         .sheet(isPresented: $organize) {
-            OrganizeView(collectionIDs: $collectionIDs, tagIDs: $tagIDs).environmentObject(model)
+            OrganizeView(tagIDs: $tagIDs).environmentObject(model)
+        }
+        .fullScreenCover(isPresented: $showCamera) {
+            PhotoCapturePicker { image in
+                guard let data = image.jpegData(compressionQuality: 0.9) else {
+                    error = "This photo couldn’t be prepared.".gentleLocalized
+                    return
+                }
+                imageData = data
+                fileExtension = "jpg"
+            }
+            .ignoresSafeArea()
         }
         .onChange(of: selectedPhoto) { item in load(item) }
         .alert("This image couldn’t be added", isPresented: Binding(
@@ -384,6 +390,21 @@ struct ImageImportView: View {
             Button("Done") { error = nil }
         } message: {
             Text(error ?? "Try another image.".gentleLocalized)
+        }
+        .alert("Camera is off", isPresented: $cameraDenied) {
+            Button("Open iPhone Settings") { UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!) }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("Gentle Note cannot take a photo without camera access. You can change this in iPhone Settings.") }
+    }
+
+    private func openCamera() {
+        guard UIImagePickerController.isSourceTypeAvailable(.camera) else {
+            error = "The camera is unavailable.".gentleLocalized
+            return
+        }
+        Task {
+            if await MediaPermissions.requestCamera() { showCamera = true }
+            else { cameraDenied = true }
         }
     }
 
@@ -425,7 +446,6 @@ struct ImageImportView: View {
             var item = LibraryItem(kind: .image)
             item.title = title
             item.isKept = kept
-            item.collectionIDs = collectionIDs
             item.tagIDs = tagIDs
             item.encryptedMediaFilename = filename
             item.mediaFileExtension = fileExtension
@@ -438,49 +458,186 @@ struct ImageImportView: View {
 }
 
 struct VideoPermissionPrimer: View {
+    @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     @State private var continueToRecorder = false
     @State private var denied = false
+    @State private var selectedVideo: PhotosPickerItem?
+    @State private var importedMedia: ImportedMediaFile?
+    @State private var showImportedMedia = false
+    @State private var isLoading = false
+    @State private var error: String?
+
     var body: some View {
-        PermissionPrimer(title: "Record a private video",
-                         message: "Gentle Note needs camera and microphone access only while you record. Videos stay inside the app unless you export them.",
-                         rows: [("Camera", "video.fill", MediaPermissions.camera()),
-                                ("Microphone", "mic.fill", MediaPermissions.microphone())],
-                         footer: "Nothing is saved to Photos.") {
-            Task {
-                if await MediaPermissions.requestCameraAndMicrophone() { continueToRecorder = true }
-                else { denied = true }
+        ZStack {
+            PaperBackground()
+            VStack(spacing: 20) {
+                Spacer(); BotanicalSprig(); Text("Add a Video").editorialTitle()
+                Text("Record a new video or choose one from Photos.")
+                    .multilineTextAlignment(.center)
+                LinenCard {
+                    VStack {
+                        PermissionStatusRow(title: "Camera", icon: "video.fill", state: MediaPermissions.camera())
+                        PermissionStatusRow(title: "Microphone", icon: "mic.fill", state: MediaPermissions.microphone())
+                    }
+                }
+                if isLoading {
+                    ProgressView("Opening video…")
+                } else {
+                    Button { requestRecordingAccess() } label: {
+                        Label("Record Video", systemImage: "video.fill")
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    PhotosPicker(selection: $selectedVideo, matching: .videos) {
+                        Label("Choose from Photos", systemImage: "photo.on.rectangle")
+                    }
+                    .buttonStyle(SecondaryButtonStyle())
+                }
+                Label("Your chosen or recorded video stays inside the app unless you export it.", systemImage: "lock")
+                    .font(.footnote).foregroundStyle(QuietLinen.muted).multilineTextAlignment(.center)
+                Spacer()
             }
+            .padding(24).frame(maxWidth: 580)
         }
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
-        .navigationDestination(isPresented: $continueToRecorder) { VideoRecorderView() }
+        .navigationDestination(isPresented: $continueToRecorder) { VideoRecorderView(onSaved: { dismiss() }) }
+        .navigationDestination(isPresented: $showImportedMedia) {
+            if let importedMedia {
+                ImportedMediaComposerView(kind: .video, media: importedMedia, onSaved: { dismiss() })
+            }
+        }
+        .onChange(of: selectedVideo) { loadVideo($0) }
         .alert("Camera and microphone are off", isPresented: $denied) {
             Button("Open iPhone Settings") { UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!) }
             Button("Cancel", role: .cancel) {}
         } message: { Text("Gentle Note cannot record a video without access. You can change this in iPhone Settings.") }
+        .alert("This video couldn’t be added", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
+            Button("Done") { error = nil }
+        } message: { Text(error ?? "Try another video.".gentleLocalized) }
+    }
+
+    private func requestRecordingAccess() {
+        Task {
+            if await MediaPermissions.requestCameraAndMicrophone() { continueToRecorder = true }
+            else { denied = true }
+        }
+    }
+
+    private func loadVideo(_ item: PhotosPickerItem?) {
+        guard let item else { return }
+        isLoading = true
+        Task {
+            do {
+                let picked = try await item.loadTransferable(type: PickedVideoFile.self)
+                guard let picked else { throw CocoaError(.fileReadUnknown) }
+                let ext = picked.url.pathExtension.isEmpty ? "mov" : picked.url.pathExtension
+                let protectedCopy = model.store.temporaryURL
+                    .appendingPathComponent(UUID().uuidString + "." + ext)
+                do {
+                    try FileManager.default.copyItem(at: picked.url, to: protectedCopy)
+                    try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete],
+                                                          ofItemAtPath: protectedCopy.path)
+                } catch {
+                    try? FileManager.default.removeItem(at: picked.url)
+                    throw error
+                }
+                try? FileManager.default.removeItem(at: picked.url)
+                let asset = AVURLAsset(url: protectedCopy)
+                let seconds = asset.duration.seconds
+                await MainActor.run {
+                    importedMedia = ImportedMediaFile(url: protectedCopy, fileExtension: ext,
+                                                      duration: seconds.isFinite ? seconds : nil)
+                    selectedVideo = nil
+                    isLoading = false
+                    showImportedMedia = true
+                }
+            } catch {
+                await MainActor.run {
+                    selectedVideo = nil
+                    isLoading = false
+                    self.error = error.localizedDescription
+                }
+            }
+        }
     }
 }
 
 struct AudioPermissionPrimer: View {
+    @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     @State private var continueToRecorder = false
     @State private var denied = false
+    @State private var showFileImporter = false
+    @State private var importedMedia: ImportedMediaFile?
+    @State private var showImportedMedia = false
+    @State private var error: String?
+
     var body: some View {
-        PermissionPrimer(title: "Record a private audio note",
-                         message: "Gentle Note needs microphone access only while you record. Audio stays inside the app unless you export it.",
-                         rows: [("Microphone", "mic.fill", MediaPermissions.microphone())],
-                         footer: "Nothing is saved to Photos.") {
-            Task {
-                if await MediaPermissions.requestMicrophone() { continueToRecorder = true }
-                else { denied = true }
+        ZStack {
+            PaperBackground()
+            VStack(spacing: 20) {
+                Spacer(); BotanicalSprig(); Text("Add Audio").editorialTitle()
+                Text("Record new audio or choose an audio file already on your iPhone.")
+                    .multilineTextAlignment(.center)
+                LinenCard {
+                    PermissionStatusRow(title: "Microphone", icon: "mic.fill", state: MediaPermissions.microphone())
+                }
+                Button { requestRecordingAccess() } label: {
+                    Label("Record Audio", systemImage: "mic.fill")
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                Button { showFileImporter = true } label: {
+                    Label("Choose Audio File", systemImage: "folder")
+                }
+                .buttonStyle(SecondaryButtonStyle())
+                Label("Your chosen or recorded audio stays inside the app unless you export it.", systemImage: "lock")
+                    .font(.footnote).foregroundStyle(QuietLinen.muted).multilineTextAlignment(.center)
+                Spacer()
             }
+            .padding(24).frame(maxWidth: 580)
         }
         .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
-        .navigationDestination(isPresented: $continueToRecorder) { AudioRecorderView() }
+        .navigationDestination(isPresented: $continueToRecorder) { AudioRecorderView(onSaved: { dismiss() }) }
+        .navigationDestination(isPresented: $showImportedMedia) {
+            if let importedMedia {
+                ImportedMediaComposerView(kind: .audio, media: importedMedia, onSaved: { dismiss() })
+            }
+        }
+        .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [.audio]) { result in
+            loadAudio(result)
+        }
         .alert("Microphone is off", isPresented: $denied) {
             Button("Open iPhone Settings") { UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!) }
             Button("Cancel", role: .cancel) {}
         } message: { Text("Gentle Note cannot record audio without access. You can change this in iPhone Settings.") }
+        .alert("This audio couldn’t be added", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
+            Button("Done") { error = nil }
+        } message: { Text(error ?? "Try another audio file.".gentleLocalized) }
+    }
+
+    private func requestRecordingAccess() {
+        Task {
+            if await MediaPermissions.requestMicrophone() { continueToRecorder = true }
+            else { denied = true }
+        }
+    }
+
+    private func loadAudio(_ result: Result<URL, Error>) {
+        do {
+            let selectedURL = try result.get()
+            let hasAccess = selectedURL.startAccessingSecurityScopedResource()
+            defer { if hasAccess { selectedURL.stopAccessingSecurityScopedResource() } }
+            let ext = selectedURL.pathExtension.isEmpty ? "m4a" : selectedURL.pathExtension
+            let copy = model.store.temporaryURL.appendingPathComponent(UUID().uuidString + "." + ext)
+            try FileManager.default.copyItem(at: selectedURL, to: copy)
+            try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: copy.path)
+            let seconds = AVURLAsset(url: copy).duration.seconds
+            importedMedia = ImportedMediaFile(url: copy, fileExtension: ext,
+                                              duration: seconds.isFinite ? seconds : nil)
+            showImportedMedia = true
+        } catch {
+            self.error = error.localizedDescription
+        }
     }
 }
 
@@ -505,13 +662,103 @@ struct PermissionPrimer: View {
     }
 }
 
+struct ImportedMediaFile: Identifiable {
+    let id = UUID()
+    let url: URL
+    let fileExtension: String
+    let duration: TimeInterval?
+}
+
+struct PickedVideoFile: Transferable {
+    let url: URL
+
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(importedContentType: .movie) { received in
+            let ext = received.file.pathExtension.isEmpty ? "mov" : received.file.pathExtension
+            let copy = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString + "." + ext)
+            try FileManager.default.copyItem(at: received.file, to: copy)
+            try FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete],
+                                                  ofItemAtPath: copy.path)
+            return PickedVideoFile(url: copy)
+        }
+    }
+}
+
+struct ImportedMediaComposerView: View {
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    let kind: LibraryItemKind
+    let media: ImportedMediaFile
+    var onSaved: (() -> Void)?
+    @State private var title = ""
+    @State private var kept = false
+    @State private var tagIDs: Set<UUID> = []
+    @State private var organize = false
+    @State private var didSave = false
+    @State private var error: String?
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 18) {
+                Text((kind == .video ? "Add Video" : "Add Audio").gentleLocalized)
+                    .font(.system(.title2, design: .serif))
+                MediaPlayerView(url: media.url, kind: kind)
+                if let duration = media.duration {
+                    Text(duration.clockString).font(.caption).foregroundStyle(QuietLinen.muted)
+                }
+                TextField("Optional title", text: $title).textFieldStyle(.roundedBorder)
+                HStack {
+                    Toggle(isOn: $kept) { Label("Keep", systemImage: "bookmark") }
+                    Button { organize = true } label: { Label("Tags", systemImage: "tag") }
+                        .buttonStyle(.bordered)
+                }
+                Button { save() } label: {
+                    Text((kind == .video ? "Save Video" : "Save Audio").gentleLocalized)
+                }
+                .buttonStyle(PrimaryButtonStyle())
+                Label("Stored in your private library.", systemImage: "lock")
+                    .font(.footnote).foregroundStyle(QuietLinen.muted)
+            }
+            .padding(20).frame(maxWidth: 700)
+        }
+        .linenScreen()
+        .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $organize) { OrganizeView(tagIDs: $tagIDs).environmentObject(model) }
+        .onDisappear {
+            if !didSave { try? FileManager.default.removeItem(at: media.url) }
+        }
+        .alert("This item couldn’t be saved", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
+            Button("Keep Editing") { error = nil }
+        } message: { Text(error ?? "Your saved items are unchanged.".gentleLocalized) }
+    }
+
+    private func save() {
+        do {
+            let filename = try model.store.importMedia(from: media.url, extension: media.fileExtension)
+            var item = LibraryItem(kind: kind)
+            item.title = title
+            item.isKept = kept
+            item.tagIDs = tagIDs
+            item.encryptedMediaFilename = filename
+            item.mediaFileExtension = media.fileExtension
+            item.duration = media.duration
+            try model.saveLibraryItem(item)
+            didSave = true
+            if let onSaved { onSaved() } else { dismiss() }
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+}
+
 struct VideoRecorderView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     @StateObject private var recorder = VideoRecorder()
+    var onSaved: (() -> Void)?
     @State private var title = ""
     @State private var kept = false
-    @State private var collectionIDs: Set<UUID> = []
     @State private var tagIDs: Set<UUID> = []
     @State private var organize = false
     @State private var error: String?
@@ -551,7 +798,7 @@ struct VideoRecorderView: View {
                     TextField("Optional title", text: $title).textFieldStyle(.roundedBorder)
                     HStack {
                         Toggle(isOn: $kept) { Label("Keep", systemImage: "bookmark") }
-                        Button { organize = true } label: { Label("Organize", systemImage: "folder") }.buttonStyle(.bordered)
+                        Button { organize = true } label: { Label("Tags", systemImage: "tag") }.buttonStyle(.bordered)
                     }
                     Button("Save Video") { saveVideo() }.buttonStyle(PrimaryButtonStyle())
                     Button("Retake") { discardRecording(); recorder.start() }.buttonStyle(SecondaryButtonStyle())
@@ -565,7 +812,7 @@ struct VideoRecorderView: View {
         .onAppear { recorder.configure() }
         .onDisappear { recorder.stopSession() }
         .onChange(of: recorder.errorMessage) { value in error = value }
-        .sheet(isPresented: $organize) { OrganizeView(collectionIDs: $collectionIDs, tagIDs: $tagIDs).environmentObject(model) }
+        .sheet(isPresented: $organize) { OrganizeView(tagIDs: $tagIDs).environmentObject(model) }
         .alert("Recording interrupted", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
             Button("Review Recording") { error = nil }
             Button("Delete Partial Recording", role: .destructive) { discardRecording(); error = nil }
@@ -578,11 +825,11 @@ struct VideoRecorderView: View {
             let seconds = AVURLAsset(url: url).duration.seconds
             let filename = try model.store.importMedia(from: url, extension: "mov")
             var item = LibraryItem(kind: .video)
-            item.title = title; item.isKept = kept; item.collectionIDs = collectionIDs; item.tagIDs = tagIDs
+            item.title = title; item.isKept = kept; item.tagIDs = tagIDs
             item.encryptedMediaFilename = filename; item.mediaFileExtension = "mov"
             item.duration = seconds.isFinite ? seconds : recorder.elapsed
             try model.saveLibraryItem(item)
-            dismiss()
+            if let onSaved { onSaved() } else { dismiss() }
         } catch let caughtError { error = caughtError.localizedDescription }
     }
 
@@ -596,9 +843,9 @@ struct AudioRecorderView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     @StateObject private var recorder = AudioRecorder()
+    var onSaved: (() -> Void)?
     @State private var title = ""
     @State private var kept = false
-    @State private var collectionIDs: Set<UUID> = []
     @State private var tagIDs: Set<UUID> = []
     @State private var organize = false
     @State private var error: String?
@@ -628,7 +875,7 @@ struct AudioRecorderView: View {
                     TextField("Optional title", text: $title).textFieldStyle(.roundedBorder)
                     HStack {
                         Toggle(isOn: $kept) { Label("Keep", systemImage: "bookmark") }
-                        Button { organize = true } label: { Label("Organize", systemImage: "folder") }.buttonStyle(.bordered)
+                        Button { organize = true } label: { Label("Tags", systemImage: "tag") }.buttonStyle(.bordered)
                     }
                     Button("Save Audio") { saveAudio() }.buttonStyle(PrimaryButtonStyle())
                     Button("Retake") { discard(); recorder.start() }.buttonStyle(SecondaryButtonStyle())
@@ -638,7 +885,7 @@ struct AudioRecorderView: View {
                     .font(.footnote).foregroundStyle(QuietLinen.muted)
             }.padding(20).frame(maxWidth: 680)
         }
-        .linenScreen().sheet(isPresented: $organize) { OrganizeView(collectionIDs: $collectionIDs, tagIDs: $tagIDs).environmentObject(model) }
+        .linenScreen().sheet(isPresented: $organize) { OrganizeView(tagIDs: $tagIDs).environmentObject(model) }
         .onChange(of: recorder.errorMessage) { value in error = value }
         .alert("Audio couldn’t be recorded", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
             Button("Done") { error = nil }
@@ -650,9 +897,10 @@ struct AudioRecorderView: View {
         do {
             let filename = try model.store.importMedia(from: url, extension: "m4a")
             var item = LibraryItem(kind: .audio)
-            item.title = title; item.isKept = kept; item.collectionIDs = collectionIDs; item.tagIDs = tagIDs
+            item.title = title; item.isKept = kept; item.tagIDs = tagIDs
             item.encryptedMediaFilename = filename; item.mediaFileExtension = "m4a"; item.duration = recorder.elapsed
-            try model.saveLibraryItem(item); dismiss()
+            try model.saveLibraryItem(item)
+            if let onSaved { onSaved() } else { dismiss() }
         } catch let caughtError { error = caughtError.localizedDescription }
     }
 
@@ -720,12 +968,10 @@ struct LibraryDetailView: View {
     }
 
     private func metadata(for item: LibraryItem) -> some View {
-        let collections = model.vault.collections.filter { item.collectionIDs.contains($0.id) }
         let tags = model.vault.tags.filter { item.tagIDs.contains($0.id) }
         return ScrollView(.horizontal, showsIndicators: false) {
             HStack {
-                ForEach(collections) { Text($0.displayName).padding(.horizontal, 10).padding(.vertical, 6).background(QuietLinen.sage.opacity(0.28), in: Capsule()) }
-                ForEach(tags) { Text($0.name).padding(.horizontal, 10).padding(.vertical, 6).background(QuietLinen.clay.opacity(0.2), in: Capsule()) }
+                ForEach(tags) { Text($0.displayName).padding(.horizontal, 10).padding(.vertical, 6).background(QuietLinen.clay.opacity(0.2), in: Capsule()) }
             }
         }
     }
@@ -752,149 +998,118 @@ struct LibraryDetailView: View {
     }
 }
 
-struct CollectionsView: View {
+struct TagsView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
-    @Binding var selectedCollectionID: UUID?
-    @State private var editing: LibraryCollection?
-
-    private var hasActiveSelection: Bool {
-        guard let selectedCollectionID else { return false }
-        return model.vault.collections.contains { $0.id == selectedCollectionID }
+    @Binding var selectedTagID: UUID?
+    @State private var newTag = ""
+    @State private var search = ""
+    @State private var editingTag: LibraryTag?
+    private var visibleTags: [LibraryTag] {
+        let tags = search.isEmpty ? model.vault.tags : model.vault.tags.filter { $0.displayName.localizedCaseInsensitiveContains(search) }
+        return tags.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
     }
     var body: some View {
         List {
             Section {
                 Button {
-                    selectedCollectionID = nil
+                    selectedTagID = nil
                     dismiss()
                 } label: {
-                    LinenCard {
-                        HStack {
-                            Image(systemName: "square.grid.2x2")
-                            Text("All Library Items").font(.system(.title3, design: .serif))
-                            Spacer()
-                            Text(model.vault.libraryItems.count.formatted())
-                                .font(.caption).foregroundStyle(QuietLinen.muted)
-                            if !hasActiveSelection { Image(systemName: "checkmark") }
+                    HStack {
+                        Image(systemName: "square.grid.2x2")
+                        Text("All Library Items")
+                        Spacer()
+                        Text(model.vault.libraryItems.count.formatted()).foregroundStyle(QuietLinen.muted)
+                        if selectedTagID == nil { Image(systemName: "checkmark") }
+                    }
+                }
+                .buttonStyle(.plain)
+                HStack {
+                    TextField("New tag", text: $newTag)
+                    Button("Add") {
+                        if !newTag.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            _ = try? model.addTag(named: newTag)
+                            newTag = ""
                         }
                     }
                 }
-                .buttonStyle(.plain)
-            }
-            Section("Included collections") {
-                ForEach(model.vault.collections.filter { $0.defaultKind != nil }) { collection in
-                    collectionRow(collection, editable: false)
-                }
-            }
-            Section {
-                ForEach(model.vault.collections.filter { $0.defaultKind == nil }) { collection in
-                    collectionRow(collection, editable: true)
-                }
-                Button { editing = LibraryCollection(name: "") } label: { Label("New Collection", systemImage: "plus") }
-            } header: {
-                Text("Your collections")
-            } footer: {
-                Text("Included collections are always available. You can also create and delete your own collections.")
-            }
-        }
-        .scrollContentBackground(.hidden).linenScreen().navigationTitle("Collections")
-        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
-        .sheet(item: $editing) { collection in NavigationStack { EditCollectionView(collection: collection) } }
-    }
-
-    private func select(_ collection: LibraryCollection) {
-        selectedCollectionID = collection.id
-        dismiss()
-    }
-
-    private func count(for collection: LibraryCollection) -> Int {
-        model.vault.libraryItems.filter { $0.collectionIDs.contains(collection.id) }.count
-    }
-
-    @ViewBuilder
-    private func collectionRow(_ collection: LibraryCollection, editable: Bool) -> some View {
-        LinenCard {
-            HStack(spacing: 10) {
-                Button { select(collection) } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: collection.symbol.rawValue)
-                        Text(collection.displayName).font(.system(.title3, design: .serif))
-                        Spacer()
-                        Text(count(for: collection).formatted())
-                            .font(.caption).foregroundStyle(QuietLinen.muted)
-                        if selectedCollectionID == collection.id { Image(systemName: "checkmark") }
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityHint("Filters the Library by this collection")
-
-                if editable {
-                    Button { editing = collection } label: {
-                        Image(systemName: "pencil")
-                            .frame(width: 44, height: 44)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Edit %@".gentleLocalizedFormat(collection.displayName))
-                }
-            }
-        }
-    }
-}
-
-struct EditCollectionView: View {
-    @EnvironmentObject private var model: AppModel
-    @Environment(\.dismiss) private var dismiss
-    @State var collection: LibraryCollection
-    @State private var confirmDelete = false
-    var body: some View {
-        Form {
-            Section("Collection name") { TextField("Things to Remember", text: $collection.name) }
-            Section("Symbol") {
-                Picker("Symbol", selection: $collection.symbol) { ForEach(CollectionSymbol.allCases) { Label($0.title, systemImage: $0.rawValue).tag($0) } }
-            }
-            Section("Color") { Picker("Color", selection: $collection.color) { ForEach(CollectionColor.allCases) { Text($0.title).tag($0) } } }
-            Button("Save Collection") { guard !collection.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }; try? model.addCollection(collection); dismiss() }
-            if collection.defaultKind == nil,
-               model.vault.collections.contains(where: { $0.id == collection.id }) {
-                Button("Delete Collection", role: .destructive) { confirmDelete = true }
-            }
-        }
-        .scrollContentBackground(.hidden).linenScreen().navigationTitle("Edit Collection")
-        .confirmationDialog("Delete this collection?", isPresented: $confirmDelete) {
-            Button("Delete Collection", role: .destructive) { try? model.deleteCollection(collection.id); dismiss() }
-            Button("Cancel", role: .cancel) {}
-        } message: { Text("Deleting a collection does not delete the items inside it.") }
-    }
-}
-
-struct TagsView: View {
-    @EnvironmentObject private var model: AppModel
-    @Environment(\.dismiss) private var dismiss
-    @State private var newTag = ""
-    @State private var search = ""
-    private var visibleTags: [LibraryTag] {
-        search.isEmpty ? model.vault.tags : model.vault.tags.filter { $0.name.localizedCaseInsensitiveContains(search) }
-    }
-    var body: some View {
-        List {
-            Section {
-                HStack { TextField("New tag", text: $newTag); Button("Add") { if !newTag.isEmpty { _ = try? model.addTag(named: newTag); newTag = "" } } }
             }
             Section {
                 ForEach(visibleTags) { tag in
-                    HStack { Image(systemName: "tag"); Text(tag.name); Spacer() }
-                        .swipeActions { Button("Delete", role: .destructive) { try? model.deleteTag(tag.id) } }
+                    HStack(spacing: 10) {
+                        Button {
+                            selectedTagID = tag.id
+                            dismiss()
+                        } label: {
+                            HStack {
+                                Image(systemName: "tag")
+                                Text(tag.displayName)
+                                Spacer()
+                                Text(model.vault.libraryItems.filter { $0.tagIDs.contains(tag.id) }.count.formatted())
+                                    .font(.caption).foregroundStyle(QuietLinen.muted)
+                                if selectedTagID == tag.id { Image(systemName: "checkmark") }
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        if tag.defaultKind == nil {
+                            Button { editingTag = tag } label: {
+                                Image(systemName: "pencil").frame(width: 44, height: 44)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Edit %@".gentleLocalizedFormat(tag.displayName))
+                        }
+                    }
                 }
             } header: {
                 Text("Tags")
             } footer: {
-                Text("Deleting a tag does not delete the items that use it.")
+                Text("Use tags to group and find Library items. Included tags are always available; you can create, rename, and delete your own.")
             }
         }
         .searchable(text: $search, prompt: "Search tags")
         .scrollContentBackground(.hidden).linenScreen().navigationTitle("Tags")
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+        .sheet(item: $editingTag) { tag in
+            NavigationStack { EditTagView(tag: tag, selectedTagID: $selectedTagID) }
+        }
+    }
+}
+
+struct EditTagView: View {
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    let tag: LibraryTag
+    @Binding var selectedTagID: UUID?
+    @State private var name: String
+    @State private var confirmDelete = false
+
+    init(tag: LibraryTag, selectedTagID: Binding<UUID?>) {
+        self.tag = tag
+        self._selectedTagID = selectedTagID
+        self._name = State(initialValue: tag.name)
+    }
+
+    var body: some View {
+        Form {
+            Section("Tag name") { TextField("Tag name", text: $name) }
+            Button("Save Tag") {
+                try? model.renameTag(tag.id, to: name)
+                dismiss()
+            }
+            .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            Button("Delete Tag", role: .destructive) { confirmDelete = true }
+        }
+        .scrollContentBackground(.hidden).linenScreen().navigationTitle("Edit Tag")
+        .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
+        .confirmationDialog("Delete this tag?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete Tag", role: .destructive) {
+                if selectedTagID == tag.id { selectedTagID = nil }
+                try? model.deleteTag(tag.id)
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("Deleting a tag does not delete the items that use it.") }
     }
 }

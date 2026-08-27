@@ -10,10 +10,9 @@ calorie, macro, or required meal logging.
 - **Journal**: two explicit paths—blank writing or seven optional,
   non-quantified reflection templates with a short purpose summary—plus
   `Journal History`, local search, Keep, edit, export, and deletion.
-- **Library**: standalone notes, selected images, private video, and private
-  audio; four included collections plus custom collections that also act as
-  filters,
-  tags, Keep, local search, playback, export, and deletion. Its dismissible
+- **Library**: standalone notes, images, video, and audio created in the app or
+  chosen from the iPhone; four included tags plus custom tags that act as
+  filters, Keep, local search, playback, export, and deletion. Its dismissible
   introduction explains how the Library can preserve words and reminders that
   feel clear now but may be harder to remember later.
 - **Settings**: app lock, preview controls, just-in-time permission status,
@@ -55,7 +54,7 @@ version to App Review or release the app publicly.
 
 ## Release boundary
 
-Source candidate version is `0.5`, build `1`. The source repository is public
+Source candidate version is `0.6`, build `1`. The source repository is public
 and TestFlight preparation/upload is authorized. App Review submission, public
 App Store release, and real StoreKit products are not authorized by that step.
 The visual runtime comparison, physical-device privacy tests, specialist/lived

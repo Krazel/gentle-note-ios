@@ -46,10 +46,10 @@ struct SettingsRootView: View {
                     row(.erase, "Erase All Data", "trash", destructive: true)
                 }
                 Section {
-                    row(.help, "Help & Safety", "questionmark.shield")
+                    row(.help, "Help & Safety", "questionmark.circle")
                     if SupportConfiguration.isEnabled { row(.support, "Support the App", "heart") }
                     row(.notice, "Privacy Notice", "doc.text")
-                    row(.terms, "Terms of Use", "text.document")
+                    row(.terms, "Terms of Use", "doc.text")
                     row(.about, "About Gentle Note", "info.circle")
                 }
                 Section { Text(gentleNoteVersionText()).foregroundStyle(QuietLinen.muted) }
@@ -142,7 +142,7 @@ struct MediaPermissionsView: View {
             PermissionStatusRow(title: "Microphone", icon: "mic", state: MediaPermissions.microphone())
             HStack { Image(systemName: "photo").frame(width: 28); Text("Photos"); Spacer(); Text("Not Requested").foregroundStyle(QuietLinen.muted) }
             Section {
-                Text("Camera and microphone access are requested only when you choose to record. The iOS photo picker gives Gentle Note only the image you select. Nothing is saved to Photos automatically.")
+                Text("Camera and microphone access are requested only when you choose to capture or record. System pickers give Gentle Note only the photo, video, or audio file you select. Nothing is saved to Photos automatically.")
                     .multilineTextAlignment(.center).frame(maxWidth: .infinity)
                 Button("Open iPhone Settings") { UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!) }
                     .buttonStyle(PrimaryButtonStyle())
@@ -252,7 +252,7 @@ struct EraseAllView: View {
             VStack(spacing: 18) {
                 Image(systemName: "trash").font(.system(size: 42)).foregroundStyle(QuietLinen.danger)
                 Text("Erase your journal and library").editorialTitle()
-                Text("This permanently deletes every journal entry, note, image, video, audio recording, collection, tag, draft, and search record stored by Gentle Note on this iPhone.")
+                Text("This permanently deletes every journal entry, note, image, video, audio recording, tag, draft, and search record stored by Gentle Note on this iPhone.")
                     .multilineTextAlignment(.center)
                 Text("It does not delete files you previously exported. Gentle Note cannot recover your content after erasing it.")
                     .multilineTextAlignment(.center).foregroundStyle(QuietLinen.muted)
@@ -277,7 +277,7 @@ struct EraseAllView: View {
             Button("Cancel", role: .cancel) {}
         } message: { Text("All content on this iPhone will be deleted now.") }
         .alert("Journal and library erased", isPresented: $completed) { Button("Done") {} }
-            message: { Text("No entries, notes, images, recordings, drafts, collections, or tags remain in Gentle Note. Previously exported files were not changed.") }
+            message: { Text("No entries, notes, images, recordings, drafts, or tags remain in Gentle Note. Previously exported files were not changed.") }
         .alert("Gentle Note couldn’t finish erasing", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
             Button("Done") { error = nil }
         } message: { Text("Some private data may still be on this iPhone. Close the app and try again. Do not assume it has been deleted.") }
@@ -299,9 +299,6 @@ struct HelpSafetyView: View {
 
     var body: some View {
         List {
-            Section {
-                Text("Gentle Note is a private journal. It cannot see or respond to what you write, and no one is monitoring your entries. It is not a crisis or medical service.")
-            }
             if usesSpainResources {
                 spainResources
             } else {
@@ -333,7 +330,7 @@ struct HelpSafetyView: View {
                     .font(.footnote)
             }
         }
-        .scrollContentBackground(.hidden).linenScreen().navigationTitle("Need support now?")
+        .scrollContentBackground(.hidden).linenScreen().navigationTitle("Need support?")
         .sheet(isPresented: $showContactEditor) {
             NavigationStack { TrustedContactEditor(contact: model.preferences.trustedContact) }
         }

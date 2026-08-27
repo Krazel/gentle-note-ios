@@ -209,7 +209,6 @@ final class SecureVaultStore {
     func storageBreakdown(for vault: VaultSnapshot) -> StorageBreakdown {
         let journal = Int64((try? JSONEncoder.gentle.encode(vault.journalEntries).count) ?? 0)
         let notes = Int64((try? JSONEncoder.gentle.encode(vault.libraryItems.filter { $0.kind == .note }).count) ?? 0)
-            + Int64((try? JSONEncoder.gentle.encode(vault.collections).count) ?? 0)
             + Int64((try? JSONEncoder.gentle.encode(vault.tags).count) ?? 0)
         var images: Int64 = 0
         var videos: Int64 = 0

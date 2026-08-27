@@ -2,7 +2,7 @@
 "Journal" = "Diario";
 "Library" = "Biblioteca";
 "Keep what you may want to remember" = "Guarda lo que quizá quieras recordar";
-"Save notes, images, and private recordings you may want to return to—words, reminders, or things that feel clear now but may become harder to remember later. Organize them with collections and tags." = "Guarda notas, imágenes y grabaciones privadas a las que quieras volver: palabras, recordatorios o cosas que ahora tienes claras pero que con el tiempo podrían difuminarse. Organízalas con colecciones y etiquetas.";
+"Save notes, images, and private recordings you may want to return to—words, reminders, or things that feel clear now but may become harder to remember later." = "Guarda notas, imágenes y grabaciones privadas a las que quieras volver: palabras, recordatorios o cosas que ahora tienes claras pero que con el tiempo podrían difuminarse.";
 "Hide Library introduction" = "Ocultar la introducción a la Biblioteca";
 "You can show it again in Settings" = "Puedes volver a mostrarla desde Ajustes";
 "Keep a note, image, or recording without creating a journal entry." = "Guarda una nota, imagen o grabación sin crear una entrada del diario.";
@@ -51,6 +51,7 @@
 "Confirm deletion of this private library item." = "Confirma la eliminación de este elemento privado de la biblioteca.";
 "Confirm export of this private %@." = "Confirma la exportación de este elemento privado: %@.";
 "Need support now?" = "¿Necesitas apoyo ahora?";
+"Need support?" = "¿Necesitas apoyo?";
 "Set up a passcode, Face ID, or Touch ID in iPhone Settings, then try again." = "Configura un código, Face ID o Touch ID en los ajustes del iPhone y vuelve a intentarlo.";
 
 /* Journal home and history */
@@ -158,13 +159,18 @@
 "Searches notes, titles, collections, and tags on this iPhone" = "Busca notas, títulos, colecciones y etiquetas en este iPhone";
 "Library filter" = "Filtro de la biblioteca";
 "No items match this filter." = "No hay elementos que coincidan con este filtro.";
+"No items with this tag." = "No hay elementos con esta etiqueta.";
 "No items in this collection." = "No hay elementos en esta colección.";
 "Previews are hidden." = "Las vistas previas están ocultas.";
 "Collections" = "Colecciones";
 "Tags" = "Etiquetas";
+"Filter and manage tags" = "Filtrar y gestionar etiquetas";
+"Clear tag filter" = "Quitar filtro de etiqueta";
 "Add to your private library" = "Añadir a tu biblioteca privada";
 "New Note" = "Nueva nota";
 "Add Image" = "Añadir imagen";
+"Add Video" = "Añadir vídeo";
+"Add Audio" = "Añadir audio";
 "Record Video" = "Grabar vídeo";
 "Record Audio" = "Grabar audio";
 "Note" = "Nota";
@@ -185,15 +191,33 @@
 "No collections yet" = "Todavía no hay colecciones";
 "Add a tag" = "Añadir una etiqueta";
 "Add an Image" = "Añadir una imagen";
-"Choose one image to keep in your private library." = "Elige una imagen para guardarla en tu biblioteca privada.";
+"Take a photo or choose one from your library." = "Haz una foto o elige una de tu fototeca.";
 "Opening image…" = "Abriendo imagen…";
 "Selected image" = "Imagen seleccionada";
 "Save Image" = "Guardar imagen";
 "Choose a Different Image" = "Elegir otra imagen";
+"Take a Different Photo" = "Hacer otra foto";
+"Take Photo" = "Hacer foto";
+"Choose from Photos" = "Elegir de Fotos";
 "Choose Image" = "Elegir imagen";
 "Gentle Note receives only the image you choose." = "Gentle Note recibe únicamente la imagen que eliges.";
 "This image couldn’t be added" = "No se ha podido añadir esta imagen";
 "Try another image." = "Prueba con otra imagen.";
+"This photo couldn’t be prepared." = "No se ha podido preparar esta foto.";
+"Camera is off" = "La cámara está desactivada";
+"Gentle Note cannot take a photo without camera access. You can change this in iPhone Settings." = "Gentle Note no puede hacer una foto sin acceso a la cámara. Puedes cambiarlo en los ajustes del iPhone.";
+"The camera is unavailable." = "La cámara no está disponible.";
+"Record a new video or choose one from Photos." = "Graba un vídeo nuevo o elige uno de Fotos.";
+"Opening video…" = "Abriendo vídeo…";
+"Your chosen or recorded video stays inside the app unless you export it." = "El vídeo elegido o grabado permanece dentro de la app salvo que decidas exportarlo.";
+"This video couldn’t be added" = "No se ha podido añadir este vídeo";
+"Try another video." = "Prueba con otro vídeo.";
+"Record new audio or choose an audio file already on your iPhone." = "Graba un audio nuevo o elige un archivo de audio que ya esté en tu iPhone.";
+"Choose Audio File" = "Elegir archivo de audio";
+"Your chosen or recorded audio stays inside the app unless you export it." = "El audio elegido o grabado permanece dentro de la app salvo que decidas exportarlo.";
+"This audio couldn’t be added" = "No se ha podido añadir este audio";
+"Try another audio file." = "Prueba con otro archivo de audio.";
+"This item couldn’t be saved" = "No se ha podido guardar este elemento";
 "Record a private video" = "Grabar un vídeo privado";
 "Gentle Note needs camera and microphone access only while you record. Videos stay inside the app unless you export them." = "Gentle Note necesita acceso a la cámara y al micrófono únicamente mientras grabas. Los vídeos permanecen dentro de la app salvo que decidas exportarlos.";
 "Camera" = "Cámara";
@@ -267,6 +291,12 @@
 "New tag" = "Nueva etiqueta";
 "Deleting a tag does not delete the items that use it." = "Eliminar una etiqueta no elimina los elementos que la usan.";
 "Search tags" = "Buscar etiquetas";
+"Use tags to group and find Library items. Included tags are always available; you can create, rename, and delete your own." = "Usa etiquetas para agrupar y encontrar elementos de la Biblioteca. Las etiquetas incluidas están siempre disponibles; puedes crear, renombrar y eliminar las tuyas.";
+"Tag name" = "Nombre de la etiqueta";
+"Save Tag" = "Guardar etiqueta";
+"Delete Tag" = "Eliminar etiqueta";
+"Edit Tag" = "Editar etiqueta";
+"Delete this tag?" = "¿Eliminar esta etiqueta?";
 
 /* Settings, privacy and export */
 "Language" = "Idioma";
@@ -309,6 +339,7 @@
 "Keep App Lock On" = "Mantener el bloqueo activado";
 "Anyone who can open your iPhone may be able to read this journal and library." = "Cualquiera que pueda abrir tu iPhone podría leer este diario y esta biblioteca.";
 "Camera and microphone access are requested only when you choose to record. The iOS photo picker gives Gentle Note only the image you select. Nothing is saved to Photos automatically." = "El acceso a la cámara y al micrófono solo se solicita cuando decides grabar. El selector de fotos de iOS proporciona a Gentle Note únicamente la imagen que eliges. No se guarda nada automáticamente en Fotos.";
+"Camera and microphone access are requested only when you choose to capture or record. System pickers give Gentle Note only the photo, video, or audio file you select. Nothing is saved to Photos automatically." = "El acceso a la cámara y al micrófono solo se solicita cuando decides hacer una foto o grabar. Los selectores del sistema proporcionan a Gentle Note únicamente la foto, el vídeo o el archivo de audio que eliges. No se guarda nada automáticamente en Fotos.";
 "Gentle Note on this iPhone" = "Gentle Note en este iPhone";
 "Temporary Files" = "Archivos temporales";
 "Total" = "Total";
@@ -336,7 +367,7 @@
 
 /* Erasing data */
 "Erase your journal and library" = "Borra tu diario y tu biblioteca";
-"This permanently deletes every journal entry, note, image, video, audio recording, collection, tag, draft, and search record stored by Gentle Note on this iPhone." = "Esto elimina de forma permanente todas las entradas del diario, notas, imágenes, vídeos, audios, colecciones, etiquetas, borradores y búsquedas guardados por Gentle Note en este iPhone.";
+"This permanently deletes every journal entry, note, image, video, audio recording, tag, draft, and search record stored by Gentle Note on this iPhone." = "Esto elimina de forma permanente todas las entradas del diario, notas, imágenes, vídeos, audios, etiquetas, borradores y búsquedas guardados por Gentle Note en este iPhone.";
 "It does not delete files you previously exported. Gentle Note cannot recover your content after erasing it." = "No elimina los archivos que hayas exportado anteriormente. Gentle Note no puede recuperar tu contenido después de borrarlo.";
 "Erase everything?" = "¿Borrarlo todo?";
 "This cannot be undone." = "Esto no se puede deshacer.";
@@ -344,7 +375,7 @@
 "Permanently Erase" = "Borrar permanentemente";
 "All content on this iPhone will be deleted now." = "Todo el contenido de este iPhone se eliminará ahora.";
 "Journal and library erased" = "Diario y biblioteca borrados";
-"No entries, notes, images, recordings, drafts, collections, or tags remain in Gentle Note. Previously exported files were not changed." = "No queda ninguna entrada, nota, imagen, grabación, borrador, colección ni etiqueta en Gentle Note. Los archivos exportados anteriormente no se han modificado.";
+"No entries, notes, images, recordings, drafts, or tags remain in Gentle Note. Previously exported files were not changed." = "No queda ninguna entrada, nota, imagen, grabación, borrador ni etiqueta en Gentle Note. Los archivos exportados anteriormente no se han modificado.";
 "Gentle Note couldn’t finish erasing" = "Gentle Note no ha podido terminar el borrado";
 "Some private data may still be on this iPhone. Close the app and try again. Do not assume it has been deleted." = "Es posible que todavía queden datos privados en este iPhone. Cierra la app e inténtalo de nuevo. No des por hecho que se han eliminado.";
 

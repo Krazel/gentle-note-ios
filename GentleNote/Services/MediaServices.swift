@@ -14,6 +14,10 @@ enum MediaPermissions {
     static func camera() -> MediaPermissionState { state(for: .video) }
     static func microphone() -> MediaPermissionState { state(for: .audio) }
 
+    static func requestCamera() async -> Bool {
+        await AVCaptureDevice.requestAccess(for: .video)
+    }
+
     static func requestCameraAndMicrophone() async -> Bool {
         let camera = await AVCaptureDevice.requestAccess(for: .video)
         guard camera else { return false }
@@ -147,6 +151,39 @@ struct CameraPreview: UIViewRepresentable {
 
     func updateUIView(_ uiView: PreviewView, context: Context) {
         uiView.layerView.session = session
+    }
+}
+
+struct PhotoCapturePicker: UIViewControllerRepresentable {
+    @Environment(\.dismiss) private var dismiss
+    let onImage: (UIImage) -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    func makeUIViewController(context: Context) -> UIImagePickerController {
+        let picker = UIImagePickerController()
+        picker.sourceType = .camera
+        picker.cameraCaptureMode = .photo
+        picker.delegate = context.coordinator
+        return picker
+    }
+
+    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+
+    final class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
+        let parent: PhotoCapturePicker
+
+        init(parent: PhotoCapturePicker) { self.parent = parent }
+
+        func imagePickerController(_ picker: UIImagePickerController,
+                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            if let image = info[.originalImage] as? UIImage { parent.onImage(image) }
+            parent.dismiss()
+        }
+
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            parent.dismiss()
+        }
     }
 }
 

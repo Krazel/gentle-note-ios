@@ -7,8 +7,8 @@ options:
 settings:
   base:
     SWIFT_VERSION: 5.10
-    MARKETING_VERSION: 0.5
-    CURRENT_PROJECT_VERSION: 3
+    MARKETING_VERSION: 0.6
+    CURRENT_PROJECT_VERSION: 1
     PRODUCT_BUNDLE_IDENTIFIER: com.krazel.gentlenote.B2X6D3A9J9
     DEVELOPMENT_TEAM: B2X6D3A9J9
     CODE_SIGN_STYLE: Automatic
@@ -36,7 +36,7 @@ targets:
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         NSFaceIDUsageDescription: Use Face ID to protect your private journal and library.
-        NSCameraUsageDescription: Gentle Note uses the camera only when you choose to record a private video.
+        NSCameraUsageDescription: Gentle Note uses the camera only when you choose to take a private photo or record a private video.
         NSMicrophoneUsageDescription: Gentle Note uses the microphone only when you choose to record private audio or video.
         ITSAppUsesNonExemptEncryption: false
     settings:

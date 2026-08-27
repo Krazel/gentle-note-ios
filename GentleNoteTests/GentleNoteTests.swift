@@ -48,6 +48,9 @@ final class GentleNoteTests: XCTestCase {
         XCTAssertEqual(spanish.localizedString(forKey: "Gentle Check-In", value: nil, table: nil), "Pausa para escucharte")
         XCTAssertEqual(spanish.localizedString(forKey: "Record Audio", value: nil, table: nil), "Grabar audio")
         XCTAssertEqual(spanish.localizedString(forKey: "Add Image", value: nil, table: nil), "Añadir imagen")
+        XCTAssertEqual(spanish.localizedString(forKey: "Add Video", value: nil, table: nil), "Añadir vídeo")
+        XCTAssertEqual(spanish.localizedString(forKey: "Add Audio", value: nil, table: nil), "Añadir audio")
+        XCTAssertEqual(spanish.localizedString(forKey: "Need support?", value: nil, table: nil), "¿Necesitas apoyo?")
         XCTAssertEqual(spanish.localizedString(forKey: "Call 112", value: nil, table: nil), "Llamar al 112")
         XCTAssertEqual(spanish.localizedString(forKey: "Call 024", value: nil, table: nil), "Llamar al 024")
         XCTAssertEqual(spanish.localizedString(forKey: "Trusted Contact", value: nil, table: nil), "Contacto de confianza")
@@ -103,24 +106,40 @@ final class GentleNoteTests: XCTestCase {
         XCTAssertEqual(try JSONDecoder().decode(AppPreferences.self, from: encoded), preferences)
     }
 
-    func testDefaultCollectionsAreAvailableWithoutCreatingThem() {
+    func testDefaultTagsAreAvailableWithoutCreatingThem() {
         let snapshot = VaultSnapshot()
-        XCTAssertEqual(Set(snapshot.collections.compactMap(\.defaultKind)), Set(DefaultCollectionKind.allCases))
-        XCTAssertTrue(snapshot.collections.allSatisfy { !$0.displayName.isEmpty })
+        XCTAssertEqual(Set(snapshot.tags.compactMap(\.defaultKind)), Set(DefaultCollectionKind.allCases))
+        XCTAssertTrue(snapshot.tags.allSatisfy { !$0.displayName.isEmpty })
     }
 
-    func testImagesAndCollectionFilteringAreRepresentedInTheModel() {
-        let collectionID = UUID()
+    func testImagesAndTagFilteringAreRepresentedInTheModel() {
+        let tagID = UUID()
         var image = LibraryItem(kind: .image)
-        image.collectionIDs = [collectionID]
+        image.tagIDs = [tagID]
 
         XCTAssertTrue(image.matches(.all))
         XCTAssertTrue(image.matches(.images))
         XCTAssertFalse(image.matches(.notes))
-        XCTAssertTrue(image.belongs(to: collectionID))
-        XCTAssertFalse(image.belongs(to: UUID()))
-        XCTAssertTrue(image.belongs(to: nil))
+        XCTAssertTrue(image.hasTag(tagID))
+        XCTAssertFalse(image.hasTag(UUID()))
+        XCTAssertTrue(image.hasTag(nil))
         XCTAssertEqual(image.displayTitle, "Untitled Image".gentleLocalized)
+    }
+
+    func testLegacyCollectionsMigrateToTagsWithoutLosingAssignments() {
+        let collection = LibraryCollection(name: "Words for later")
+        var item = LibraryItem(kind: .note)
+        item.collectionIDs = [collection.id]
+        var snapshot = VaultSnapshot(schemaVersion: 1, libraryItems: [item],
+                                     collections: [collection], tags: [])
+
+        XCTAssertTrue(snapshot.migrateCollectionsToTags())
+        XCTAssertEqual(snapshot.schemaVersion, 2)
+        XCTAssertTrue(snapshot.collections.isEmpty)
+        let migratedTag = snapshot.tags.first { $0.name == "Words for later" }
+        XCTAssertNotNil(migratedTag)
+        XCTAssertTrue(snapshot.libraryItems[0].collectionIDs.isEmpty)
+        XCTAssertTrue(snapshot.libraryItems[0].tagIDs.contains(try! XCTUnwrap(migratedTag).id))
     }
 
     func testLibraryIntroductionIsVisibleUntilExplicitlyHidden() {
@@ -132,7 +151,7 @@ final class GentleNoteTests: XCTestCase {
         XCTAssertEqual(hidden.showLibraryIntroduction, false)
     }
 
-    func testSpanishDefaultCollectionNamesArePackaged() throws {
+    func testSpanishDefaultTagNamesArePackaged() throws {
         let path = try XCTUnwrap(Bundle.main.path(forResource: "es", ofType: "lproj"))
         let spanish = try XCTUnwrap(Bundle(path: path))
         XCTAssertEqual(spanish.localizedString(forKey: "Comfort", value: nil, table: nil), "Consuelo")

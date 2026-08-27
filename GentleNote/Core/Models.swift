@@ -102,7 +102,7 @@ enum JournalTemplateID: String, Codable, CaseIterable, Identifiable {
         case .valuesCompass: "safari"
         case .presentMoment: "camera.macro"
         case .prepareToTalk: "heart.text.square"
-        case .noticeSomethingSmall: "sprout"
+        case .noticeSomethingSmall: "sparkles"
         }
     }
 
@@ -270,9 +270,9 @@ struct LibraryItem: Identifiable, Codable, Hashable {
         }
     }
 
-    func belongs(to collectionID: UUID?) -> Bool {
-        guard let collectionID else { return true }
-        return collectionIDs.contains(collectionID)
+    func hasTag(_ tagID: UUID?) -> Bool {
+        guard let tagID else { return true }
+        return tagIDs.contains(tagID)
     }
 }
 
@@ -311,7 +311,7 @@ struct LibraryCollection: Identifiable, Codable, Hashable {
     var symbol: CollectionSymbol = .leaf
     var color: CollectionColor = .forest
     var createdAt = Date()
-    var defaultKind: DefaultCollectionKind?
+    var defaultKind: DefaultCollectionKind? = nil
 
     var displayName: String { defaultKind?.title ?? name }
 
@@ -360,6 +360,15 @@ struct LibraryTag: Identifiable, Codable, Hashable {
     var id = UUID()
     var name: String
     var createdAt = Date()
+    var defaultKind: DefaultCollectionKind? = nil
+
+    var displayName: String { defaultKind?.title ?? name }
+
+    static var defaults: [LibraryTag] {
+        DefaultCollectionKind.allCases.map {
+            LibraryTag(name: "", defaultKind: $0)
+        }
+    }
 }
 
 struct JournalDraft: Codable, Equatable {
@@ -381,13 +390,71 @@ struct LibraryDraft: Codable, Equatable {
 }
 
 struct VaultSnapshot: Codable, Equatable {
-    var schemaVersion = 1
+    var schemaVersion = 2
     var journalEntries: [JournalEntry] = []
     var libraryItems: [LibraryItem] = []
-    var collections: [LibraryCollection] = LibraryCollection.defaults
-    var tags: [LibraryTag] = []
+    // Kept only to decode and migrate vaults created before tags replaced collections.
+    var collections: [LibraryCollection] = []
+    var tags: [LibraryTag] = LibraryTag.defaults
     var journalDraft: JournalDraft?
     var libraryDraft: LibraryDraft?
+}
+
+extension VaultSnapshot {
+    @discardableResult
+    mutating func migrateCollectionsToTags() -> Bool {
+        var changed = schemaVersion < 2 || !collections.isEmpty
+        var collectionToTag: [UUID: UUID] = [:]
+
+        for collection in collections {
+            let existing = tags.first { tag in
+                if let kind = collection.defaultKind { return tag.defaultKind == kind }
+                return tag.displayName.caseInsensitiveCompare(collection.displayName) == .orderedSame
+            }
+            if let existing {
+                collectionToTag[collection.id] = existing.id
+            } else {
+                let tag = LibraryTag(name: collection.defaultKind == nil ? collection.name : "",
+                                     createdAt: collection.createdAt,
+                                     defaultKind: collection.defaultKind)
+                tags.append(tag)
+                collectionToTag[collection.id] = tag.id
+                changed = true
+            }
+        }
+
+        let missingDefaults = DefaultCollectionKind.allCases.filter { kind in
+            !tags.contains { $0.defaultKind == kind }
+        }
+        for kind in missingDefaults {
+            tags.append(LibraryTag(name: "", defaultKind: kind))
+            changed = true
+        }
+
+        for index in libraryItems.indices {
+            let migrated = libraryItems[index].collectionIDs.compactMap { collectionToTag[$0] }
+            if !migrated.isEmpty || !libraryItems[index].collectionIDs.isEmpty {
+                libraryItems[index].tagIDs.formUnion(migrated)
+                libraryItems[index].collectionIDs.removeAll()
+                changed = true
+            }
+        }
+        if var draft = libraryDraft, !draft.collectionIDs.isEmpty {
+            draft.tagIDs.formUnion(draft.collectionIDs.compactMap { collectionToTag[$0] })
+            draft.collectionIDs.removeAll()
+            libraryDraft = draft
+            changed = true
+        }
+        if !collections.isEmpty {
+            collections.removeAll()
+            changed = true
+        }
+        if schemaVersion != 2 {
+            schemaVersion = 2
+            changed = true
+        }
+        return changed
+    }
 }
 
 enum LockDelay: String, Codable, CaseIterable, Identifiable {

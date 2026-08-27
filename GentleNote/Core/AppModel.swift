@@ -21,13 +21,7 @@ final class AppModel: ObservableObject {
             preferences = try store.loadPreferences()
             GentleLocalization.configure(preferences.languageOverride)
             var loadedVault = try store.loadSnapshot()
-            let missingDefaults = DefaultCollectionKind.allCases.filter { kind in
-                !loadedVault.collections.contains { $0.defaultKind == kind }
-            }
-            if !missingDefaults.isEmpty {
-                loadedVault.collections.append(contentsOf: missingDefaults.map {
-                    LibraryCollection(name: "", symbol: $0.symbol, color: $0.color, defaultKind: $0)
-                })
+            if loadedVault.migrateCollectionsToTags() {
                 try store.saveSnapshot(loadedVault)
             }
             vault = loadedVault
@@ -160,37 +154,35 @@ final class AppModel: ObservableObject {
         try commit(changed)
     }
 
-    func addCollection(_ collection: LibraryCollection) throws {
-        var changed = vault
-        if let index = changed.collections.firstIndex(where: { $0.id == collection.id }) {
-            changed.collections[index] = collection
-        } else { changed.collections.append(collection) }
-        try commit(changed)
-    }
-
-    func deleteCollection(_ id: UUID) throws {
-        var changed = vault
-        guard changed.collections.first(where: { $0.id == id })?.defaultKind == nil else { return }
-        changed.collections.removeAll { $0.id == id }
-        for index in changed.libraryItems.indices { changed.libraryItems[index].collectionIDs.remove(id) }
-        try commit(changed)
-    }
-
     func addTag(named name: String) throws -> LibraryTag {
-        if let existing = vault.tags.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) {
+        let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if let existing = vault.tags.first(where: { $0.displayName.caseInsensitiveCompare(cleanName) == .orderedSame }) {
             return existing
         }
-        let tag = LibraryTag(name: name.trimmingCharacters(in: .whitespacesAndNewlines))
+        let tag = LibraryTag(name: cleanName)
         var changed = vault
         changed.tags.append(tag)
         try commit(changed)
         return tag
     }
 
+    func renameTag(_ id: UUID, to name: String) throws {
+        let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanName.isEmpty,
+              !vault.tags.contains(where: { $0.id != id && $0.displayName.caseInsensitiveCompare(cleanName) == .orderedSame }) else { return }
+        var changed = vault
+        guard let index = changed.tags.firstIndex(where: { $0.id == id }),
+              changed.tags[index].defaultKind == nil else { return }
+        changed.tags[index].name = cleanName
+        try commit(changed)
+    }
+
     func deleteTag(_ id: UUID) throws {
         var changed = vault
+        guard changed.tags.first(where: { $0.id == id })?.defaultKind == nil else { return }
         changed.tags.removeAll { $0.id == id }
         for index in changed.libraryItems.indices { changed.libraryItems[index].tagIDs.remove(id) }
+        changed.libraryDraft?.tagIDs.remove(id)
         try commit(changed)
     }
 
@@ -209,6 +201,7 @@ final class AppModel: ObservableObject {
         try store.saveSnapshot(changed)
         vault = changed
     }
+
 }
 
 enum RootTab: Hashable { case journal, library, settings }

@@ -33,7 +33,7 @@
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSCameraUsageDescription</key>
-    <string>Gentle Note uses the camera only when you choose to record a private video.</string>
+    <string>Gentle Note uses the camera only when you choose to take a private photo or record a private video.</string>
     <key>NSFaceIDUsageDescription</key>
     <string>Use Face ID to protect your private journal and library.</string>
     <key>NSMicrophoneUsageDescription</key>

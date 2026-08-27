@@ -1,4 +1,4 @@
-# Implementation handoff — 0.5 (3)
+# Implementation handoff — 0.6 (1)
 
 ## Implemented
 
@@ -10,11 +10,14 @@
   with purpose summaries and reachable cancellation, drafts, Journal History,
   local search/filtering, previews-off default, Keep, detail, editing, PDF/text
   export, individual deletion, and total erase.
-- Library for notes, user-selected images, video, and audio with collection
-  filtering, the system photo picker, and just-in-time recording permissions,
-  custom camera preview/recording, audio metering/waveform, review before save,
-  local playback, Keep, four included collections, user-created collections,
-  tags, metadata search, export, and delete. Library has a dismissible
+- Library for notes, images, video, and audio with one tag system for both
+  organization and filtering. Images can be captured or selected in Photos;
+  videos can be recorded or selected in Photos; audio can be recorded or
+  chosen with the system file picker. Camera/microphone access is requested
+  only for capture. The app provides four included tags plus user-created tags,
+  local playback, Keep, metadata search, export, and delete. A schema-v2
+  migration converts every legacy collection into a tag and preserves all item
+  assignments. Library has a dismissible
   introduction explaining that it is a standalone archive for words and
   reminders the person may want to recover later; Settings can show it again.
 - AES-GCM encrypted text/metadata and chunk-encrypted recordings, a random key

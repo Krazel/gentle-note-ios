@@ -65,7 +65,7 @@ if ($Info.Contains('NSPhotoLibraryUsageDescription')) { $Failures.Add('Photos pe
 $Swift = Get-ChildItem -LiteralPath (Join-Path $ProjectRoot 'GentleNote') -Filter '*.swift' -Recurse |
     ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw }
 $AllSwift = $Swift -join "`n"
-foreach ($RequiredText in @('Journal History','Record Video','Record Audio','Add Image','PhotosPicker','selectedCollectionID','Data Not Collected','deviceOwnerAuthentication','AES.GCM','isExcludedFromBackup','enteredInactive','MFMessageComposeViewController','tel:112','tel:024','trustedContact','requireAuthenticationForDeletion','KeyboardDismissInstaller','DefaultCollectionKind','Helpful Reminders','languageOverride','showLibraryIntroduction','template.summary')) {
+foreach ($RequiredText in @('Journal History','Record Video','Record Audio','Add Image','PhotosPicker','selectedTagID','migrateCollectionsToTags','PickedVideoFile','PhotoCapturePicker','fileImporter','Data Not Collected','deviceOwnerAuthentication','AES.GCM','isExcludedFromBackup','enteredInactive','MFMessageComposeViewController','tel:112','tel:024','trustedContact','requireAuthenticationForDeletion','KeyboardDismissInstaller','DefaultCollectionKind','Helpful Reminders','languageOverride','showLibraryIntroduction','template.summary')) {
     if (-not $AllSwift.Contains($RequiredText) -and $RequiredText -ne 'Data Not Collected') {
         $Failures.Add("Expected implementation marker missing: $RequiredText")
     }
@@ -78,6 +78,9 @@ foreach ($RemovedOnboardingCopy in @('Your words and recordings stay with you.',
 }
 foreach ($RemovedVisibleCopy in @('Reflection templates are not therapy or medical advice.','No account. No ads. No analytics.','New Journal Entry','Start blank or choose a gentle template.')) {
     if ($AllSwift.Contains($RemovedVisibleCopy)) { $Failures.Add("Removed visible copy is still present: $RemovedVisibleCopy") }
+}
+foreach ($RemovedLibraryUI in @('Button("Collections")','selectedCollectionID','Organize them with collections and tags.','questionmark.shield','text.document','case .noticeSomethingSmall: "sprout"')) {
+    if ($AllSwift.Contains($RemovedLibraryUI)) { $Failures.Add("Removed Library/UI marker is still present: $RemovedLibraryUI") }
 }
 
 $SpanishCatalog = Get-Content -LiteralPath (Join-Path $ProjectRoot 'GentleNote\Resources\es.lproj\Localizable.strings') -Raw
@@ -94,8 +97,8 @@ foreach ($Source in @('GentleNoteApp.swift','Models.swift','SecureStore.swift','
 foreach ($LocalizedResource in @('Localizable.strings','InfoPlist.strings','knownRegions = (en, es, Base)')) {
     if (-not $Pbx.Contains($LocalizedResource)) { $Failures.Add("Xcode project omits localization marker: $LocalizedResource") }
 }
-if (-not $Pbx.Contains('MARKETING_VERSION = 0.5')) { $Failures.Add('Marketing version is not 0.5') }
-if (-not $Pbx.Contains('CURRENT_PROJECT_VERSION = 3')) { $Failures.Add('Build number is not 3') }
+if (-not $Pbx.Contains('MARKETING_VERSION = 0.6')) { $Failures.Add('Marketing version is not 0.6') }
+if (-not $Pbx.Contains('CURRENT_PROJECT_VERSION = 1')) { $Failures.Add('Build number is not 1') }
 if (-not $Pbx.Contains('ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon')) { $Failures.Add('Xcode target does not select the AppIcon asset catalog') }
 if (-not $Pbx.Contains('IPHONEOS_DEPLOYMENT_TARGET = 16.0')) { $Failures.Add('Minimum iOS version is not 16.0') }
 if (-not $Pbx.Contains('PRODUCT_BUNDLE_IDENTIFIER = com.krazel.gentlenote.B2X6D3A9J9')) { $Failures.Add('App Store bundle identifier is not configured') }
@@ -112,7 +115,7 @@ if (-not (Test-Path -LiteralPath $AppIconPath)) { $Failures.Add('AppIcon-1024.pn
 if (-not $AppIconContents.Contains('"filename" : "AppIcon-1024.png"')) { $Failures.Add('App icon catalog does not reference AppIcon-1024.png') }
 
 $Workflow = Get-Content -LiteralPath (Join-Path $ProjectRoot '.github\workflows\ios-verify.yml') -Raw
-foreach ($VersionMarker in @('runs-on: macos-26','GentleNote-0.5-build-3-${SHORT_SHA}-Local-QA-unsigned','"marketingVersion": "0.5"','"build": "3"','GentleNote-0.5-build-3-test-evidence')) {
+foreach ($VersionMarker in @('runs-on: macos-26','GentleNote-0.6-build-1-${SHORT_SHA}-Local-QA-unsigned','"marketingVersion": "0.6"','"build": "1"','GentleNote-0.6-build-1-test-evidence')) {
     if (-not $Workflow.Contains($VersionMarker)) { $Failures.Add("Workflow version marker missing: $VersionMarker") }
 }
 
@@ -129,7 +132,7 @@ if (-not (Test-Path -LiteralPath $TestFlightWorkflowPath)) {
         'com.krazel.gentlenote.B2X6D3A9J9',
         'runs-on: macos-26',
         'CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName',
-        'GentleNote-0.5-build-3-signed-${{ github.sha }}'
+        'GentleNote-0.6-build-1-signed-${{ github.sha }}'
     )) {
         if (-not $TestFlightWorkflow.Contains($Marker)) {
             $Failures.Add("TestFlight workflow is missing marker: $Marker")
@@ -146,5 +149,5 @@ if ($Failures.Count -gt 0) {
 Write-Output 'VERIFY: PASS'
 Write-Output "Swift files: $($Swift.Count)"
 Write-Output "Approved boards: $($Approved.Count)"
-Write-Output 'Version: 0.5 (3), iOS 16+'
+Write-Output 'Version: 0.6 (1), iOS 16+'
 Write-Output 'Scope: iPhone, English and Spanish, local-only, no accounts/ads/analytics/tracking'
