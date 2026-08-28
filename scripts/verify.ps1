@@ -141,6 +141,12 @@ foreach ($RequiredSpanish in @('"Journal" = "Diario";','"Library" = "Biblioteca"
 }
 
 $Pbx = Get-Content -LiteralPath (Join-Path $ProjectRoot 'GentleNote.xcodeproj\project.pbxproj') -Raw
+$DefinedObjectIDs = [regex]::Matches($Pbx, '(?m)^\s*([A-F0-9]{24})\b(?: /\*.*?\*/)? = \{') |
+    ForEach-Object { $_.Groups[1].Value }
+$DuplicateObjectIDs = $DefinedObjectIDs | Group-Object | Where-Object { $_.Count -gt 1 }
+foreach ($DuplicateObjectID in $DuplicateObjectIDs) {
+    $Failures.Add("Xcode project reuses object identifier: $($DuplicateObjectID.Name)")
+}
 foreach ($Source in @('GentleNoteApp.swift','Models.swift','SecureStore.swift','AppModel.swift','AuthenticationService.swift','MediaServices.swift','ExportService.swift','SupportStore.swift','DesignSystem.swift','Components.swift','OnboardingAndRoot.swift','JournalViews.swift','LibraryViews.swift','SettingsViews.swift','GentleNoteTests.swift','PrivacyInfo.xcprivacy')) {
     if (-not $Pbx.Contains($Source)) { $Failures.Add("Xcode project omits: $Source") }
 }
