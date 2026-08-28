@@ -28,6 +28,7 @@ $Required = @(
     'GentleNote\UI\OnboardingAndRoot.swift',
     'GentleNote\UI\JournalViews.swift',
     'GentleNote\UI\LibraryViews.swift',
+    'GentleNote\UI\MealReflectionsViews.swift',
     'GentleNote\UI\SettingsViews.swift',
     'GentleNoteTests\GentleNoteTests.swift',
     'design\APPROVALS.md',
@@ -39,7 +40,7 @@ $Required = @(
 $Required | ForEach-Object { Require-File $_ }
 
 $Approved = Get-ChildItem -LiteralPath (Join-Path $ProjectRoot 'design\approved') -Filter 'ui-*.png'
-if ($Approved.Count -ne 8) { $Failures.Add("Expected 8 approved UI boards; found $($Approved.Count)") }
+if ($Approved.Count -ne 15) { $Failures.Add("Expected 15 approved UI boards; found $($Approved.Count)") }
 
 $ExpectedHashes = @{
     'ui-01-onboarding-journal.png' = 'F94224325FB6A9977AF58CAAAE25DA82E10EE38DC489A106ECADFEF6EECCF5D0'
@@ -50,6 +51,13 @@ $ExpectedHashes = @{
     'ui-06-media-search-errors.png' = '2A50800B3193D53014BFCF7CCCAD789FD19152EDC692D97A3BCA5F7CC882996F'
     'ui-07-settings-export.png' = 'B44BBADE22225DF56477D2364CAD8546A492A32E6E2F102FC959E2E3BD8F7AC6'
     'ui-08-lock-delete-help.png' = '69AFFF70B5B28324743F5B1C06C1096D80B5389ED7C4DBEF2F5F2B5BF29BD345'
+    'ui-09-meal-reflections-creation-en.png' = 'D5E8275130EA36D979E766DF1CC7957CB7DBF3672E22E090F7587AC3C836D753'
+    'ui-10-meal-reflections-review-en.png' = 'A08229FDA378184D438C57239E07633DCF612FFA503E3A064833BF58057D2092'
+    'ui-11-meal-reflections-creation-es.png' = '1EE628BF165AACC4E80F12B7377325940EF7F1669C01011D1AC1E6EBFFE8C4C8'
+    'ui-12-meal-reflections-review-es.png' = 'C80F099BDE4B2FBE0F7DED7520F679A0153319F9D1F100F4FF577047DCDB7C3B'
+    'ui-13-meal-reflections-calendar-en.png' = '4CB081F0508F7535D294490491D50C358818E31A0F81F8CFE425389BCEF0DDE5'
+    'ui-14-meal-reflections-calendar-es.png' = '5F1FEDD0ACA9A4A46E98C6C7B0F56BA19CD2C2BE1EE46F906E2931F589FDF0AF'
+    'ui-15-first-run-overview-es.png' = '12D373601C4344C4735CC17BFA766A5D74024D389511771D7E73E09F7AA2BF5F'
 }
 foreach ($File in $Approved) {
     $Actual = (Get-FileHash -LiteralPath $File.FullName -Algorithm SHA256).Hash
@@ -65,7 +73,7 @@ if ($Info.Contains('NSPhotoLibraryUsageDescription')) { $Failures.Add('Photos pe
 $Swift = Get-ChildItem -LiteralPath (Join-Path $ProjectRoot 'GentleNote') -Filter '*.swift' -Recurse |
     ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw }
 $AllSwift = $Swift -join "`n"
-foreach ($RequiredText in @('Journal History','Record Video','Record Audio','Add Image','PhotosPicker','selectedTagID','migrateCollectionsToTags','PickedVideoFile','PhotoCapturePicker','fileImporter','Data Not Collected','deviceOwnerAuthentication','AES.GCM','isExcludedFromBackup','enteredInactive','MFMessageComposeViewController','tel:112','tel:024','trustedContact','requireAuthenticationForDeletion','KeyboardDismissInstaller','DefaultCollectionKind','Helpful Reminders','languageOverride','showLibraryIntroduction','template.summary')) {
+foreach ($RequiredText in @('Journal History','Record Video','Record Audio','Add Image','PhotosPicker','selectedTagID','migrateCollectionsToTags','PickedVideoFile','PhotoCapturePicker','fileImporter','Data Not Collected','deviceOwnerAuthentication','AES.GCM','isExcludedFromBackup','enteredInactive','MFMessageComposeViewController','tel:112','tel:024','trustedContact','requireAuthenticationForDeletion','KeyboardDismissInstaller','DefaultCollectionKind','Helpful Reminders','languageOverride','showLibraryIntroduction','template.summary','MealReflection','MealReflectionsRootView','ReflectionCalendarView','MealMoment','schemaVersion = 3','OnboardingStep','OnboardingFlowState','Three spaces, each with its own purpose.','Continue to App Lock','It is always optional.')) {
     if (-not $AllSwift.Contains($RequiredText) -and $RequiredText -ne 'Data Not Collected') {
         $Failures.Add("Expected implementation marker missing: $RequiredText")
     }
@@ -76,6 +84,22 @@ foreach ($Forbidden in @('GoogleMobileAds','FirebaseAnalytics','CloudKit','Healt
 foreach ($RemovedOnboardingCopy in @('Your words and recordings stay with you.','A note about care.','I understand what this journal can and cannot do.')) {
     if ($AllSwift.Contains($RemovedOnboardingCopy)) { $Failures.Add("Removed onboarding copy is still present: $RemovedOnboardingCopy") }
 }
+
+$Onboarding = Get-Content -LiteralPath (Join-Path $ProjectRoot 'GentleNote\UI\OnboardingAndRoot.swift') -Raw
+foreach ($OnboardingMarker in @('case welcome','case overview','case appLock','flow.skipTour()','Button("Skip tour".gentleLocalized)','Button("Not Now".gentleLocalized)')) {
+    if (-not $Onboarding.Contains($OnboardingMarker)) { $Failures.Add("Onboarding flow marker missing: $OnboardingMarker") }
+}
+$JournalPosition = $Onboarding.IndexOf('title: "Journal"')
+$LibraryPosition = $Onboarding.IndexOf('title: "Library"')
+$ReflectionPosition = $Onboarding.IndexOf('title: "Meal Reflections"')
+if ($JournalPosition -lt 0 -or $LibraryPosition -lt 0 -or $ReflectionPosition -lt 0 -or
+    -not ($JournalPosition -lt $LibraryPosition -and $LibraryPosition -lt $ReflectionPosition)) {
+    $Failures.Add('Onboarding overview must keep Journal, Library, and Meal Reflections in that order')
+}
+$OnboardingCompletionCalls = [regex]::Matches($Onboarding, 'model\.setOnboardingComplete\(\)').Count
+if ($OnboardingCompletionCalls -ne 2) {
+    $Failures.Add("Onboarding completion must remain exclusive to the two App Lock choices; found $OnboardingCompletionCalls calls")
+}
 foreach ($RemovedVisibleCopy in @('Reflection templates are not therapy or medical advice.','No account. No ads. No analytics.','New Journal Entry','Start blank or choose a gentle template.')) {
     if ($AllSwift.Contains($RemovedVisibleCopy)) { $Failures.Add("Removed visible copy is still present: $RemovedVisibleCopy") }
 }
@@ -83,10 +107,36 @@ foreach ($RemovedLibraryUI in @('Button("Collections")','selectedCollectionID','
     if ($AllSwift.Contains($RemovedLibraryUI)) { $Failures.Add("Removed Library/UI marker is still present: $RemovedLibraryUI") }
 }
 
+$MediaServices = Get-Content -LiteralPath (Join-Path $ProjectRoot 'GentleNote\Services\MediaServices.swift') -Raw
+if ($MediaServices.Contains('setCategory(.record, mode: .spokenAudio')) {
+    $Failures.Add('Audio recording still uses the incompatible record/spokenAudio session pair')
+}
+foreach ($AudioSafetyMarker in @(
+    'static let sessionCategory: AVAudioSession.Category = .record',
+    'static let sessionMode: AVAudioSession.Mode = .default',
+    'recorder.prepareToRecord()',
+    'options: .notifyOthersOnDeactivation'
+)) {
+    if (-not $MediaServices.Contains($AudioSafetyMarker)) {
+        $Failures.Add("Audio recording safety marker missing: $AudioSafetyMarker")
+    }
+}
+$BeginConfiguration = $MediaServices.IndexOf('self.session.beginConfiguration()')
+$CommitConfiguration = if ($BeginConfiguration -ge 0) {
+    $MediaServices.IndexOf('self.session.commitConfiguration()', $BeginConfiguration)
+} else { -1 }
+$StartRunning = if ($BeginConfiguration -ge 0) {
+    $MediaServices.IndexOf('self.session.startRunning()', $BeginConfiguration)
+} else { -1 }
+if ($BeginConfiguration -lt 0 -or $CommitConfiguration -lt 0 -or $StartRunning -lt 0 -or
+    -not ($BeginConfiguration -lt $CommitConfiguration -and $CommitConfiguration -lt $StartRunning)) {
+    $Failures.Add('Video capture must commit configuration before calling startRunning')
+}
+
 $SpanishCatalog = Get-Content -LiteralPath (Join-Path $ProjectRoot 'GentleNote\Resources\es.lproj\Localizable.strings') -Raw
 $SpanishKeys = [regex]::Matches($SpanishCatalog, '(?m)^"(?:\\.|[^"])*"\s*=')
 if ($SpanishKeys.Count -lt 360) { $Failures.Add("Spanish catalog is unexpectedly incomplete: $($SpanishKeys.Count) keys") }
-foreach ($RequiredSpanish in @('"Journal" = "Diario";','"Library" = "Biblioteca";','"Settings" = "Ajustes";','"Gentle Check-In" = "Pausa para escucharte";','"Call 112" = "Llamar al 112";','"Call 024" = "Llamar al 024";','"Trusted Contact" = "Contacto de confianza";','"Helpful Reminders" = "Recordatorios que ayudan";','"Require Authentication to Delete" = "Solicitar autenticación para eliminar";','"App Language" = "Idioma de la app";','"Show Library Introduction" = "Mostrar la introducción de la Biblioteca";')) {
+foreach ($RequiredSpanish in @('"Journal" = "Diario";','"Library" = "Biblioteca";','"Settings" = "Ajustes";','"Gentle Check-In" = "Pausa para escucharte";','"Call 112" = "Llamar al 112";','"Call 024" = "Llamar al 024";','"Trusted Contact" = "Contacto de confianza";','"Helpful Reminders" = "Recordatorios que ayudan";','"Require Authentication to Delete" = "Solicitar autenticación para eliminar";','"App Language" = "Idioma de la app";','"Show Library Introduction" = "Mostrar la introducción de la Biblioteca";','"Audio recording could not start. Please try again." = "No se ha podido iniciar la grabación de audio. Inténtalo de nuevo.";','"Three spaces, each with its own purpose." = "Tres espacios, cada uno con su propósito.";','"Write freely or choose a template. There is nothing to keep up with." = "Escribe libremente o elige una plantilla. No hay nada pendiente.";','"Keep private notes, images, videos, and audio to return to whenever you choose." = "Guarda notas, imágenes, vídeos y audios privados para volver a ellos cuando tú decidas.";','"Reflect in your own words on moments related to food. It is always optional." = "Reflexiona con tus propias palabras sobre momentos relacionados con la comida. Siempre es opcional.";','"Skip tour" = "Omitir recorrido";','"Continue to App Lock" = "Continuar al bloqueo";')) {
     if (-not $SpanishCatalog.Contains($RequiredSpanish)) { $Failures.Add("Missing required Spanish translation: $RequiredSpanish") }
 }
 
@@ -97,7 +147,7 @@ foreach ($Source in @('GentleNoteApp.swift','Models.swift','SecureStore.swift','
 foreach ($LocalizedResource in @('Localizable.strings','InfoPlist.strings','knownRegions = (en, es, Base)')) {
     if (-not $Pbx.Contains($LocalizedResource)) { $Failures.Add("Xcode project omits localization marker: $LocalizedResource") }
 }
-if (-not $Pbx.Contains('MARKETING_VERSION = 0.6')) { $Failures.Add('Marketing version is not 0.6') }
+if (-not $Pbx.Contains('MARKETING_VERSION = 0.7')) { $Failures.Add('Marketing version is not 0.7') }
 if (-not $Pbx.Contains('CURRENT_PROJECT_VERSION = 1')) { $Failures.Add('Build number is not 1') }
 if (-not $Pbx.Contains('ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon')) { $Failures.Add('Xcode target does not select the AppIcon asset catalog') }
 if (-not $Pbx.Contains('IPHONEOS_DEPLOYMENT_TARGET = 16.0')) { $Failures.Add('Minimum iOS version is not 16.0') }
@@ -115,7 +165,7 @@ if (-not (Test-Path -LiteralPath $AppIconPath)) { $Failures.Add('AppIcon-1024.pn
 if (-not $AppIconContents.Contains('"filename" : "AppIcon-1024.png"')) { $Failures.Add('App icon catalog does not reference AppIcon-1024.png') }
 
 $Workflow = Get-Content -LiteralPath (Join-Path $ProjectRoot '.github\workflows\ios-verify.yml') -Raw
-foreach ($VersionMarker in @('runs-on: macos-26','GentleNote-0.6-build-1-${SHORT_SHA}-Local-QA-unsigned','"marketingVersion": "0.6"','"build": "1"','GentleNote-0.6-build-1-test-evidence')) {
+foreach ($VersionMarker in @('runs-on: macos-26','GentleNote-0.7-build-1-${SHORT_SHA}-Local-QA-unsigned','"marketingVersion": "0.7"','"build": "1"','GentleNote-0.7-build-1-test-evidence')) {
     if (-not $Workflow.Contains($VersionMarker)) { $Failures.Add("Workflow version marker missing: $VersionMarker") }
 }
 
@@ -132,7 +182,7 @@ if (-not (Test-Path -LiteralPath $TestFlightWorkflowPath)) {
         'com.krazel.gentlenote.B2X6D3A9J9',
         'runs-on: macos-26',
         'CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName',
-        'GentleNote-0.6-build-1-signed-${{ github.sha }}'
+        'GentleNote-0.7-build-1-signed-${{ github.sha }}'
     )) {
         if (-not $TestFlightWorkflow.Contains($Marker)) {
             $Failures.Add("TestFlight workflow is missing marker: $Marker")
@@ -149,5 +199,5 @@ if ($Failures.Count -gt 0) {
 Write-Output 'VERIFY: PASS'
 Write-Output "Swift files: $($Swift.Count)"
 Write-Output "Approved boards: $($Approved.Count)"
-Write-Output 'Version: 0.6 (1), iOS 16+'
+Write-Output 'Version: 0.7 (1), iOS 16+'
 Write-Output 'Scope: iPhone, English and Spanish, local-only, no accounts/ads/analytics/tracking'

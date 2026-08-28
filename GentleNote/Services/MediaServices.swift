@@ -48,13 +48,13 @@ final class VideoRecorder: NSObject, ObservableObject, AVCaptureFileOutputRecord
     private let output = AVCaptureMovieFileOutput()
     private let queue = DispatchQueue(label: "com.krazel.gentlenote.camera")
     private var timer: Timer?
+    private var discardFinishedRecording = false
 
     func configure() {
         queue.async { [weak self] in
             guard let self else { return }
             self.session.beginConfiguration()
             self.session.sessionPreset = .hd1280x720
-            defer { self.session.commitConfiguration() }
             do {
                 guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera,
                                                            for: .video,
@@ -72,11 +72,19 @@ final class VideoRecorder: NSObject, ObservableObject, AVCaptureFileOutputRecord
                 }
                 self.session.addInput(cameraInput)
                 self.session.addInput(microphoneInput)
-                if self.session.canAddOutput(self.output) { self.session.addOutput(self.output) }
+                if !self.session.outputs.contains(where: { $0 === self.output }) {
+                    guard self.session.canAddOutput(self.output) else {
+                        throw NSError(domain: "GentleNote.Camera", code: 3,
+                                      userInfo: [NSLocalizedDescriptionKey: "Camera output could not be prepared.".gentleLocalized])
+                    }
+                    self.session.addOutput(self.output)
+                }
                 self.output.movieFragmentInterval = .invalid
+                self.session.commitConfiguration()
+                if !self.session.isRunning { self.session.startRunning() }
                 DispatchQueue.main.async { self.isReady = true }
-                self.session.startRunning()
             } catch {
+                self.session.commitConfiguration()
                 DispatchQueue.main.async { self.errorMessage = error.localizedDescription }
             }
         }
@@ -88,6 +96,7 @@ final class VideoRecorder: NSObject, ObservableObject, AVCaptureFileOutputRecord
         try? FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete],
                                                ofItemAtPath: FileManager.default.temporaryDirectory.path)
         finishedURL = nil
+        discardFinishedRecording = false
         output.startRecording(to: url, recordingDelegate: self)
         isRecording = true
         elapsed = 0
@@ -127,12 +136,27 @@ final class VideoRecorder: NSObject, ObservableObject, AVCaptureFileOutputRecord
         queue.async { [weak self] in self?.session.stopRunning() }
     }
 
+    func cancelAndDiscard() {
+        discardFinishedRecording = true
+        timer?.invalidate()
+        if output.isRecording {
+            output.stopRecording()
+        } else if let finishedURL {
+            try? FileManager.default.removeItem(at: finishedURL)
+            self.finishedURL = nil
+        }
+        isRecording = false
+    }
+
     func fileOutput(_ output: AVCaptureFileOutput,
                     didFinishRecordingTo outputFileURL: URL,
                     from connections: [AVCaptureConnection],
                     error: Error?) {
         DispatchQueue.main.async {
-            if let error { self.errorMessage = error.localizedDescription }
+            if self.discardFinishedRecording {
+                try? FileManager.default.removeItem(at: outputFileURL)
+                self.finishedURL = nil
+            } else if let error { self.errorMessage = error.localizedDescription }
             else { self.finishedURL = outputFileURL }
             self.isRecording = false
         }
@@ -194,6 +218,9 @@ final class PreviewView: UIView {
 
 @MainActor
 final class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
+    static let sessionCategory: AVAudioSession.Category = .record
+    static let sessionMode: AVAudioSession.Mode = .default
+
     @Published var isRecording = false
     @Published var isPaused = false
     @Published var elapsed: TimeInterval = 0
@@ -205,9 +232,10 @@ final class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
     private var timer: Timer?
 
     func start() {
+        errorMessage = nil
         do {
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.record, mode: .spokenAudio, options: [])
+            try session.setCategory(Self.sessionCategory, mode: Self.sessionMode, options: [])
             try session.setActive(true)
             let url = FileManager.default.temporaryDirectory
                 .appendingPathComponent(UUID().uuidString + ".m4a")
@@ -220,7 +248,18 @@ final class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
             let recorder = try AVAudioRecorder(url: url, settings: settings)
             recorder.delegate = self
             recorder.isMeteringEnabled = true
-            recorder.record()
+            guard recorder.prepareToRecord(), recorder.record() else {
+                try? FileManager.default.removeItem(at: url)
+                try? session.setActive(false, options: .notifyOthersOnDeactivation)
+                throw NSError(
+                    domain: "GentleNote.AudioRecorder",
+                    code: 1,
+                    userInfo: [
+                        NSLocalizedDescriptionKey:
+                            "Audio recording could not start. Please try again.".gentleLocalized
+                    ]
+                )
+            }
             self.recorder = recorder
             isRecording = true
             isPaused = false
@@ -235,13 +274,19 @@ final class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
                     self.level = max(0.05, min(1, (power + 60) / 60))
                 }
             }
-        } catch { errorMessage = error.localizedDescription }
+        } catch {
+            try? AVAudioSession.sharedInstance().setActive(
+                false,
+                options: .notifyOthersOnDeactivation
+            )
+            errorMessage = error.localizedDescription
+        }
     }
 
     func pauseOrResume() {
         guard let recorder else { return }
         if recorder.isRecording { recorder.pause(); isPaused = true }
-        else { recorder.record(); isPaused = false }
+        else if recorder.record() { isPaused = false }
     }
 
     func stop() {
@@ -250,6 +295,15 @@ final class AudioRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate {
         finishedURL = recorder?.url
         isRecording = false
         isPaused = false
-        try? AVAudioSession.sharedInstance().setActive(false)
+        try? AVAudioSession.sharedInstance().setActive(
+            false,
+            options: .notifyOthersOnDeactivation
+        )
+    }
+
+    func cancelAndDiscard() {
+        if isRecording { stop() }
+        if let finishedURL { try? FileManager.default.removeItem(at: finishedURL) }
+        finishedURL = nil
     }
 }

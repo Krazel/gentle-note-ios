@@ -223,8 +223,20 @@ final class SecureVaultStore {
             case .note: break
             }
         }
+        for reflection in vault.mealReflections {
+            images += fileSize(mediaURL.appendingPathComponent(reflection.mainPhotoFilename))
+            for attachment in reflection.attachments {
+                let size = fileSize(mediaURL.appendingPathComponent(attachment.encryptedMediaFilename))
+                switch attachment.kind {
+                case .image: images += size
+                case .video: videos += size
+                case .audio: audio += size
+                }
+            }
+        }
+        let reflectionText = Int64((try? JSONEncoder.gentle.encode(vault.mealReflections).count) ?? 0)
         let temporary = directorySize(temporaryURL)
-        return StorageBreakdown(journal: journal, notes: notes, images: images,
+        return StorageBreakdown(journal: journal, notes: notes + reflectionText, images: images,
                                 videos: videos, audio: audio, temporary: temporary)
     }
 

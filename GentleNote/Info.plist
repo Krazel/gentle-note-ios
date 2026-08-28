@@ -35,7 +35,7 @@
     <key>NSCameraUsageDescription</key>
     <string>Gentle Note uses the camera only when you choose to take a private photo or record a private video.</string>
     <key>NSFaceIDUsageDescription</key>
-    <string>Use Face ID to protect your private journal and library.</string>
+    <string>Use Face ID to protect your private space in Gentle Note.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Gentle Note uses the microphone only when you choose to record private audio or video.</string>
     <key>UILaunchScreen</key>

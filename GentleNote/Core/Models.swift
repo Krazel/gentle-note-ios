@@ -276,6 +276,85 @@ struct LibraryItem: Identifiable, Codable, Hashable {
     }
 }
 
+enum MealMoment: String, Codable, CaseIterable, Identifiable {
+    case breakfast
+    case morningSnack
+    case lunch
+    case afternoonSnack
+    case dinner
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .breakfast: "Breakfast".gentleLocalized
+        case .morningSnack: "Morning snack".gentleLocalized
+        case .lunch: "Lunch".gentleLocalized
+        case .afternoonSnack: "Afternoon snack".gentleLocalized
+        case .dinner: "Dinner".gentleLocalized
+        }
+    }
+}
+
+enum ReflectionAttachmentKind: String, Codable, CaseIterable, Identifiable {
+    case image, audio, video
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .image: "Image".gentleLocalized
+        case .audio: "Audio".gentleLocalized
+        case .video: "Video".gentleLocalized
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .image: "photo"
+        case .audio: "waveform"
+        case .video: "video"
+        }
+    }
+
+    var libraryKind: LibraryItemKind {
+        switch self {
+        case .image: .image
+        case .audio: .audio
+        case .video: .video
+        }
+    }
+}
+
+struct ReflectionAttachment: Identifiable, Codable, Hashable {
+    var id = UUID()
+    var kind: ReflectionAttachmentKind
+    var encryptedMediaFilename: String
+    var mediaFileExtension: String
+    var duration: TimeInterval?
+    var createdAt = Date()
+}
+
+struct MealReflection: Identifiable, Codable, Hashable {
+    var id = UUID()
+    var mainPhotoFilename: String
+    var mainPhotoExtension: String
+    var words = ""
+    var attachments: [ReflectionAttachment] = []
+    var reflectionDate = Date()
+    var mealMoment: MealMoment?
+    var createdAt = Date()
+    var updatedAt = Date()
+
+    var displayTitle: String {
+        mealMoment?.title ?? "A moment to remember".gentleLocalized
+    }
+
+    var allMediaFilenames: Set<String> {
+        Set([mainPhotoFilename] + attachments.map(\.encryptedMediaFilename))
+    }
+}
+
 enum CollectionSymbol: String, Codable, CaseIterable, Identifiable {
     case leaf = "leaf"
     case sprig = "camera.macro"
@@ -390,20 +469,68 @@ struct LibraryDraft: Codable, Equatable {
 }
 
 struct VaultSnapshot: Codable, Equatable {
-    var schemaVersion = 2
+    var schemaVersion = 3
     var journalEntries: [JournalEntry] = []
     var libraryItems: [LibraryItem] = []
+    var mealReflections: [MealReflection] = []
     // Kept only to decode and migrate vaults created before tags replaced collections.
     var collections: [LibraryCollection] = []
     var tags: [LibraryTag] = LibraryTag.defaults
     var journalDraft: JournalDraft?
     var libraryDraft: LibraryDraft?
+
+    private enum CodingKeys: String, CodingKey {
+        case schemaVersion, journalEntries, libraryItems, mealReflections, collections, tags,
+             journalDraft, libraryDraft
+    }
+
+    init(schemaVersion: Int = 3,
+         journalEntries: [JournalEntry] = [],
+         libraryItems: [LibraryItem] = [],
+         mealReflections: [MealReflection] = [],
+         collections: [LibraryCollection] = [],
+         tags: [LibraryTag] = LibraryTag.defaults,
+         journalDraft: JournalDraft? = nil,
+         libraryDraft: LibraryDraft? = nil) {
+        self.schemaVersion = schemaVersion
+        self.journalEntries = journalEntries
+        self.libraryItems = libraryItems
+        self.mealReflections = mealReflections
+        self.collections = collections
+        self.tags = tags
+        self.journalDraft = journalDraft
+        self.libraryDraft = libraryDraft
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 1
+        journalEntries = try container.decodeIfPresent([JournalEntry].self, forKey: .journalEntries) ?? []
+        libraryItems = try container.decodeIfPresent([LibraryItem].self, forKey: .libraryItems) ?? []
+        mealReflections = try container.decodeIfPresent([MealReflection].self, forKey: .mealReflections) ?? []
+        collections = try container.decodeIfPresent([LibraryCollection].self, forKey: .collections) ?? []
+        tags = try container.decodeIfPresent([LibraryTag].self, forKey: .tags) ?? LibraryTag.defaults
+        journalDraft = try container.decodeIfPresent(JournalDraft.self, forKey: .journalDraft)
+        libraryDraft = try container.decodeIfPresent(LibraryDraft.self, forKey: .libraryDraft)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(schemaVersion, forKey: .schemaVersion)
+        try container.encode(journalEntries, forKey: .journalEntries)
+        try container.encode(libraryItems, forKey: .libraryItems)
+        try container.encode(mealReflections, forKey: .mealReflections)
+        try container.encode(collections, forKey: .collections)
+        try container.encode(tags, forKey: .tags)
+        try container.encodeIfPresent(journalDraft, forKey: .journalDraft)
+        try container.encodeIfPresent(libraryDraft, forKey: .libraryDraft)
+    }
 }
 
 extension VaultSnapshot {
     @discardableResult
     mutating func migrateCollectionsToTags() -> Bool {
-        var changed = schemaVersion < 2 || !collections.isEmpty
+        var changed = schemaVersion < 3 || !collections.isEmpty
         var collectionToTag: [UUID: UUID] = [:]
 
         for collection in collections {
@@ -449,8 +576,8 @@ extension VaultSnapshot {
             collections.removeAll()
             changed = true
         }
-        if schemaVersion != 2 {
-            schemaVersion = 2
+        if schemaVersion != 3 {
+            schemaVersion = 3
             changed = true
         }
         return changed
@@ -491,6 +618,8 @@ struct AppPreferences: Codable, Equatable {
     var requireAuthenticationForDeletion: Bool?
     var languageOverride: AppLanguage?
     var showLibraryIntroduction: Bool?
+    var showMealReflectionPreviews: Bool?
+    var mealReflectionsEnabled: Bool?
 }
 
 struct TrustedContact: Codable, Equatable {

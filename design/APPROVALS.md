@@ -15,6 +15,13 @@ the visual specification; runtime captures will be linked after macOS/Xcode QA.
 | 06 | Video detail; audio detail; Library search; tags; permission denial; storage/interruption error | `design/approved/ui-06-media-search-errors.png` | `2A50800B3193D53014BFCF7CCCAD789FD19152EDC692D97A3BCA5F7CC882996F` | Current |
 | 07 | Settings; Privacy & Lock; media permissions; storage; export selection; export warning/success | `design/approved/ui-07-settings-export.png` | `B44BBADE22225DF56477D2364CAD8546A492A32E6E2F102FC959E2E3BD8F7AC6` | Current visual language; v0.4 Settings additions below; storage values are illustrative only |
 | 08 | Locked; delete item; erase all; Help & Safety; optional support; Privacy Notice | `design/approved/ui-08-lock-delete-help.png` | `69AFFF70B5B28324743F5B1C06C1096D80B5389ED7C4DBEF2F5F2B5BF29BD345` | Current; clinical/crisis copy still requires specialist review |
+| 09 | Independent Meal Reflections home; camera-first main photo; photo review; layered editor; multi-attachment state | `design/approved/ui-09-meal-reflections-creation-en.png` | `D5E8275130EA36D979E766DF1CC7957CB7DBF3672E22E090F7587AC3C836D753` | Approved by owner on 2026-08-28; English creation reference |
+| 10 | Reflection history; full detail; deliberate playback; edit; reflection privacy/export; single-item deletion | `design/approved/ui-10-meal-reflections-review-en.png` | `A08229FDA378184D438C57239E07633DCF612FFA503E3A064833BF58057D2092` | Approved by owner on 2026-08-28; English review reference |
+| 11 | Spanish localization of independent creation and multi-attachment flow | `design/approved/ui-11-meal-reflections-creation-es.png` | `1EE628BF165AACC4E80F12B7377325940EF7F1669C01011D1AC1E6EBFFE8C4C8` | Approved by owner on 2026-08-28; Spanish creation reference |
+| 12 | Spanish localization of history, detail, playback, edit, privacy and deletion | `design/approved/ui-12-meal-reflections-review-es.png` | `C80F099BDE4B2FBE0F7DED7520F679A0153319F9D1F100F4FF577047DCDB7C3B` | Approved by owner on 2026-08-28; Spanish review reference |
+| 13 | Internal calendar; selected-day reflections; editable date; optional quick meal-moment selector; calendar-linked detail | `design/approved/ui-13-meal-reflections-calendar-en.png` | `4CB081F0508F7535D294490491D50C358818E31A0F81F8CFE425389BCEF0DDE5` | Approved by owner on 2026-08-28; English calendar amendment |
+| 14 | Spanish localization of calendar and optional Desayuno/Tentempié/Comida/Merienda/Cena selector | `design/approved/ui-14-meal-reflections-calendar-es.png` | `5F1FEDD0ACA9A4A46E98C6C7B0F56BA19CD2C2BE1EE46F906E2931F589FDF0AF` | Approved by owner on 2026-08-28; Spanish calendar amendment |
+| 15 | First-run overview between Welcome and optional App Lock; Journal, Library and Meal Reflections always shown | `design/approved/ui-15-first-run-overview-es.png` | `12D373601C4344C4735CC17BFA766A5D74024D389511771D7E73E09F7AA2BF5F` | Approved by owner on 2026-08-28; 1041 × 1510 portrait Spanish reference; English uses the approved equivalent copy |
 
 ## Owner-requested and safety corrections
 
@@ -48,6 +55,22 @@ the visual specification; runtime captures will be linked after macOS/Xcode QA.
   Symbols, shorten the open Help title to `Need support?`, and remove its opening
   explanatory block. The Library introduction retains only its memory-purpose
   copy and no longer mentions organization systems.
+- Owner-approved Meal Reflections direction on 2026-08-28 adds a fourth root
+  destination, `Reflections`, independent of Journal and Library. Every saved
+  reflection is anchored by one main photo and may combine optional text,
+  multiple audio recordings or chosen audio files, multiple recorded or chosen
+  videos, and multiple additional captured or chosen images. Its own list and
+  calendar provide review by date. The optional, reversible quick label is one
+  of Breakfast, Morning snack, Lunch, Afternoon snack, or Dinner (localized as
+  Desayuno, Tentempié, Comida, Merienda, or Cena). Calendar dots indicate saved
+  content only; they are not completion, streak, schedule, or progress UI.
+- Owner-approved first-run amendment on 2026-08-28 inserts one Quiet Linen
+  overview between the existing Welcome and optional App Lock pages. It always
+  presents Journal, Library, and Meal Reflections in that order; Meal
+  Reflections is described as optional to use. `Skip tour` skips only this
+  explanation and advances to App Lock. It never completes onboarding or
+  changes the lock preference. Settings and Help & Safety are not included in
+  this overview, and the retired privacy/care pages remain absent.
 
 ## Runtime comparison
 

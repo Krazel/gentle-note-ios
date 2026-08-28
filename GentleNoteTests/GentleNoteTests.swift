@@ -1,7 +1,52 @@
 import XCTest
+import AVFoundation
 @testable import GentleNote
 
 final class GentleNoteTests: XCTestCase {
+    func testFirstRunFlowPlacesOverviewBetweenWelcomeAndAppLock() {
+        XCTAssertEqual(OnboardingStep.allCases, [.welcome, .overview, .appLock])
+
+        var flow = OnboardingFlowState()
+        XCTAssertEqual(flow.step, .welcome)
+        flow.advance()
+        XCTAssertEqual(flow.step, .overview)
+        flow.advance()
+        XCTAssertEqual(flow.step, .appLock)
+    }
+
+    func testSkipAndContinueReachAppLockWithoutCompletingOnboardingOrChangingLock() {
+        let preferences = AppPreferences()
+
+        var continued = OnboardingFlowState()
+        continued.advance()
+        continued.advance()
+        XCTAssertEqual(continued.step, .appLock)
+
+        var skipped = OnboardingFlowState()
+        skipped.skipTour()
+        XCTAssertEqual(skipped.step, .welcome)
+        skipped.advance()
+        skipped.skipTour()
+        XCTAssertEqual(skipped.step, .appLock)
+
+        XCTAssertFalse(preferences.onboardingComplete)
+        XCTAssertFalse(preferences.appLockEnabled)
+    }
+
+    func testFirstRunOverviewAlwaysContainsThreeOrderedSpaces() {
+        XCTAssertEqual(onboardingOverviewItems.map(\.title), ["Journal", "Library", "Meal Reflections"])
+        XCTAssertEqual(onboardingOverviewItems.count, 3)
+        XCTAssertEqual(
+            onboardingOverviewItems.last?.body,
+            "Reflect in your own words on moments related to food. It is always optional."
+        )
+    }
+
+    func testAudioRecorderUsesACompatibleRecordingSession() {
+        XCTAssertEqual(AudioRecorder.sessionCategory.rawValue, AVAudioSession.Category.record.rawValue)
+        XCTAssertEqual(AudioRecorder.sessionMode.rawValue, AVAudioSession.Mode.default.rawValue)
+    }
+
     func testEveryGuidedTemplateHasOnlyOptionalTextPrompts() {
         for template in JournalTemplateID.allCases where template != .blank {
             XCTAssertFalse(template.prompts.isEmpty)
@@ -50,6 +95,39 @@ final class GentleNoteTests: XCTestCase {
         XCTAssertEqual(spanish.localizedString(forKey: "Add Image", value: nil, table: nil), "Añadir imagen")
         XCTAssertEqual(spanish.localizedString(forKey: "Add Video", value: nil, table: nil), "Añadir vídeo")
         XCTAssertEqual(spanish.localizedString(forKey: "Add Audio", value: nil, table: nil), "Añadir audio")
+        XCTAssertEqual(
+            spanish.localizedString(forKey: "Three spaces, each with its own purpose.", value: nil, table: nil),
+            "Tres espacios, cada uno con su propósito."
+        )
+        XCTAssertEqual(
+            spanish.localizedString(
+                forKey: "Write freely or choose a template. There is nothing to keep up with.",
+                value: nil,
+                table: nil
+            ),
+            "Escribe libremente o elige una plantilla. No hay nada pendiente."
+        )
+        XCTAssertEqual(
+            spanish.localizedString(
+                forKey: "Keep private notes, images, videos, and audio to return to whenever you choose.",
+                value: nil,
+                table: nil
+            ),
+            "Guarda notas, imágenes, vídeos y audios privados para volver a ellos cuando tú decidas."
+        )
+        XCTAssertEqual(
+            spanish.localizedString(
+                forKey: "Reflect in your own words on moments related to food. It is always optional.",
+                value: nil,
+                table: nil
+            ),
+            "Reflexiona con tus propias palabras sobre momentos relacionados con la comida. Siempre es opcional."
+        )
+        XCTAssertEqual(spanish.localizedString(forKey: "Skip tour", value: nil, table: nil), "Omitir recorrido")
+        XCTAssertEqual(
+            spanish.localizedString(forKey: "Continue to App Lock", value: nil, table: nil),
+            "Continuar al bloqueo"
+        )
         XCTAssertEqual(spanish.localizedString(forKey: "Need support?", value: nil, table: nil), "¿Necesitas apoyo?")
         XCTAssertEqual(spanish.localizedString(forKey: "Call 112", value: nil, table: nil), "Llamar al 112")
         XCTAssertEqual(spanish.localizedString(forKey: "Call 024", value: nil, table: nil), "Llamar al 024")
@@ -97,6 +175,8 @@ final class GentleNoteTests: XCTestCase {
         XCTAssertNotEqual(preferences.requireAuthenticationForDeletion, true)
         XCTAssertNil(preferences.languageOverride)
         XCTAssertNil(preferences.showLibraryIntroduction)
+        XCTAssertNil(preferences.showMealReflectionPreviews)
+        XCTAssertNil(preferences.mealReflectionsEnabled)
     }
 
     func testTrustedContactRoundTrip() throws {
@@ -134,7 +214,7 @@ final class GentleNoteTests: XCTestCase {
                                      collections: [collection], tags: [])
 
         XCTAssertTrue(snapshot.migrateCollectionsToTags())
-        XCTAssertEqual(snapshot.schemaVersion, 2)
+        XCTAssertEqual(snapshot.schemaVersion, 3)
         XCTAssertTrue(snapshot.collections.isEmpty)
         let migratedTag = snapshot.tags.first { $0.name == "Words for later" }
         XCTAssertNotNil(migratedTag)
@@ -151,6 +231,42 @@ final class GentleNoteTests: XCTestCase {
         XCTAssertEqual(hidden.showLibraryIntroduction, false)
     }
 
+    func testOlderVaultDecodesWithAnEmptyMealReflectionsSection() throws {
+        let legacyJSON = """
+        {
+          "schemaVersion": 2,
+          "journalEntries": [],
+          "libraryItems": [],
+          "collections": [],
+          "tags": []
+        }
+        """
+        var snapshot = try JSONDecoder.gentle.decode(VaultSnapshot.self, from: Data(legacyJSON.utf8))
+        XCTAssertTrue(snapshot.mealReflections.isEmpty)
+        XCTAssertTrue(snapshot.migrateCollectionsToTags())
+        XCTAssertEqual(snapshot.schemaVersion, 3)
+    }
+
+    func testMealReflectionKeepsItsMainPhotoAndCombinedAttachments() {
+        let image = ReflectionAttachment(kind: .image,
+                                         encryptedMediaFilename: "additional.gnm",
+                                         mediaFileExtension: "jpg")
+        let audio = ReflectionAttachment(kind: .audio,
+                                         encryptedMediaFilename: "voice.gnm",
+                                         mediaFileExtension: "m4a")
+        let video = ReflectionAttachment(kind: .video,
+                                         encryptedMediaFilename: "clip.gnm",
+                                         mediaFileExtension: "mov")
+        let reflection = MealReflection(mainPhotoFilename: "main.gnm",
+                                        mainPhotoExtension: "jpg",
+                                        attachments: [image, audio, video],
+                                        mealMoment: .lunch)
+        XCTAssertEqual(reflection.mealMoment, .lunch)
+        XCTAssertEqual(reflection.attachments.map(\.kind), [.image, .audio, .video])
+        XCTAssertEqual(reflection.allMediaFilenames,
+                       ["main.gnm", "additional.gnm", "voice.gnm", "clip.gnm"])
+    }
+
     func testSpanishDefaultTagNamesArePackaged() throws {
         let path = try XCTUnwrap(Bundle.main.path(forResource: "es", ofType: "lproj"))
         let spanish = try XCTUnwrap(Bundle(path: path))
@@ -158,5 +274,10 @@ final class GentleNoteTests: XCTestCase {
         XCTAssertEqual(spanish.localizedString(forKey: "Helpful Reminders", value: nil, table: nil), "Recordatorios que ayudan")
         XCTAssertEqual(spanish.localizedString(forKey: "For Difficult Moments", value: nil, table: nil), "Para momentos difíciles")
         XCTAssertEqual(spanish.localizedString(forKey: "People & Places", value: nil, table: nil), "Personas y lugares")
+        XCTAssertEqual(spanish.localizedString(forKey: "Breakfast", value: nil, table: nil), "Desayuno")
+        XCTAssertEqual(spanish.localizedString(forKey: "Morning snack", value: nil, table: nil), "Tentempié")
+        XCTAssertEqual(spanish.localizedString(forKey: "Lunch", value: nil, table: nil), "Comida")
+        XCTAssertEqual(spanish.localizedString(forKey: "Afternoon snack", value: nil, table: nil), "Merienda")
+        XCTAssertEqual(spanish.localizedString(forKey: "Dinner", value: nil, table: nil), "Cena")
     }
 }

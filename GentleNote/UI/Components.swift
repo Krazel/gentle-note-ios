@@ -3,10 +3,14 @@ import SwiftUI
 import UIKit
 
 struct RootTabBar: View {
+    @EnvironmentObject private var model: AppModel
     @Binding var selection: RootTab
     var body: some View {
         HStack {
             tab(.journal, "Journal", "book.closed")
+            if model.mealReflectionsEnabled {
+                tab(.reflections, "Reflections", "camera.macro")
+            }
             tab(.library, "Library", "books.vertical")
             tab(.settings, "Settings", "gearshape")
         }

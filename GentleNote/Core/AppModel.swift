@@ -46,6 +46,14 @@ final class AppModel: ObservableObject {
         preferences.showLibraryIntroduction != false
     }
 
+    var showsMealReflectionPreviews: Bool {
+        preferences.showMealReflectionPreviews == true
+    }
+
+    var mealReflectionsEnabled: Bool {
+        preferences.mealReflectionsEnabled != false
+    }
+
     func setLanguage(_ language: AppLanguage?) {
         preferences.languageOverride = language
         GentleLocalization.configure(language)
@@ -57,12 +65,23 @@ final class AppModel: ObservableObject {
         savePreferences()
     }
 
+    func setMealReflectionPreviewsVisible(_ visible: Bool) {
+        preferences.showMealReflectionPreviews = visible
+        savePreferences()
+    }
+
+    func setMealReflectionsEnabled(_ enabled: Bool) {
+        preferences.mealReflectionsEnabled = enabled
+        if !enabled, selectedTab == .reflections { selectedTab = .journal }
+        savePreferences()
+    }
+
     func setOnboardingComplete() {
         preferences.onboardingComplete = true
         savePreferences()
     }
 
-    func unlock(reason: String = "Unlock your private journal and library.".gentleLocalized) async -> Bool {
+    func unlock(reason: String = "Unlock your private space.".gentleLocalized) async -> Bool {
         if !preferences.appLockEnabled {
             isUnlocked = true
             return true
@@ -154,6 +173,33 @@ final class AppModel: ObservableObject {
         try commit(changed)
     }
 
+    func saveMealReflection(_ reflection: MealReflection,
+                            newlyImportedFilenames: Set<String> = []) throws {
+        var changed = vault
+        let previous = changed.mealReflections.first { $0.id == reflection.id }
+        if let index = changed.mealReflections.firstIndex(where: { $0.id == reflection.id }) {
+            changed.mealReflections[index] = reflection
+        } else {
+            changed.mealReflections.append(reflection)
+        }
+        do {
+            try commit(changed)
+        } catch {
+            for filename in newlyImportedFilenames { try? store.removeMedia(filename: filename) }
+            throw error
+        }
+        let obsolete = (previous?.allMediaFilenames ?? []).subtracting(reflection.allMediaFilenames)
+        for filename in obsolete { try? store.removeMedia(filename: filename) }
+    }
+
+    func deleteMealReflection(_ id: UUID) throws {
+        var changed = vault
+        guard let reflection = changed.mealReflections.first(where: { $0.id == id }) else { return }
+        changed.mealReflections.removeAll { $0.id == id }
+        try commit(changed)
+        for filename in reflection.allMediaFilenames { try? store.removeMedia(filename: filename) }
+    }
+
     func addTag(named name: String) throws -> LibraryTag {
         let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         if let existing = vault.tags.first(where: { $0.displayName.caseInsensitiveCompare(cleanName) == .orderedSame }) {
@@ -204,4 +250,4 @@ final class AppModel: ObservableObject {
 
 }
 
-enum RootTab: Hashable { case journal, library, settings }
+enum RootTab: Hashable { case journal, reflections, library, settings }

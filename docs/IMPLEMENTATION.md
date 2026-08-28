@@ -1,10 +1,13 @@
-# Implementation handoff — 0.6 (1)
+# Implementation handoff — 0.7 (1)
 
 ## Implemented
 
 - Native SwiftUI iPhone app with the approved Quiet Linen language.
-- Two-step onboarding (welcome and optional device lock); detailed privacy and
-  care limits remain available in Settings and Help & Safety,
+- Three-step onboarding (welcome, a first-run overview that always lists
+  Journal, Library and Meal Reflections, then optional device lock). The overview can
+  be skipped only to the App Lock choice and never completes onboarding or
+  changes the lock preference. Detailed privacy and care limits remain
+  available in Settings and Help & Safety,
   background privacy cover, and Help & Safety access from the locked screen.
 - Journal Home with distinct blank/template paths, seven optional templates
   with purpose summaries and reachable cancellation, drafts, Journal History,
@@ -20,11 +23,27 @@
   assignments. Library has a dismissible
   introduction explaining that it is a standalone archive for words and
   reminders the person may want to recover later; Settings can show it again.
+- Meal Reflections as a new independent root section, not a Library variant.
+  Creation is camera-first with an existing-photo alternative. A required main
+  photo anchors each saved moment; optional words, multiple audio recordings or
+  chosen files, multiple recorded or chosen videos, and multiple additional
+  captured or chosen images can coexist. The date defaults to now but is
+  editable, and Breakfast, Morning snack, Lunch, Afternoon snack, or Dinner can
+  be applied or removed with one tap. Its own discreet history and calendar use
+  dots and a selected-day list instead of a food-photo grid. Detail supports
+  playback, editing, authenticated export, authenticated optional deletion,
+  previews-off privacy, and hiding the entire navigation section without data
+  loss. Vault schema v3 preserves older content and defaults the section empty.
+- Audio capture uses the compatible `.record`/`.default` session pair, checks
+  both preparation and recording start, and restores other audio sessions when
+  finished. Video capture commits its camera configuration before starting the
+  session, preventing the launch-time exception found during physical-device
+  QA of 0.6 (1).
 - AES-GCM encrypted text/metadata and chunk-encrypted recordings, a random key
   in the device-only Keychain, complete iOS file protection, backup exclusion,
   protected temporary files, and cleanup at background/export/playback exit.
 - Settings for system-default/English/Spanish language selection, the Library
-  introduction, lock delay, preview controls, guided-template visibility,
+  introduction, Meal Reflections visibility, lock delay, preview controls, guided-template visibility,
   permission status, dynamic storage breakdown, export, erase, safety, privacy,
   terms, and About.
 - Authentication before deletion is a separate App Lock option and is off by
