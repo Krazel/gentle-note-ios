@@ -16,6 +16,7 @@ final class GentleNoteTests: XCTestCase {
 
     func testSkipAndContinueReachAppLockWithoutCompletingOnboardingOrChangingLock() {
         let preferences = AppPreferences()
+        let initialLockSetting = preferences.appLockEnabled
 
         var continued = OnboardingFlowState()
         continued.advance()
@@ -30,7 +31,7 @@ final class GentleNoteTests: XCTestCase {
         XCTAssertEqual(skipped.step, .appLock)
 
         XCTAssertFalse(preferences.onboardingComplete)
-        XCTAssertFalse(preferences.appLockEnabled)
+        XCTAssertEqual(preferences.appLockEnabled, initialLockSetting)
     }
 
     func testFirstRunOverviewAlwaysContainsThreeOrderedSpaces() {
@@ -42,6 +43,7 @@ final class GentleNoteTests: XCTestCase {
         )
     }
 
+    @MainActor
     func testAudioRecorderUsesACompatibleRecordingSession() {
         XCTAssertEqual(AudioRecorder.sessionCategory.rawValue, AVAudioSession.Category.record.rawValue)
         XCTAssertEqual(AudioRecorder.sessionMode.rawValue, AVAudioSession.Mode.default.rawValue)
