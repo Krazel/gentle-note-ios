@@ -81,13 +81,13 @@ struct OnboardingOverviewItem: Identifiable, Equatable {
 let onboardingOverviewItems = [
     OnboardingOverviewItem(icon: "book.closed",
                            title: "Journal",
-                           body: "Write freely or choose a template. There is nothing to keep up with."),
+                           body: "Write freely or choose a template. Your personal journal."),
     OnboardingOverviewItem(icon: "books.vertical",
                            title: "Library",
-                           body: "Keep private notes, images, videos, and audio to return to whenever you choose."),
-    OnboardingOverviewItem(icon: "pencil",
+                           body: "Keep private notes, images, videos, and audio to return to when you need them."),
+    OnboardingOverviewItem(icon: "fork.knife",
                            title: "Meal Reflections",
-                           body: "Reflect in your own words on moments related to food. It is always optional.")
+                           body: "Keep one or more photos of your meals together with any words, audio, or video you want to add.")
 ]
 
 private struct OnboardingPage {
@@ -114,7 +114,7 @@ struct OnboardingView: View {
         GeometryReader { proxy in
             PaperBackground()
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: flow.step == .overview ? 12 : 24) {
                     HStack {
                         Spacer()
                         if flow.step == .overview {
@@ -128,7 +128,9 @@ struct OnboardingView: View {
 
                     OnboardingProgressIndicator(step: flow.step)
 
-                    Spacer(minLength: flow.step == .overview ? 0 : 20)
+                    if flow.step != .overview {
+                        Spacer(minLength: 20)
+                    }
 
                     if flow.step == .overview {
                         overviewContent
@@ -192,11 +194,11 @@ struct OnboardingView: View {
     }
 
     private var overviewContent: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 14) {
             Image(systemName: "books.vertical")
-                .font(.system(size: 32))
+                .font(.system(size: 28))
                 .foregroundStyle(QuietLinen.forest)
-                .padding(20)
+                .padding(14)
                 .background(QuietLinen.sage.opacity(0.2), in: Circle())
                 .accessibilityHidden(true)
 
@@ -206,24 +208,37 @@ struct OnboardingView: View {
             VStack(spacing: 12) {
                 ForEach(onboardingOverviewItems) { item in
                     LinenCard {
-                        HStack(alignment: .top, spacing: 14) {
-                            Image(systemName: item.icon)
-                                .font(.title2)
-                                .foregroundStyle(QuietLinen.forest)
-                                .frame(minWidth: 34, maxWidth: 34, minHeight: 44, alignment: .top)
-                                .accessibilityHidden(true)
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(item.title.gentleLocalized)
-                                    .font(.system(.title3, design: .serif, weight: .medium))
-                                    .foregroundStyle(QuietLinen.ink)
-                                Text(item.body.gentleLocalized)
-                                    .font(.body)
-                                    .foregroundStyle(QuietLinen.muted)
-                                    .fixedSize(horizontal: false, vertical: true)
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack(alignment: .top, spacing: 14) {
+                                Image(systemName: item.icon)
+                                    .font(.title2)
+                                    .foregroundStyle(QuietLinen.forest)
+                                    .frame(minWidth: 34, maxWidth: 34, minHeight: 44, alignment: .top)
+                                    .accessibilityHidden(true)
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(item.title.gentleLocalized)
+                                        .font(.system(.title3, design: .serif, weight: .medium))
+                                        .foregroundStyle(QuietLinen.ink)
+                                    Text(item.body.gentleLocalized)
+                                        .font(.body)
+                                        .foregroundStyle(QuietLinen.muted)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityElement(children: .combine)
+
+                            if item.title == "Meal Reflections" {
+                                Divider()
+                                Toggle("Show Meal Reflections in the app".gentleLocalized, isOn: Binding(
+                                    get: { model.mealReflectionsEnabled },
+                                    set: { model.setMealReflectionsEnabled($0) }
+                                ))
+                                .tint(QuietLinen.forest)
+                                .font(.subheadline)
+                                .frame(minHeight: 44)
+                            }
                         }
-                        .accessibilityElement(children: .combine)
                     }
                 }
             }

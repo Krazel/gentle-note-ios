@@ -39,8 +39,16 @@ final class GentleNoteTests: XCTestCase {
         XCTAssertEqual(onboardingOverviewItems.count, 3)
         XCTAssertEqual(
             onboardingOverviewItems.last?.body,
-            "Reflect in your own words on moments related to food. It is always optional."
+            "Keep one or more photos of your meals together with any words, audio, or video you want to add."
         )
+    }
+
+    func testEveryContentPreviewStartsEnabled() {
+        let preferences = AppPreferences()
+        XCTAssertTrue(preferences.showJournalPreviews)
+        XCTAssertTrue(preferences.showLibraryPreviews)
+        XCTAssertTrue(preferences.showVideoThumbnails)
+        XCTAssertEqual(preferences.showMealReflectionPreviews, true)
     }
 
     @MainActor
@@ -179,6 +187,8 @@ final class GentleNoteTests: XCTestCase {
         XCTAssertNil(preferences.showLibraryIntroduction)
         XCTAssertNil(preferences.showMealReflectionPreviews)
         XCTAssertNil(preferences.mealReflectionsEnabled)
+        XCTAssertNil(preferences.showMealReflectionIntroduction)
+        XCTAssertNil(preferences.previewDefaultsVersion)
     }
 
     func testTrustedContactRoundTrip() throws {

@@ -3,7 +3,7 @@ import fs from "node:fs";
 
 const appId = "6805943178";
 const bundleId = "com.krazel.gentlenote.B2X6D3A9J9";
-const marketingVersion = "0.7";
+const marketingVersion = "0.7.1";
 const buildNumber = "1";
 const groupName = "Testers";
 const mode = process.argv[2] ?? "status";

@@ -46,7 +46,7 @@ jobs:
         run: |
           set -euo pipefail
           SHORT_SHA="${GITHUB_SHA::7}"
-          ARTIFACT_BASENAME="GentleNote-0.7-build-1-${SHORT_SHA}-Local-QA-unsigned"
+          ARTIFACT_BASENAME="GentleNote-0.7.1-build-1-${SHORT_SHA}-Local-QA-unsigned"
           APP_PATH="$RUNNER_TEMP/DeviceDerivedData/Build/Products/Release-iphoneos/GentleNote.app"
           OUTPUT_DIR="$RUNNER_TEMP/GentleNoteArtifact"
           test -d "$APP_PATH"
@@ -60,7 +60,7 @@ jobs:
           cat > "$OUTPUT_DIR/${ARTIFACT_BASENAME}.json" <<JSON
           {
             "app": "Gentle Note",
-            "marketingVersion": "0.7",
+            "marketingVersion": "0.7.1",
             "build": "1",
             "commit": "$GITHUB_SHA",
             "ciRun": "$GITHUB_RUN_ID",
@@ -86,7 +86,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: GentleNote-0.7-build-1-test-evidence
+          name: GentleNote-0.7.1-build-1-test-evidence
           path: ${{ runner.temp }}/SimulatorDerivedData/Logs/Test/*.xcresult
           if-no-files-found: warn
           retention-days: 14

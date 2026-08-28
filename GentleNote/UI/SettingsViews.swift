@@ -39,7 +39,7 @@ struct SettingsRootView: View {
                     .tint(QuietLinen.forest)
                 }
                 Section("Meal Reflections") {
-                    Text("An optional, independent space for private reflections anchored by a photo. It is not a required meal log or treatment tool.")
+                    Text("Keep one or more photos of a meal together with any words, audio, or video you want to add. Use this space only when it is useful to you.")
                     Toggle("Show Meal Reflections Section", isOn: Binding(
                         get: { model.mealReflectionsEnabled },
                         set: { model.setMealReflectionsEnabled($0) }
@@ -48,6 +48,11 @@ struct SettingsRootView: View {
                     Toggle("Show Reflection Photo Previews", isOn: Binding(
                         get: { model.showsMealReflectionPreviews },
                         set: { model.setMealReflectionPreviewsVisible($0) }
+                    ))
+                    .tint(QuietLinen.forest)
+                    Toggle("Show Meal Reflections Introduction", isOn: Binding(
+                        get: { model.showsMealReflectionIntroduction },
+                        set: { model.setMealReflectionIntroductionVisible($0) }
                     ))
                     .tint(QuietLinen.forest)
                 }

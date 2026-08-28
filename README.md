@@ -16,11 +16,11 @@ calorie, macro, or required meal logging.
   introduction explains how the Library can preserve words and reminders that
   feel clear now but may be harder to remember later.
 - **Meal Reflections**: an optional, independent, camera-first section. Every
-  saved moment has one main photo and may combine words, multiple audio clips,
+  saved reflection has one main photo and may combine words, multiple audio clips,
   videos, and additional images. Its own history and calendar use optional
   Breakfast/Morning snack/Lunch/Afternoon snack/Dinner labels without scores,
   streaks, required timing, analysis, or plate comparison. Photo previews are
-  off by default and the entire navigation section can be hidden without
+  on by default and the entire navigation section can be hidden without
   deleting its encrypted local content.
 - **Settings**: app lock, preview controls, just-in-time permission status,
   storage, export, erase all, region-aware Help & Safety, an optional local
@@ -61,7 +61,7 @@ version to App Review or release the app publicly.
 
 ## Release boundary
 
-Source candidate version is `0.7`, build `1`. The source repository is public
+Source candidate version is `0.7.1`, build `1`. The source repository is public
 and TestFlight preparation/upload is authorized. App Review submission, public
 App Store release, and real StoreKit products are not authorized by that step.
 The visual runtime comparison, physical-device privacy tests, specialist/lived

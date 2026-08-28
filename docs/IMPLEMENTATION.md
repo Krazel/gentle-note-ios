@@ -1,4 +1,4 @@
-# Implementation handoff — 0.7 (1)
+# Implementation handoff — 0.7.1 (1)
 
 ## Implemented
 
@@ -11,7 +11,7 @@
   background privacy cover, and Help & Safety access from the locked screen.
 - Journal Home with distinct blank/template paths, seven optional templates
   with purpose summaries and reachable cancellation, drafts, Journal History,
-  local search/filtering, previews-off default, Keep, detail, editing, PDF/text
+  local search/filtering, previews on by default with user controls, Keep, detail, editing, PDF/text
   export, individual deletion, and total erase.
 - Library for notes, images, video, and audio with one tag system for both
   organization and filtering. Images can be captured or selected in Photos;
@@ -23,17 +23,20 @@
   assignments. Library has a dismissible
   introduction explaining that it is a standalone archive for words and
   reminders the person may want to recover later; Settings can show it again.
-- Meal Reflections as a new independent root section, not a Library variant.
-  Creation is camera-first with an existing-photo alternative. A required main
-  photo anchors each saved moment; optional words, multiple audio recordings or
+- Meal Reflections as a dedicated root section for meal photos and their context.
+  Creation is camera-first with a multi-photo Photos alternative. A required main
+  photo anchors each saved reflection; optional words, multiple audio recordings or
   chosen files, multiple recorded or chosen videos, and multiple additional
   captured or chosen images can coexist. The date defaults to now but is
   editable, and Breakfast, Morning snack, Lunch, Afternoon snack, or Dinner can
   be applied or removed with one tap. Its own discreet history and calendar use
-  dots and a selected-day list instead of a food-photo grid. Detail supports
+  dots and a selected-day list instead of a food-photo grid. Calendar is opened
+  from the top-right navigation button; there is no Moments/Calendar switch. Detail supports
   playback, editing, authenticated export, authenticated optional deletion,
-  previews-off privacy, and hiding the entire navigation section without data
-  loss. Vault schema v3 preserves older content and defaults the section empty.
+  user-controlled previews, and hiding the entire navigation section without data
+  loss. All preview types are on by default in this beta and remain individually
+  configurable. The section introduction can be dismissed and restored from
+  Settings. Vault schema v3 preserves older content and defaults the section empty.
 - Audio capture uses the compatible `.record`/`.default` session pair, checks
   both preparation and recording start, and restores other audio sessions when
   finished. Video capture commits its camera configuration before starting the

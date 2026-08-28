@@ -347,7 +347,7 @@ struct MealReflection: Identifiable, Codable, Hashable {
     var updatedAt = Date()
 
     var displayTitle: String {
-        mealMoment?.title ?? "A moment to remember".gentleLocalized
+        mealMoment?.title ?? "Meal reflection".gentleLocalized
     }
 
     var allMediaFilenames: Set<String> {
@@ -610,16 +610,18 @@ struct AppPreferences: Codable, Equatable {
     var onboardingComplete = false
     var appLockEnabled = true
     var lockDelay: LockDelay = .immediately
-    var showJournalPreviews = false
-    var showLibraryPreviews = false
-    var showVideoThumbnails = false
+    var showJournalPreviews = true
+    var showLibraryPreviews = true
+    var showVideoThumbnails = true
     var showGuidedTemplates = true
     var trustedContact: TrustedContact?
     var requireAuthenticationForDeletion: Bool?
     var languageOverride: AppLanguage?
     var showLibraryIntroduction: Bool?
-    var showMealReflectionPreviews: Bool?
+    var showMealReflectionPreviews: Bool? = true
     var mealReflectionsEnabled: Bool?
+    var showMealReflectionIntroduction: Bool?
+    var previewDefaultsVersion: Int?
 }
 
 struct TrustedContact: Codable, Equatable {

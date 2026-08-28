@@ -17,6 +17,6 @@ journal content never depends on a remote asset service.
 | Calendar indicators | Quiet Linen clay dots and sage selection drawn with SwiftUI | Saved-reflection dates without photo comparison or progress semantics |
 | Meal-moment chips | Native buttons using Quiet Linen line/clay states | Optional Breakfast/Morning snack/Lunch/Afternoon snack/Dinner label |
 | Reflection layer rows | SF Symbols, native controls and LinenCard surfaces | Text, multiple audio/video attachments and additional images |
-| First-run overview cards | Native `LinenCard` surfaces with `book.closed`, `books.vertical`, and `pencil` SF Symbols | Journal, Library, and optional-use Meal Reflections explanation |
+| First-run overview cards | Native `LinenCard` surfaces with `book.closed`, `books.vertical`, and `fork.knife` SF Symbols | Journal, Library, and optional Meal Reflections explanation and visibility control |
 
 No image, font, analytics, ad, or UI dependency is fetched at runtime.

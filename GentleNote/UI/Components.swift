@@ -8,10 +8,10 @@ struct RootTabBar: View {
     var body: some View {
         HStack {
             tab(.journal, "Journal", "book.closed")
-            if model.mealReflectionsEnabled {
-                tab(.reflections, "Reflections", "camera.macro")
-            }
             tab(.library, "Library", "books.vertical")
+            if model.mealReflectionsEnabled {
+                tab(.reflections, "Reflections", "fork.knife")
+            }
             tab(.settings, "Settings", "gearshape")
         }
         .padding(.horizontal, 18)
@@ -24,7 +24,7 @@ struct RootTabBar: View {
             selection = value
         } label: {
             VStack(spacing: 3) {
-                Image(systemName: selection == value ? icon + ".fill" : icon)
+                Image(systemName: resolvedIcon(icon, selected: selection == value))
                     .font(.title3)
                 Text(title).font(.caption2)
             }
@@ -33,6 +33,12 @@ struct RootTabBar: View {
         }
         .accessibilityLabel(Text(title))
         .accessibilityAddTraits(selection == value ? .isSelected : [])
+    }
+
+    private func resolvedIcon(_ icon: String, selected: Bool) -> String {
+        guard selected else { return icon }
+        let filled = icon + ".fill"
+        return UIImage(systemName: filled) == nil ? icon : filled
     }
 }
 

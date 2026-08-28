@@ -4,17 +4,17 @@ import SwiftUI
 import UniformTypeIdentifiers
 import UIKit
 
-private enum ReflectionRootMode: String, CaseIterable, Identifiable {
-    case moments, calendar
-    var id: String { rawValue }
-    var title: String { (self == .moments ? "Moments" : "Calendar").gentleLocalized }
-}
-
 private struct ReflectionEditorSeed: Identifiable {
     let id = UUID()
     var existingID: UUID?
     var mainPhotoData: Data?
     var mainPhotoExtension = "jpg"
+    var additionalPhotos: [ReflectionSeedImage] = []
+}
+
+private struct ReflectionSeedImage {
+    var data: Data
+    var fileExtension: String
 }
 
 private struct ReflectionDraftAttachment: Identifiable {
@@ -30,12 +30,10 @@ private struct ReflectionDraftAttachment: Identifiable {
 
 struct MealReflectionsRootView: View {
     @EnvironmentObject private var model: AppModel
-    @State private var mode: ReflectionRootMode = .moments
-    @State private var selectedPhoto: PhotosPickerItem?
+    @State private var selectedPhotos: [PhotosPickerItem] = []
     @State private var editorSeed: ReflectionEditorSeed?
     @State private var showCamera = false
     @State private var cameraDenied = false
-    @State private var showPrivacy = false
     @State private var loadingPhoto = false
     @State private var error: String?
 
@@ -47,20 +45,12 @@ struct MealReflectionsRootView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 18) {
-                    sectionIntroduction
+                    if model.showsMealReflectionIntroduction {
+                        sectionIntroduction
+                    }
                     captureActions
                     if !reflections.isEmpty {
-                        Picker("View", selection: $mode) {
-                            ForEach(ReflectionRootMode.allCases) { Text($0.title).tag($0) }
-                        }
-                        .pickerStyle(.segmented)
-                        .accessibilityLabel("Choose moments or calendar")
-
-                        if mode == .moments {
-                            ReflectionHistoryList(reflections: reflections)
-                        } else {
-                            ReflectionCalendarView(reflections: reflections)
-                        }
+                        ReflectionHistoryList(reflections: reflections)
                     }
                 }
                 .padding(20)
@@ -70,10 +60,12 @@ struct MealReflectionsRootView: View {
             .navigationTitle("Meal Reflections")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button { showPrivacy = true } label: {
-                        Image(systemName: "lock.shield")
+                    NavigationLink {
+                        ReflectionCalendarScreen(reflections: reflections)
+                    } label: {
+                        Image(systemName: "calendar")
                     }
-                    .accessibilityLabel("Reflection privacy")
+                    .accessibilityLabel("Open Calendar")
                 }
             }
             .navigationDestination(for: UUID.self) { id in
@@ -93,10 +85,7 @@ struct MealReflectionsRootView: View {
         .fullScreenCover(item: $editorSeed) { seed in
             NavigationStack { MealReflectionEditorView(seed: seed) }
         }
-        .sheet(isPresented: $showPrivacy) {
-            NavigationStack { ReflectionPrivacyView() }
-        }
-        .onChange(of: selectedPhoto) { loadMainPhoto($0) }
+        .onChange(of: selectedPhotos) { loadSelectedPhotos($0) }
         .alert("Camera is off", isPresented: $cameraDenied) {
             Button("Open iPhone Settings") {
                 UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
@@ -114,13 +103,27 @@ struct MealReflectionsRootView: View {
 
     private var sectionIntroduction: some View {
         LinenCard {
-            VStack(alignment: .leading, spacing: 10) {
-                Label("A moment, held gently", systemImage: "camera.macro")
-                    .font(.system(.title2, design: .serif))
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "fork.knife")
+                    .font(.title2)
                     .foregroundStyle(QuietLinen.forest)
-                Text("Keep a private reflection around one photo. Add words, audio, video, or more images only if they feel useful.")
-                Text("There is nothing to complete and no schedule to keep.")
-                    .font(.footnote).foregroundStyle(QuietLinen.muted)
+                    .frame(minWidth: 34, maxWidth: 34, minHeight: 44, alignment: .top)
+                    .accessibilityHidden(true)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Photos and context, together")
+                        .font(.system(.title2, design: .serif))
+                        .foregroundStyle(QuietLinen.forest)
+                    Text("Start with one or more photos of a meal. Add words, audio, or video to give it the context you want.")
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Button {
+                    model.setMealReflectionIntroductionVisible(false)
+                } label: {
+                    Image(systemName: "xmark")
+                        .frame(width: 44, height: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Hide this introduction")
             }
         }
     }
@@ -131,11 +134,11 @@ struct MealReflectionsRootView: View {
                 Label("Take a Photo", systemImage: "camera.fill")
             }
             .buttonStyle(PrimaryButtonStyle())
-            PhotosPicker(selection: $selectedPhoto, matching: .images) {
+            PhotosPicker(selection: $selectedPhotos, maxSelectionCount: 20, matching: .images) {
                 if loadingPhoto {
                     ProgressView()
                 } else {
-                    Label("Choose a Photo", systemImage: "photo.on.rectangle")
+                    Label("Choose Photos", systemImage: "photo.on.rectangle")
                 }
             }
             .buttonStyle(SecondaryButtonStyle())
@@ -154,28 +157,50 @@ struct MealReflectionsRootView: View {
         }
     }
 
-    private func loadMainPhoto(_ item: PhotosPickerItem?) {
-        guard let item else { return }
+    private func loadSelectedPhotos(_ items: [PhotosPickerItem]) {
+        guard !items.isEmpty else { return }
         loadingPhoto = true
         Task {
             do {
-                guard let data = try await item.loadTransferable(type: Data.self),
-                      UIImage(data: data) != nil else { throw CocoaError(.fileReadCorruptFile) }
-                let ext = item.supportedContentTypes.first(where: { $0.conforms(to: .image) })?
-                    .preferredFilenameExtension ?? "jpg"
+                var loaded: [ReflectionSeedImage] = []
+                for item in items {
+                    guard let data = try await item.loadTransferable(type: Data.self),
+                          UIImage(data: data) != nil else { throw CocoaError(.fileReadCorruptFile) }
+                    let ext = item.supportedContentTypes.first(where: { $0.conforms(to: .image) })?
+                        .preferredFilenameExtension ?? "jpg"
+                    loaded.append(ReflectionSeedImage(data: data, fileExtension: ext))
+                }
+                guard let main = loaded.first else { throw CocoaError(.fileReadUnknown) }
                 await MainActor.run {
-                    selectedPhoto = nil
+                    selectedPhotos = []
                     loadingPhoto = false
-                    editorSeed = ReflectionEditorSeed(mainPhotoData: data, mainPhotoExtension: ext)
+                    editorSeed = ReflectionEditorSeed(mainPhotoData: main.data,
+                                                      mainPhotoExtension: main.fileExtension,
+                                                      additionalPhotos: Array(loaded.dropFirst()))
                 }
             } catch {
                 await MainActor.run {
-                    selectedPhoto = nil
+                    selectedPhotos = []
                     loadingPhoto = false
                     self.error = error.localizedDescription
                 }
             }
         }
+    }
+}
+
+private struct ReflectionCalendarScreen: View {
+    let reflections: [MealReflection]
+
+    var body: some View {
+        ScrollView {
+            ReflectionCalendarView(reflections: reflections)
+                .padding(20)
+                .frame(maxWidth: 720)
+        }
+        .linenScreen()
+        .navigationTitle("Calendar")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -185,7 +210,7 @@ private struct ReflectionHistoryList: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Your moments").font(.system(.title2, design: .serif))
+            Text("Your reflections").font(.system(.title2, design: .serif))
             ForEach(reflections) { reflection in
                 NavigationLink(value: reflection.id) {
                     HStack(spacing: 14) {
@@ -356,7 +381,7 @@ private struct MealReflectionEditorView: View {
     @State private var saving = false
 
     @State private var replacementPhoto: PhotosPickerItem?
-    @State private var additionalPhoto: PhotosPickerItem?
+    @State private var additionalPhotos: [PhotosPickerItem] = []
     @State private var selectedVideo: PhotosPickerItem?
     @State private var showMainCamera = false
     @State private var showAdditionalCamera = false
@@ -373,6 +398,12 @@ private struct MealReflectionEditorView: View {
         _mainPhotoData = State(initialValue: seed.mainPhotoData)
         _mainPhotoExtension = State(initialValue: seed.mainPhotoExtension)
         _mainPhotoChanged = State(initialValue: seed.mainPhotoData != nil)
+        _attachments = State(initialValue: seed.additionalPhotos.map {
+            ReflectionDraftAttachment(kind: .image,
+                                      fileExtension: $0.fileExtension,
+                                      duration: nil,
+                                      imageData: $0.data)
+        })
     }
 
     var body: some View {
@@ -398,10 +429,10 @@ private struct MealReflectionEditorView: View {
 
                 LinenCard {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("When was this moment?").font(.headline)
+                        Text("When was this?").font(.headline)
                         DatePicker("Reflection date", selection: $reflectionDate,
                                    displayedComponents: [.date, .hourAndMinute])
-                        Text("Optional moment").font(.headline)
+                        Text("Optional meal label").font(.headline)
                         mealMomentChips
                     }
                 }
@@ -441,7 +472,7 @@ private struct MealReflectionEditorView: View {
         }
         .task { loadExistingIfNeeded() }
         .onChange(of: replacementPhoto) { loadImage($0, asMainPhoto: true) }
-        .onChange(of: additionalPhoto) { loadImage($0, asMainPhoto: false) }
+        .onChange(of: additionalPhotos) { loadAdditionalImages($0) }
         .onChange(of: selectedVideo) { loadVideo($0) }
         .fullScreenCover(isPresented: $showMainCamera) {
             PhotoCapturePicker { image in setCameraImage(image, asMainPhoto: true) }.ignoresSafeArea()
@@ -515,30 +546,49 @@ private struct MealReflectionEditorView: View {
     private var layerPicker: some View {
         LinenCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Add to this moment").font(.headline)
-                Text("Choose any combination, and add more than one of each.")
+                Text("Add more to this reflection").font(.headline)
+                Text("Add as many photos as you like, plus optional audio or video.")
                     .font(.footnote).foregroundStyle(QuietLinen.muted)
-                HStack {
-                    PhotosPicker(selection: $additionalPhoto, matching: .images) {
-                        Label("Image", systemImage: "photo")
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                    attachmentAction("Take Another Photo", icon: "camera") {
+                        requestAdditionalCamera()
                     }
-                    Button { requestAdditionalCamera() } label: { Image(systemName: "camera") }
-                        .accessibilityLabel("Take another photo")
-                    Spacer()
-                    Button { requestAudioRecording() } label: { Label("Audio", systemImage: "mic") }
-                    Button { showAudioImporter = true } label: { Image(systemName: "folder") }
-                        .accessibilityLabel("Choose audio file")
-                }
-                .buttonStyle(.bordered)
-                HStack {
-                    Button { requestVideoRecording() } label: { Label("Video", systemImage: "video") }
+                    PhotosPicker(selection: $additionalPhotos, maxSelectionCount: 20, matching: .images) {
+                        attachmentActionLabel("Choose Photos", icon: "photo.on.rectangle")
+                    }
+                    attachmentAction("Record Audio", icon: "mic") {
+                        requestAudioRecording()
+                    }
+                    attachmentAction("Choose Audio File", icon: "folder") {
+                        showAudioImporter = true
+                    }
+                    attachmentAction("Record Video", icon: "video") {
+                        requestVideoRecording()
+                    }
                     PhotosPicker(selection: $selectedVideo, matching: .videos) {
-                        Label("Choose Video", systemImage: "photo.on.rectangle")
+                        attachmentActionLabel("Choose Video", icon: "film")
                     }
                 }
-                .buttonStyle(.bordered)
             }
         }
+    }
+
+    private func attachmentAction(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            attachmentActionLabel(title, icon: icon)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func attachmentActionLabel(_ title: String, icon: String) -> some View {
+        Label(title.gentleLocalized, systemImage: icon)
+            .font(.subheadline.weight(.medium))
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+            .padding(.horizontal, 12)
+            .background(QuietLinen.paper, in: RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(QuietLinen.sage.opacity(0.65)))
+            .foregroundStyle(QuietLinen.ink)
     }
 
     private func attachmentRow(_ attachment: ReflectionDraftAttachment) -> some View {
@@ -639,15 +689,37 @@ private struct MealReflectionEditorView: View {
                     if asMainPhoto {
                         mainPhotoData = data; mainPhotoExtension = ext; mainPhotoChanged = true
                         replacementPhoto = nil
-                    } else {
-                        attachments.append(ReflectionDraftAttachment(kind: .image,
-                                                                     fileExtension: ext,
-                                                                     duration: nil,
-                                                                     imageData: data))
-                        additionalPhoto = nil
                     }
                 }
             } catch { await MainActor.run { self.error = error.localizedDescription } }
+        }
+    }
+
+    private func loadAdditionalImages(_ items: [PhotosPickerItem]) {
+        guard !items.isEmpty else { return }
+        Task {
+            do {
+                var loaded: [ReflectionDraftAttachment] = []
+                for item in items {
+                    guard let data = try await item.loadTransferable(type: Data.self),
+                          UIImage(data: data) != nil else { throw CocoaError(.fileReadCorruptFile) }
+                    let ext = item.supportedContentTypes.first(where: { $0.conforms(to: .image) })?
+                        .preferredFilenameExtension ?? "jpg"
+                    loaded.append(ReflectionDraftAttachment(kind: .image,
+                                                            fileExtension: ext,
+                                                            duration: nil,
+                                                            imageData: data))
+                }
+                await MainActor.run {
+                    attachments.append(contentsOf: loaded)
+                    additionalPhotos = []
+                }
+            } catch {
+                await MainActor.run {
+                    additionalPhotos = []
+                    self.error = error.localizedDescription
+                }
+            }
         }
     }
 
@@ -1018,7 +1090,7 @@ struct ReflectionPrivacyView: View {
                     set: { model.setMealReflectionPreviewsVisible($0) }
                 )).tint(QuietLinen.forest)
             } footer: {
-                Text("Off by default. When off, history shows a quiet placeholder instead of each main photo. Full photos remain visible inside a reflection.")
+                Text("When off, history shows a quiet placeholder instead of each main photo. Full photos remain visible inside a reflection.")
             }
             Section("Export") {
                 Button("Export All Reflections") { warning = true }

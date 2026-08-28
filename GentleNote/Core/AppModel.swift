@@ -19,6 +19,14 @@ final class AppModel: ObservableObject {
         do {
             store = try SecureVaultStore()
             preferences = try store.loadPreferences()
+            if preferences.previewDefaultsVersion == nil {
+                preferences.showJournalPreviews = true
+                preferences.showLibraryPreviews = true
+                preferences.showVideoThumbnails = true
+                preferences.showMealReflectionPreviews = true
+                preferences.previewDefaultsVersion = 1
+                try store.savePreferences(preferences)
+            }
             GentleLocalization.configure(preferences.languageOverride)
             var loadedVault = try store.loadSnapshot()
             if loadedVault.migrateCollectionsToTags() {
@@ -47,11 +55,15 @@ final class AppModel: ObservableObject {
     }
 
     var showsMealReflectionPreviews: Bool {
-        preferences.showMealReflectionPreviews == true
+        preferences.showMealReflectionPreviews != false
     }
 
     var mealReflectionsEnabled: Bool {
         preferences.mealReflectionsEnabled != false
+    }
+
+    var showsMealReflectionIntroduction: Bool {
+        preferences.showMealReflectionIntroduction != false
     }
 
     func setLanguage(_ language: AppLanguage?) {
@@ -73,6 +85,11 @@ final class AppModel: ObservableObject {
     func setMealReflectionsEnabled(_ enabled: Bool) {
         preferences.mealReflectionsEnabled = enabled
         if !enabled, selectedTab == .reflections { selectedTab = .journal }
+        savePreferences()
+    }
+
+    func setMealReflectionIntroductionVisible(_ visible: Bool) {
+        preferences.showMealReflectionIntroduction = visible
         savePreferences()
     }
 

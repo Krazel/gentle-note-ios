@@ -25,7 +25,8 @@ the visual specification; runtime captures will be linked after macOS/Xcode QA.
 
 ## Owner-requested and safety corrections
 
-- Root navigation is `Journal`, `Library`, `Settings`. Home is the Journal.
+- Root navigation is `Journal`, `Library`, optional `Reflections`, `Settings`.
+  Home is the Journal.
 - `View Journal History` is the explicit path back to previous entries.
 - Library contains private Notes, Images, Videos, and Audio. A single Tags
   system handles organization and filtering; legacy Collections are migrated
@@ -71,6 +72,15 @@ the visual specification; runtime captures will be linked after macOS/Xcode QA.
   explanation and advances to App Lock. It never completes onboarding or
   changes the lock preference. Settings and Help & Safety are not included in
   this overview, and the retired privacy/care pages remain absent.
+- Owner-directed v0.7.1 refinements on 2026-08-28 retain the approved Quiet
+  Linen compositions while moving the overview content closer to its progress
+  indicator, replacing the three card descriptions, adding a visible meal
+  icon, and allowing the Reflections destination to be hidden from that page.
+  In the Reflections root, the calendar replaces the privacy control at top
+  right, the Moments/Calendar switch is removed, the introduction is
+  dismissible, multi-photo selection is explicit, and attachment actions use
+  complete labelled controls. Runtime captures, rather than altered concept
+  boards, will verify these direct owner corrections.
 
 ## Runtime comparison
 
