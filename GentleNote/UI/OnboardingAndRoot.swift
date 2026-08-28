@@ -210,7 +210,7 @@ struct OnboardingView: View {
                             Image(systemName: item.icon)
                                 .font(.title2)
                                 .foregroundStyle(QuietLinen.forest)
-                                .frame(width: 34, minHeight: 44, alignment: .top)
+                                .frame(minWidth: 34, maxWidth: 34, minHeight: 44, alignment: .top)
                                 .accessibilityHidden(true)
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(item.title.gentleLocalized)
