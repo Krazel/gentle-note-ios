@@ -33,27 +33,30 @@ const buildQuery = new URLSearchParams({
   "filter[app]": appId,
   "filter[version]": buildNumber,
   "sort": "-uploadedDate",
-  "limit": "50",
+  "limit": "10",
   "fields[builds]": "version,uploadedDate,expirationDate,expired,processingState,buildAudienceType,usesNonExemptEncryption"
 });
 const candidateResponse = await request(token, "GET", `/v1/builds?${buildQuery}`);
-const matchingBuilds = [];
-for (const candidate of candidateResponse.data ?? []) {
-  const versionResponse = await request(token, "GET", `/v1/builds/${candidate.id}/preReleaseVersion`);
-  if (versionResponse.data?.attributes?.version === marketingVersion) {
-    matchingBuilds.push(candidate);
-  }
-}
-
-if (matchingBuilds.length === 0) {
+const latestCandidate = candidateResponse.data?.[0];
+if (!latestCandidate) {
   console.log(JSON.stringify({ status: "BUILD_NOT_VISIBLE", appId, bundleId, marketingVersion, buildNumber }));
   process.exit(0);
 }
-if (matchingBuilds.length !== 1) {
-  fail(`Expected exactly one ${marketingVersion} (${buildNumber}) build; found ${matchingBuilds.length}.`);
+const versionResponse = await request(token, "GET", `/v1/builds/${latestCandidate.id}/preReleaseVersion`);
+const latestMarketingVersion = versionResponse.data?.attributes?.version;
+if (latestMarketingVersion !== marketingVersion) {
+  console.log(JSON.stringify({
+    status: "BUILD_NOT_VISIBLE",
+    appId,
+    bundleId,
+    marketingVersion,
+    buildNumber,
+    latestMatchingBuildNumberBelongsToVersion: latestMarketingVersion ?? null
+  }));
+  process.exit(0);
 }
 
-const build = matchingBuilds[0];
+const build = latestCandidate;
 const betaDetailResponse = await request(token, "GET", `/v1/builds/${build.id}/buildBetaDetail`);
 const internalBuildState = betaDetailResponse.data?.attributes?.internalBuildState;
 const externalBuildState = betaDetailResponse.data?.attributes?.externalBuildState;
