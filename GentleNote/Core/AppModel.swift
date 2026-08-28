@@ -25,7 +25,8 @@ final class AppModel: ObservableObject {
                 preferences.showVideoThumbnails = true
                 preferences.showMealReflectionPreviews = true
                 preferences.previewDefaultsVersion = 1
-                try store.savePreferences(preferences)
+                // Persist with the next user preference change. Avoid forcing a
+                // Keychain write while an unsigned XCTest host is bootstrapping.
             }
             GentleLocalization.configure(preferences.languageOverride)
             var loadedVault = try store.loadSnapshot()
