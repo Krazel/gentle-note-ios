@@ -1,0 +1,50 @@
+name: Manage Gentle Note Internal TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Inspect or link the current build to the private internal group
+        required: true
+        default: status
+        type: choice
+        options:
+          - status
+          - assign
+
+permissions:
+  contents: read
+
+jobs:
+  manage-internal-testflight:
+    environment: app-store-production
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out management script
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Inspect or assign internal build
+        shell: bash
+        env:
+          ASC_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -euo pipefail
+          KEY_PATH="$RUNNER_TEMP/GentleNote-AppStore-Connect.p8"
+          printf '%s' "$ASC_API_KEY_BASE64" | base64 --decode > "$KEY_PATH"
+          chmod 600 "$KEY_PATH"
+          export ASC_PRIVATE_KEY_PATH="$KEY_PATH"
+          if [[ "${{ inputs.operation }}" == "assign" ]]; then
+            node scripts/manage-testflight-internal.mjs assign --confirm-private-internal-group
+          else
+            node scripts/manage-testflight-internal.mjs status
+          fi
+
+      - name: Remove temporary API key
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/GentleNote-AppStore-Connect.p8"
