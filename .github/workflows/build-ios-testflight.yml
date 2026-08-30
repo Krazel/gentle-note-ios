@@ -135,7 +135,7 @@ jobs:
           test -n "$IPA_PATH"
           APP_PATH="$RUNNER_TEMP/GentleNote.xcarchive/Products/Applications/GentleNote.app"
           test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIdentifier' "$APP_PATH/Info.plist")" = "$APP_BUNDLE_ID"
-          test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$APP_PATH/Info.plist")" = "0.7.1"
+          test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$APP_PATH/Info.plist")" = "0.7.2"
           test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' "$APP_PATH/Info.plist")" = "1"
           test "$(/usr/libexec/PlistBuddy -c 'Print CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName' "$APP_PATH/Info.plist")" = "AppIcon"
           ICON_120_PATH=""
@@ -178,7 +178,7 @@ jobs:
         if: ${{ always() && env.IPA_PATH != '' }}
         uses: actions/upload-artifact@v4
         with:
-          name: GentleNote-0.7.1-build-1-signed-${{ github.sha }}
+          name: GentleNote-0.7.2-build-1-signed-${{ github.sha }}
           path: |
             ${{ runner.temp }}/TestFlightExport/*.ipa
             ${{ runner.temp }}/TestFlightExport/*.sha256
@@ -189,7 +189,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: GentleNote-0.7.1-build-1-test-evidence-${{ github.sha }}
+          name: GentleNote-0.7.2-build-1-test-evidence-${{ github.sha }}
           path: ${{ runner.temp }}/SimulatorDerivedData/Logs/Test/*.xcresult
           if-no-files-found: warn
           retention-days: 14

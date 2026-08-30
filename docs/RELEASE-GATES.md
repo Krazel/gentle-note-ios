@@ -5,6 +5,9 @@
 - On iOS 16 hardware, switch Settings between System Default, English, and
   Spanish; verify every visible surface refreshes immediately and System Default
   follows the iPhone language after relaunch.
+- In Settings, expand and collapse the Library and Meal Reflections information
+  rows in English and Spanish; verify both begin collapsed, remain readable at
+  large Dynamic Type sizes, and expose meaningful VoiceOver labels and states.
 - Verify the Library introduction can be dismissed, remains hidden after
   relaunch, and can be restored from Settings. Check its copy at large Dynamic
   Type sizes and the 44-point dismiss target with VoiceOver.

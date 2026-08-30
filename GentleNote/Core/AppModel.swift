@@ -10,6 +10,7 @@ final class AppModel: ObservableObject {
     @Published var privacyCoverVisible = false
     @Published var lastError: String?
     @Published var selectedTab: RootTab = .journal
+    @Published private(set) var activeLanguageOverride: AppLanguage?
 
     let store: SecureVaultStore
     let authenticator = AuthenticationService()
@@ -29,6 +30,7 @@ final class AppModel: ObservableObject {
                 // Keychain write while an unsigned XCTest host is bootstrapping.
             }
             GentleLocalization.configure(preferences.languageOverride)
+            activeLanguageOverride = preferences.languageOverride
             var loadedVault = try store.loadSnapshot()
             if loadedVault.migrateCollectionsToTags() {
                 try store.saveSnapshot(loadedVault)
@@ -45,10 +47,12 @@ final class AppModel: ObservableObject {
         catch { lastError = error.localizedDescription }
     }
 
-    var interfaceLocale: Locale { GentleLocalization.locale }
+    var interfaceLocale: Locale {
+        activeLanguageOverride.map { Locale(identifier: $0.rawValue) } ?? .autoupdatingCurrent
+    }
 
     var languageIdentity: String {
-        preferences.languageOverride?.rawValue ?? "system-\(Locale.autoupdatingCurrent.identifier)"
+        activeLanguageOverride?.rawValue ?? "system-\(Locale.autoupdatingCurrent.identifier)"
     }
 
     var showsLibraryIntroduction: Bool {
@@ -68,8 +72,9 @@ final class AppModel: ObservableObject {
     }
 
     func setLanguage(_ language: AppLanguage?) {
-        preferences.languageOverride = language
         GentleLocalization.configure(language)
+        preferences.languageOverride = language
+        activeLanguageOverride = language
         savePreferences()
     }
 
@@ -258,6 +263,7 @@ final class AppModel: ObservableObject {
                                      appLockEnabled: preferences.appLockEnabled,
                                      languageOverride: languageOverride)
         GentleLocalization.configure(languageOverride)
+        activeLanguageOverride = languageOverride
         try store.savePreferences(preferences)
     }
 

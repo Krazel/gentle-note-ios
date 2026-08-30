@@ -12,13 +12,15 @@ private func gentleNoteVersionText() -> String {
 
 struct SettingsRootView: View {
     @EnvironmentObject private var model: AppModel
+    @State private var librarySummaryExpanded = false
+    @State private var mealReflectionsSummaryExpanded = false
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
                     Picker("App Language", selection: Binding(
-                        get: { model.preferences.languageOverride },
+                        get: { model.activeLanguageOverride },
                         set: { model.setLanguage($0) }
                     )) {
                         Text("System Default").tag(Optional<AppLanguage>.none)
@@ -31,7 +33,16 @@ struct SettingsRootView: View {
                     Text("System Default follows your iPhone language.")
                 }
                 Section("Library") {
-                    Text("Use Library for notes, images, and private recordings you may want to return to—especially words, reminders, or things that feel clear now but may become harder to remember later.")
+                    DisclosureGroup(isExpanded: $librarySummaryExpanded) {
+                        Text("Use Library for notes, images, and private recordings you may want to return to—especially words, reminders, or things that feel clear now but may become harder to remember later.")
+                            .font(.footnote)
+                            .foregroundStyle(QuietLinen.muted)
+                            .padding(.vertical, 6)
+                    } label: {
+                        Label("What Library is for", systemImage: "info.circle")
+                            .frame(minHeight: 44)
+                    }
+                    .tint(QuietLinen.forest)
                     Toggle("Show Library Introduction", isOn: Binding(
                         get: { model.showsLibraryIntroduction },
                         set: { model.setLibraryIntroductionVisible($0) }
@@ -39,7 +50,16 @@ struct SettingsRootView: View {
                     .tint(QuietLinen.forest)
                 }
                 Section("Meal Reflections") {
-                    Text("Keep one or more photos of a meal together with any words, audio, or video you want to add. Use this space only when it is useful to you.")
+                    DisclosureGroup(isExpanded: $mealReflectionsSummaryExpanded) {
+                        Text("Keep one or more photos of a meal together with any words, audio, or video you want to add. Use this space only when it is useful to you.")
+                            .font(.footnote)
+                            .foregroundStyle(QuietLinen.muted)
+                            .padding(.vertical, 6)
+                    } label: {
+                        Label("What Meal Reflections is for", systemImage: "info.circle")
+                            .frame(minHeight: 44)
+                    }
+                    .tint(QuietLinen.forest)
                     Toggle("Show Meal Reflections Section", isOn: Binding(
                         get: { model.mealReflectionsEnabled },
                         set: { model.setMealReflectionsEnabled($0) }

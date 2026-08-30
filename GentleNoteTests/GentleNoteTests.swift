@@ -145,6 +145,14 @@ final class GentleNoteTests: XCTestCase {
         XCTAssertEqual(spanish.localizedString(forKey: "App Language", value: nil, table: nil), "Idioma de la app")
         XCTAssertEqual(spanish.localizedString(forKey: "System Default", value: nil, table: nil), "Según el sistema")
         XCTAssertEqual(
+            spanish.localizedString(forKey: "What Library is for", value: nil, table: nil),
+            "Para qué sirve la Biblioteca"
+        )
+        XCTAssertEqual(
+            spanish.localizedString(forKey: "What Meal Reflections is for", value: nil, table: nil),
+            "Para qué sirven Reflexiones sobre comidas"
+        )
+        XCTAssertEqual(
             spanish.localizedString(forKey: "Show Library Introduction", value: nil, table: nil),
             "Mostrar la introducción de la Biblioteca"
         )

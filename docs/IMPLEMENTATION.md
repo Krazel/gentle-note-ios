@@ -1,4 +1,4 @@
-# Implementation handoff — 0.7.1 (1)
+# Implementation handoff — 0.7.2 (1)
 
 ## Implemented
 
@@ -45,10 +45,12 @@
 - AES-GCM encrypted text/metadata and chunk-encrypted recordings, a random key
   in the device-only Keychain, complete iOS file protection, backup exclusion,
   protected temporary files, and cleanup at background/export/playback exit.
-- Settings for system-default/English/Spanish language selection, the Library
-  introduction, Meal Reflections visibility, lock delay, preview controls, guided-template visibility,
-  permission status, dynamic storage breakdown, export, erase, safety, privacy,
-  terms, and About.
+- Settings for system-default/English/Spanish language selection with immediate
+  full-interface refresh, the Library introduction, Meal Reflections visibility,
+  lock delay, preview controls, guided-template visibility, permission status,
+  dynamic storage breakdown, export, erase, safety, privacy, terms, and About.
+  The longer Library and Meal Reflections explanations are collapsed by default
+  behind clearly labelled information rows and expand only when requested.
 - Authentication before deletion is a separate App Lock option and is off by
   default. Confirmations remain visible; Face ID/Touch ID/passcode is requested
   only when this option and App Lock are both enabled.
