@@ -1,4 +1,4 @@
-# Implementation handoff — 0.8.1 (1)
+# Implementation handoff — 1.0 (1)
 
 ## Implemented
 

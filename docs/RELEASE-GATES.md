@@ -1,6 +1,6 @@
 # Gates remaining before a publishable candidate
 
-Prepared locally for candidate 0.8.1 (1): explicit English localization to
+Prepared locally for candidate 1.0 (1): explicit English localization to
 make Settings language switching reliable, bilingual store metadata, truthful
 review notes, per-release privacy/age/category/export answers, bilingual legal
 page drafts, deterministic runtime screenshot fixtures, and manual protected

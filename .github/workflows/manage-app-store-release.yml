@@ -38,7 +38,7 @@ jobs:
         with:
           repository: Krazel/gentle-note-ios
           run-id: ${{ inputs.screenshot_run_id }}
-          pattern: GentleNote-0.8.1-build-1-App-Store-screenshots-*
+          pattern: GentleNote-1.0-build-1-App-Store-screenshots-*
           path: ${{ runner.temp }}/GentleNote-App-Store-Screenshots
           merge-multiple: true
           github-token: ${{ github.token }}
@@ -66,4 +66,3 @@ jobs:
         if: always()
         shell: bash
         run: rm -f "$RUNNER_TEMP/GentleNote-AppStore-Connect.p8"
-

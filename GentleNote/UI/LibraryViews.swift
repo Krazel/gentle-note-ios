@@ -926,7 +926,7 @@ struct LibraryDetailView: View {
             if let item {
                 VStack(spacing: 15) {
                     Text(item.displayTitle).editorialTitle()
-                    Text(item.createdAt.formatted(date: .long, time: .shortened)).font(.caption).foregroundStyle(QuietLinen.muted)
+                    Text(item.createdAt.gentleLongDateTime).font(.caption).foregroundStyle(QuietLinen.muted)
                     if item.kind == .note {
                         LinenCard { Text(item.body).frame(maxWidth: .infinity, alignment: .leading) }
                     } else if let readableURL {

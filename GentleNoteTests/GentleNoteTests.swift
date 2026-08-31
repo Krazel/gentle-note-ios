@@ -175,6 +175,21 @@ final class GentleNoteTests: XCTestCase {
         XCTAssertEqual("Library".gentleLocalized, "Library")
     }
 
+    func testVisibleDatesFollowTheSelectedAppLanguage() {
+        defer { GentleLocalization.configure(nil) }
+        let components = DateComponents(calendar: Calendar(identifier: .gregorian),
+                                        timeZone: TimeZone(secondsFromGMT: 0),
+                                        year: 2026, month: 8, day: 31,
+                                        hour: 10, minute: 30)
+        let date = try! XCTUnwrap(components.date)
+
+        GentleLocalization.configure(.spanish)
+        XCTAssertTrue(date.gentleDate.lowercased().contains("ago"))
+
+        GentleLocalization.configure(.english)
+        XCTAssertTrue(date.gentleDate.lowercased().contains("aug"))
+    }
+
     func testOlderPreferencesDecodeWithoutTrustedContact() throws {
         let legacyJSON = """
         {

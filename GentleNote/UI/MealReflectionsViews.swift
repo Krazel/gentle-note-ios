@@ -227,7 +227,7 @@ private struct ReflectionHistoryList: View {
                         }
                         VStack(alignment: .leading, spacing: 5) {
                             Text(reflection.displayTitle).font(.headline)
-                            Text(reflection.reflectionDate.formatted(date: .abbreviated, time: .shortened))
+                            Text(reflection.reflectionDate.gentleMediumDateTime)
                                 .font(.caption).foregroundStyle(QuietLinen.muted)
                             Text("%d attachment(s)".gentleLocalizedFormat(reflection.attachments.count))
                                 .font(.caption2).foregroundStyle(QuietLinen.muted)
@@ -262,7 +262,7 @@ private struct ReflectionCalendarView: View {
                         Button { moveMonth(-1) } label: { Image(systemName: "chevron.left") }
                             .accessibilityLabel("Previous month")
                         Spacer()
-                        Text(visibleMonth.formatted(.dateTime.month(.wide).year()))
+                        Text(visibleMonth.gentleMonthYear)
                             .font(.system(.headline, design: .serif))
                         Spacer()
                         Button { moveMonth(1) } label: { Image(systemName: "chevron.right") }
@@ -272,7 +272,7 @@ private struct ReflectionCalendarView: View {
                 }
             }
             VStack(alignment: .leading, spacing: 10) {
-                Text(selectedDate.formatted(date: .long, time: .omitted))
+                Text(selectedDate.gentleLongDate)
                     .font(.system(.headline, design: .serif))
                 if selectedReflections.isEmpty {
                     Text("No intake saved for this day.")
@@ -284,7 +284,7 @@ private struct ReflectionCalendarView: View {
                                 Image(systemName: "camera.macro").foregroundStyle(QuietLinen.forest)
                                 VStack(alignment: .leading) {
                                     Text(reflection.displayTitle).font(.headline)
-                                    Text(reflection.reflectionDate.formatted(date: .omitted, time: .shortened))
+                                    Text(reflection.reflectionDate.gentleTime)
                                         .font(.caption).foregroundStyle(QuietLinen.muted)
                                 }
                                 Spacer()
@@ -333,7 +333,7 @@ private struct ReflectionCalendarView: View {
             .foregroundStyle(QuietLinen.ink)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(date.formatted(date: .long, time: .omitted))
+        .accessibilityLabel(date.gentleLongDate)
         .accessibilityValue(count == 0 ? "No intakes".gentleLocalized : "%d intake(s)".gentleLocalizedFormat(count))
     }
 
@@ -1029,7 +1029,7 @@ struct MealReflectionDetailView: View {
                         .aspectRatio(4 / 3, contentMode: .fit)
                         .clipShape(RoundedRectangle(cornerRadius: 18))
                     Text(reflection.displayTitle).editorialTitle()
-                    Text(reflection.reflectionDate.formatted(date: .long, time: .shortened))
+                    Text(reflection.reflectionDate.gentleLongDateTime)
                         .font(.caption).foregroundStyle(QuietLinen.muted)
                     if !reflection.words.isEmpty {
                         LinenCard { Text(reflection.words).frame(maxWidth: .infinity, alignment: .leading) }

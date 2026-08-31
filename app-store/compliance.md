@@ -1,4 +1,4 @@
-# App Store compliance answers — candidate 0.8.1 (1)
+# App Store compliance answers — candidate 1.0 (1)
 
 These answers are based on the exact source data-flow inventory in
 `docs/DATA-FLOW.md`. Re-run the inventory against the final 1.0 archive before

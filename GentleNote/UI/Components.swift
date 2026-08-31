@@ -184,7 +184,27 @@ struct PermissionStatusRow: View {
 }
 
 extension Date {
-    var gentleDate: String { formatted(date: .abbreviated, time: .omitted) }
+    private func gentleFormatted(dateStyle: DateFormatter.Style,
+                                 timeStyle: DateFormatter.Style) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = GentleLocalization.locale
+        formatter.dateStyle = dateStyle
+        formatter.timeStyle = timeStyle
+        return formatter.string(from: self)
+    }
+
+    var gentleDate: String { gentleFormatted(dateStyle: .medium, timeStyle: .none) }
+    var gentleLongDate: String { gentleFormatted(dateStyle: .long, timeStyle: .none) }
+    var gentleTime: String { gentleFormatted(dateStyle: .none, timeStyle: .short) }
+    var gentleLongDateTime: String { gentleFormatted(dateStyle: .long, timeStyle: .short) }
+    var gentleMediumDateTime: String { gentleFormatted(dateStyle: .medium, timeStyle: .short) }
+
+    var gentleMonthYear: String {
+        let formatter = DateFormatter()
+        formatter.locale = GentleLocalization.locale
+        formatter.setLocalizedDateFormatFromTemplate("MMMM y")
+        return formatter.string(from: self)
+    }
 }
 
 extension TimeInterval {

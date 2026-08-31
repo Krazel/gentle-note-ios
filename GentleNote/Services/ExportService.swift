@@ -39,7 +39,7 @@ struct ExportService {
     func allReadable(vault: VaultSnapshot, format: ExportFormat) throws -> URL {
         var sections = vault.journalEntries.sorted { $0.createdAt < $1.createdAt }.map(render)
         sections += vault.libraryItems.filter { $0.kind == .note }.map {
-            "LIBRARY NOTE".gentleLocalized + "\n\($0.displayTitle)\n\($0.createdAt.formatted(date: .long, time: .shortened))\n\n\($0.body)"
+            "LIBRARY NOTE".gentleLocalized + "\n\($0.displayTitle)\n\($0.createdAt.gentleLongDateTime)\n\n\($0.body)"
         }
         let text = sections.joined(separator: "\n\n————————————\n\n")
         return format == .pdf ? try writePDF(text, named: "Gentle Note Export")
@@ -82,7 +82,7 @@ struct ExportService {
 
     private func render(_ entry: JournalEntry) -> String {
         var lines = [entry.displayTitle,
-                     entry.createdAt.formatted(date: .long, time: .shortened), ""]
+                     entry.createdAt.gentleLongDateTime, ""]
         if !entry.body.isEmpty { lines.append(entry.body) }
         for (index, answer) in entry.answers.enumerated() where !answer.isEmpty {
             if index < entry.templateID.prompts.count { lines.append(entry.templateID.prompts[index]) }
@@ -94,7 +94,7 @@ struct ExportService {
 
     private func render(_ reflection: MealReflection) -> String {
         var lines = ["INTAKE".gentleLocalized,
-                     reflection.reflectionDate.formatted(date: .long, time: .shortened)]
+                     reflection.reflectionDate.gentleLongDateTime]
         if let moment = reflection.mealMoment { lines.append(moment.title) }
         lines.append("")
         if !reflection.words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {

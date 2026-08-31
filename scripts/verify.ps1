@@ -211,7 +211,7 @@ foreach ($Source in @('GentleNoteApp.swift','Models.swift','SecureStore.swift','
 foreach ($LocalizedResource in @('Localizable.strings','InfoPlist.strings','knownRegions = (en, es, Base)')) {
     if (-not $Pbx.Contains($LocalizedResource)) { $Failures.Add("Xcode project omits localization marker: $LocalizedResource") }
 }
-if (-not $Pbx.Contains('MARKETING_VERSION = 0.8.1')) { $Failures.Add('Marketing version is not 0.8.1') }
+if (-not $Pbx.Contains('MARKETING_VERSION = 1.0')) { $Failures.Add('Marketing version is not 1.0') }
 if (-not $Pbx.Contains('B00100000000000000000018 /* en */') -or
     -not $Pbx.Contains('B00100000000000000000019 /* en */')) {
     $Failures.Add('The Xcode project must package explicit English Localizable and InfoPlist resources')
@@ -233,11 +233,11 @@ if (-not (Test-Path -LiteralPath $AppIconPath)) { $Failures.Add('AppIcon-1024.pn
 if (-not $AppIconContents.Contains('"filename" : "AppIcon-1024.png"')) { $Failures.Add('App icon catalog does not reference AppIcon-1024.png') }
 
 $Workflow = Get-Content -LiteralPath (Join-Path $ProjectRoot '.github\workflows\ios-verify.yml') -Raw
-foreach ($VersionMarker in @('runs-on: macos-26','GentleNote-0.8.1-build-1-${SHORT_SHA}-Local-QA-unsigned','"marketingVersion": "0.8.1"','"build": "1"','GentleNote-0.8.1-build-1-test-evidence')) {
+foreach ($VersionMarker in @('runs-on: macos-26','GentleNote-1.0-build-1-${SHORT_SHA}-Local-QA-unsigned','"marketingVersion": "1.0"','"build": "1"','GentleNote-1.0-build-1-test-evidence')) {
     if (-not $Workflow.Contains($VersionMarker)) { $Failures.Add("Workflow version marker missing: $VersionMarker") }
 }
 $ScreenshotWorkflow = Get-Content -LiteralPath (Join-Path $ProjectRoot '.github\workflows\capture-app-store-screenshots.yml') -Raw
-foreach ($ScreenshotMarker in @('StoreScreenshotDerivedData','iPhone 14 Plus','store-screenshot.json','get_app_container','1284x2778','en-US','es-ES','format jpeg','GentleNote-0.8.1-build-1-App-Store-screenshots-${{ github.sha }}')) {
+foreach ($ScreenshotMarker in @('StoreScreenshotDerivedData','iPhone 14 Plus','store-screenshot.json','get_app_container','1284x2778','en-US','es-ES','format jpeg','GentleNote-1.0-build-1-App-Store-screenshots-${{ github.sha }}')) {
     if (-not $ScreenshotWorkflow.Contains($ScreenshotMarker)) {
         $Failures.Add("App Store screenshot workflow marker missing: $ScreenshotMarker")
     }
@@ -254,8 +254,8 @@ foreach ($StoreMarker in @('environment: app-store-production','prepare-metadata
 }
 
 $Metadata = Get-Content -LiteralPath (Join-Path $ProjectRoot 'app-store\metadata.json') -Raw | ConvertFrom-Json
-if ($Metadata.candidateVersion -ne '0.8.1' -or $Metadata.publicReleaseVersion -ne '1.0') {
-    $Failures.Add('App Store metadata versions do not follow the pre-release to 1.0 gate')
+if ($Metadata.candidateVersion -ne '1.0' -or $Metadata.publicReleaseVersion -ne '1.0') {
+    $Failures.Add('App Store metadata versions do not match the 1.0 release candidate')
 }
 foreach ($Locale in @('en-US','es-ES')) {
     $Record = $Metadata.localizations.$Locale
@@ -284,7 +284,7 @@ if (-not (Test-Path -LiteralPath $TestFlightWorkflowPath)) {
         'com.krazel.gentlenote.B2X6D3A9J9',
         'runs-on: macos-26',
         'CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName',
-        'GentleNote-0.8.1-build-1-signed-${{ github.sha }}'
+        'GentleNote-1.0-build-1-signed-${{ github.sha }}'
     )) {
         if (-not $TestFlightWorkflow.Contains($Marker)) {
             $Failures.Add("TestFlight workflow is missing marker: $Marker")
@@ -301,5 +301,5 @@ if ($Failures.Count -gt 0) {
 Write-Output 'VERIFY: PASS'
 Write-Output "Swift files: $($Swift.Count)"
 Write-Output "Approved boards: $($Approved.Count)"
-Write-Output 'Version: 0.8.1 (1), iOS 16+'
+Write-Output 'Version: 1.0 (1), iOS 16+'
 Write-Output 'Scope: iPhone, English and Spanish, local-only, no accounts/ads/analytics/tracking'

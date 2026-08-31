@@ -114,7 +114,7 @@ jobs:
           cat > "$OUTPUT/manifest.json" <<JSON
           {
             "app": "Gentle Note",
-            "marketingVersion": "0.8.1",
+            "marketingVersion": "1.0",
             "build": "1",
             "commit": "$GITHUB_SHA",
             "ciRun": "$GITHUB_RUN_ID",
@@ -129,7 +129,7 @@ jobs:
       - name: Upload store screenshot evidence
         uses: actions/upload-artifact@v4
         with:
-          name: GentleNote-0.8.1-build-1-App-Store-screenshots-${{ github.sha }}
+          name: GentleNote-1.0-build-1-App-Store-screenshots-${{ github.sha }}
           path: ${{ runner.temp }}/GentleNote-App-Store-Screenshots
           if-no-files-found: error
           retention-days: 30

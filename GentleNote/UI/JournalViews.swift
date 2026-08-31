@@ -314,7 +314,7 @@ struct JournalDetailView: View {
             if let entry {
                 VStack(alignment: .leading, spacing: 14) {
                     Text(entry.displayTitle).editorialTitle().frame(maxWidth: .infinity)
-                    Text(entry.createdAt.formatted(date: .long, time: .shortened))
+                    Text(entry.createdAt.gentleLongDateTime)
                         .font(.caption).foregroundStyle(QuietLinen.muted).frame(maxWidth: .infinity)
                     if !entry.body.isEmpty { LinenCard { Text(entry.body).frame(maxWidth: .infinity, alignment: .leading) } }
                     ForEach(Array(entry.answers.enumerated()), id: \.offset) { index, answer in
