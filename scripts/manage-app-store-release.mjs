@@ -63,7 +63,7 @@ const infoLocalizations = (await request("GET", `/v1/appInfos/${appInfo.id}/appI
 
 if (mode === "prepare-metadata") {
   for (const [locale, record] of Object.entries(metadata.localizations)) {
-    const existingInfo = infoLocalizations.find((item) => item.attributes?.locale === locale);
+    const existingInfo = ((await request("GET", `/v1/appInfos/${appInfo.id}/appInfoLocalizations?filter[locale]=${encodeURIComponent(locale)}&limit=10`)).data ?? [])[0];
     const infoAttributes = {
       name: record.name,
       subtitle: record.subtitle,
@@ -83,7 +83,7 @@ if (mode === "prepare-metadata") {
       });
     }
 
-    const existingVersion = versionLocalizations.find((item) => item.attributes?.locale === locale);
+    const existingVersion = ((await request("GET", `/v1/appStoreVersions/${releaseVersion.id}/appStoreVersionLocalizations?filter[locale]=${encodeURIComponent(locale)}&limit=10`)).data ?? [])[0];
     const versionAttributes = {
       description: record.description,
       keywords: record.keywords,
