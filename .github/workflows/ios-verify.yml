@@ -13,6 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Select Xcode
+        shell: pwsh
         run: |
           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
           xcodebuild -version
