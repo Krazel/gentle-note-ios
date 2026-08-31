@@ -242,6 +242,10 @@ foreach ($ScreenshotMarker in @('StoreScreenshotDerivedData','iPhone 14 Plus','s
         $Failures.Add("App Store screenshot workflow marker missing: $ScreenshotMarker")
     }
 }
+$ProjectFile = Get-Content -LiteralPath (Join-Path $ProjectRoot 'GentleNote.xcodeproj\project.pbxproj') -Raw
+if (-not $ProjectFile.Contains('SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG')) {
+    $Failures.Add('Debug builds must define DEBUG so screenshot fixtures compile without entering Release builds.')
+}
 $StoreWorkflow = Get-Content -LiteralPath (Join-Path $ProjectRoot '.github\workflows\manage-app-store-release.yml') -Raw
 foreach ($StoreMarker in @('environment: app-store-production','prepare-metadata','upload-screenshots','actions/download-artifact@v5','--confirm-metadata-write','--confirm-screenshot-upload')) {
     if (-not $StoreWorkflow.Contains($StoreMarker)) {

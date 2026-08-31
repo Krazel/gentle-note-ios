@@ -49,6 +49,9 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         TARGETED_DEVICE_FAMILY: 1
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true
+      configs:
+        Debug:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: DEBUG
   GentleNoteTests:
     type: bundle.unit-test
     platform: iOS
