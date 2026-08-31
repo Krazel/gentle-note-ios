@@ -90,6 +90,7 @@ if (mode === "prepare-metadata") {
     const versionAttributes = {
       description: record.description,
       keywords: record.keywords,
+      promotionalText: record.promotionalText,
       supportUrl: record.supportUrl
     };
     if (existingVersion) {
