@@ -237,7 +237,7 @@ foreach ($VersionMarker in @('runs-on: macos-26','GentleNote-0.8.1-build-1-${SHO
     if (-not $Workflow.Contains($VersionMarker)) { $Failures.Add("Workflow version marker missing: $VersionMarker") }
 }
 $ScreenshotWorkflow = Get-Content -LiteralPath (Join-Path $ProjectRoot '.github\workflows\capture-app-store-screenshots.yml') -Raw
-foreach ($ScreenshotMarker in @('StoreScreenshotDerivedData','iPhone 14 Plus','SIMCTL_CHILD_GNStoreScreenshot','SIMCTL_CHILD_GNStoreLanguage','1284x2778','en-US','es-ES','format jpeg','GentleNote-0.8.1-build-1-App-Store-screenshots-${{ github.sha }}')) {
+foreach ($ScreenshotMarker in @('StoreScreenshotDerivedData','iPhone 14 Plus','store-screenshot.json','get_app_container','1284x2778','en-US','es-ES','format jpeg','GentleNote-0.8.1-build-1-App-Store-screenshots-${{ github.sha }}')) {
     if (-not $ScreenshotWorkflow.Contains($ScreenshotMarker)) {
         $Failures.Add("App Store screenshot workflow marker missing: $ScreenshotMarker")
     }

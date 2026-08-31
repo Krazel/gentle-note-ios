@@ -291,11 +291,12 @@ struct StoreScreenshotConfiguration {
     static var current: StoreScreenshotConfiguration? {
         let arguments = ProcessInfo.processInfo.arguments
         let environment = ProcessInfo.processInfo.environment
-        let scenarioValue = environment["GNStoreScreenshot"] ?? value(after: "-GNStoreScreenshot", in: arguments)
+        let fixture = fileFixture
+        let scenarioValue = fixture?.scenario ?? environment["GNStoreScreenshot"] ?? value(after: "-GNStoreScreenshot", in: arguments)
         guard let scenarioValue,
               let scenario = StoreScreenshotScenario(rawValue: scenarioValue) else { return nil }
         let language: AppLanguage
-        let languageValue = environment["GNStoreLanguage"] ?? value(after: "-GNStoreLanguage", in: arguments)
+        let languageValue = fixture?.language ?? environment["GNStoreLanguage"] ?? value(after: "-GNStoreLanguage", in: arguments)
         if let languageValue,
            let requested = AppLanguage(rawValue: languageValue) {
             language = requested
@@ -303,6 +304,15 @@ struct StoreScreenshotConfiguration {
             language = .english
         }
         return StoreScreenshotConfiguration(scenario: scenario, language: language)
+    }
+
+    private static var fileFixture: (scenario: String, language: String)? {
+        guard let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
+              let data = try? Data(contentsOf: documents.appendingPathComponent("store-screenshot.json")),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: String],
+              let scenario = object["scenario"],
+              let language = object["language"] else { return nil }
+        return (scenario, language)
     }
 
     private static func value(after flag: String, in arguments: [String]) -> String? {
