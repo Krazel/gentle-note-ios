@@ -12,14 +12,17 @@ const issuerId = requiredEnvironment("ASC_ISSUER_ID");
 const privateKey = fs.readFileSync(requiredEnvironment("ASC_PRIVATE_KEY_PATH"), "utf8");
 const token = createToken({ keyId, issuerId, privateKey });
 
-if (!new Set(["audit", "prepare-metadata", "upload-screenshots"]).has(mode)) {
-  fail("Use audit, prepare-metadata, or upload-screenshots.");
+if (!new Set(["audit", "prepare-metadata", "prepare-review", "upload-screenshots"]).has(mode)) {
+  fail("Use audit, prepare-metadata, prepare-review, or upload-screenshots.");
 }
 if (mode === "prepare-metadata" && !confirmations.has("--confirm-metadata-write")) {
   fail("Metadata writes require --confirm-metadata-write.");
 }
 if (mode === "upload-screenshots" && !confirmations.has("--confirm-screenshot-upload")) {
   fail("Screenshot uploads require --confirm-screenshot-upload.");
+}
+if (mode === "prepare-review" && !confirmations.has("--confirm-review-write")) {
+  fail("App Review writes require --confirm-review-write.");
 }
 
 const app = (await request("GET", `/v1/apps/${appId}`)).data;
@@ -104,6 +107,57 @@ if (mode === "prepare-metadata") {
     }
   }
   console.log(JSON.stringify({ status: "METADATA_PREPARED", appId, versionId: releaseVersion.id, versionString: publicVersion, locales: Object.keys(metadata.localizations) }));
+  process.exit(0);
+}
+
+if (mode === "prepare-review") {
+  const review = metadata.review ?? {};
+  if (!review.copyright || !review.contactSourceAppId || !review.contactSourceVersion) {
+    fail("metadata.json must define review copyright and the existing contact source app/version.");
+  }
+  const sourceVersions = (await request(
+    "GET",
+    `/v1/apps/${review.contactSourceAppId}/appStoreVersions?filter[platform]=IOS&filter[versionString]=${encodeURIComponent(review.contactSourceVersion)}&limit=10`
+  )).data ?? [];
+  const sourceVersion = sourceVersions[0];
+  if (!sourceVersion) fail("The approved App Review contact source version was not found.");
+  const sourceDetail = (await request("GET", `/v1/appStoreVersions/${sourceVersion.id}/appStoreReviewDetail`)).data;
+  const contact = Object.fromEntries(
+    ["contactFirstName", "contactLastName", "contactPhone", "contactEmail"]
+      .map((key) => [key, sourceDetail?.attributes?.[key]?.trim() ?? ""])
+  );
+  if (Object.values(contact).some((value) => !value)) {
+    fail("The approved App Review contact source is incomplete.");
+  }
+  if (!contact.contactPhone.startsWith("+")) {
+    fail("The approved App Review contact phone is not in international format.");
+  }
+  const targetDetail = (await request("GET", `/v1/appStoreVersions/${releaseVersion.id}/appStoreReviewDetail`)).data;
+  if (!targetDetail?.id) fail("Gentle Note App Review detail is missing.");
+  const notes = fs.readFileSync("app-store/review-notes.txt", "utf8").trim();
+  await request("PATCH", `/v1/appStoreReviewDetails/${targetDetail.id}`, {
+    data: {
+      type: "appStoreReviewDetails",
+      id: targetDetail.id,
+      attributes: { ...contact, notes }
+    }
+  });
+  await request("PATCH", `/v1/appStoreVersions/${releaseVersion.id}`, {
+    data: {
+      type: "appStoreVersions",
+      id: releaseVersion.id,
+      attributes: { copyright: review.copyright }
+    }
+  });
+  console.log(JSON.stringify({
+    status: "APP_REVIEW_DETAILS_PREPARED",
+    appId,
+    versionId: releaseVersion.id,
+    versionString: publicVersion,
+    contact: "COPIED_WITHIN_APP_STORE_CONNECT",
+    notesLength: notes.length,
+    copyright: review.copyright
+  }));
   process.exit(0);
 }
 

@@ -247,7 +247,7 @@ if (-not $ProjectFile.Contains('SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG')) {
     $Failures.Add('Debug builds must define DEBUG so screenshot fixtures compile without entering Release builds.')
 }
 $StoreWorkflow = Get-Content -LiteralPath (Join-Path $ProjectRoot '.github\workflows\manage-app-store-release.yml') -Raw
-foreach ($StoreMarker in @('environment: app-store-production','prepare-metadata','upload-screenshots','actions/download-artifact@v5','--confirm-metadata-write','--confirm-screenshot-upload')) {
+foreach ($StoreMarker in @('environment: app-store-production','prepare-metadata','prepare-review','upload-screenshots','actions/download-artifact@v5','--confirm-metadata-write','--confirm-review-write','--confirm-screenshot-upload')) {
     if (-not $StoreWorkflow.Contains($StoreMarker)) {
         $Failures.Add("App Store management workflow marker missing: $StoreMarker")
     }
@@ -256,6 +256,11 @@ foreach ($StoreMarker in @('environment: app-store-production','prepare-metadata
 $Metadata = Get-Content -LiteralPath (Join-Path $ProjectRoot 'app-store\metadata.json') -Raw | ConvertFrom-Json
 if ($Metadata.candidateVersion -ne '1.0' -or $Metadata.publicReleaseVersion -ne '1.0') {
     $Failures.Add('App Store metadata versions do not match the 1.0 release candidate')
+}
+if ($Metadata.review.copyright -ne '2026 Krazel' -or
+    [string]::IsNullOrWhiteSpace($Metadata.review.contactSourceAppId) -or
+    [string]::IsNullOrWhiteSpace($Metadata.review.contactSourceVersion)) {
+    $Failures.Add('App Review metadata is incomplete')
 }
 foreach ($Locale in @('en-US','es-ES')) {
     $Record = $Metadata.localizations.$Locale

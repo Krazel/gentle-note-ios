@@ -6,6 +6,11 @@
   "publicReleaseVersion": "1.0",
   "primaryCategory": "HEALTH_AND_FITNESS",
   "secondaryCategory": "LIFESTYLE",
+  "review": {
+    "copyright": "2026 Krazel",
+    "contactSourceAppId": "6772278149",
+    "contactSourceVersion": "1.0.8"
+  },
   "localizations": {
     "en-US": {
       "name": "Gentle Note",

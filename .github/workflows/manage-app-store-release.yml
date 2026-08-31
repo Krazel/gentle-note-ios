@@ -4,13 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: Read status, prepare localized metadata, or upload approved screenshots
+        description: Read status, prepare metadata/review details, or upload approved screenshots
         required: true
         default: audit
         type: choice
         options:
           - audit
           - prepare-metadata
+          - prepare-review
           - upload-screenshots
       screenshot_run_id:
         description: Screenshot workflow run ID; required only for upload-screenshots
@@ -59,6 +60,7 @@ jobs:
           case "${{ inputs.operation }}" in
             audit) node scripts/manage-app-store-release.mjs audit ;;
             prepare-metadata) node scripts/manage-app-store-release.mjs prepare-metadata --confirm-metadata-write ;;
+            prepare-review) node scripts/manage-app-store-release.mjs prepare-review --confirm-review-write ;;
             upload-screenshots) node scripts/manage-app-store-release.mjs upload-screenshots --confirm-screenshot-upload ;;
           esac
 
