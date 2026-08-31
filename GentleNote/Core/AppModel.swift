@@ -15,6 +15,9 @@ final class AppModel: ObservableObject {
     let store: SecureVaultStore
     let authenticator = AuthenticationService()
     private var backgroundedAt: Date?
+#if DEBUG
+    private var storeScreenshotPreparationFlag = false
+#endif
 
     init() {
         do {
@@ -275,3 +278,100 @@ final class AppModel: ObservableObject {
 }
 
 enum RootTab: Hashable { case journal, reflections, library, settings }
+
+#if DEBUG
+enum StoreScreenshotScenario: String {
+    case journal, templates, library, intakes, settings, privacy
+}
+
+struct StoreScreenshotConfiguration {
+    let scenario: StoreScreenshotScenario
+    let language: AppLanguage
+
+    static var current: StoreScreenshotConfiguration? {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard let scenarioIndex = arguments.firstIndex(of: "-GNStoreScreenshot"),
+              arguments.indices.contains(scenarioIndex + 1),
+              let scenario = StoreScreenshotScenario(rawValue: arguments[scenarioIndex + 1]) else { return nil }
+        let language: AppLanguage
+        if let languageIndex = arguments.firstIndex(of: "-GNStoreLanguage"),
+           arguments.indices.contains(languageIndex + 1),
+           let requested = AppLanguage(rawValue: arguments[languageIndex + 1]) {
+            language = requested
+        } else {
+            language = .english
+        }
+        return StoreScreenshotConfiguration(scenario: scenario, language: language)
+    }
+}
+
+extension AppModel {
+    func prepareStoreScreenshot(_ configuration: StoreScreenshotConfiguration) {
+        guard !storeScreenshotPreparationFlag else { return }
+        storeScreenshotPreparationFlag = true
+
+        let language = configuration.language
+        let localized: (String, String) -> String = { english, spanish in
+            language == .spanish ? spanish : english
+        }
+        var tags = LibraryTag.defaults
+        let helpfulTag = tags.first(where: { $0.defaultKind == .helpfulReminders })?.id
+        let comfortTag = tags.first(where: { $0.defaultKind == .comfort })?.id
+        let now = Date()
+        let journalEntries = [
+            JournalEntry(templateID: .noticeSomethingSmall,
+                         title: localized("A small moment I want to remember", "Un momento pequeño que quiero recordar"),
+                         body: localized("I asked for support and gave myself some quiet time.",
+                                         "Pedí apoyo y me permití un poco de calma."),
+                         isKept: true,
+                         createdAt: now.addingTimeInterval(-3_600),
+                         updatedAt: now.addingTimeInterval(-3_600)),
+            JournalEntry(templateID: .gentleCheckIn,
+                         title: localized("What I need today", "Lo que necesito hoy"),
+                         body: localized("A gentler pace and a conversation with someone I trust.",
+                                         "Un ritmo más amable y hablar con alguien de confianza."),
+                         createdAt: now.addingTimeInterval(-86_400),
+                         updatedAt: now.addingTimeInterval(-86_400))
+        ]
+        let libraryItems = [
+            LibraryItem(kind: .note,
+                        title: localized("Words I want to keep", "Palabras que quiero conservar"),
+                        body: localized("I do not have to handle every difficult moment alone.",
+                                        "No tengo que atravesar a solas cada momento difícil."),
+                        tagIDs: Set([helpfulTag].compactMap { $0 }),
+                        isKept: true,
+                        createdAt: now.addingTimeInterval(-7_200),
+                        updatedAt: now.addingTimeInterval(-7_200)),
+            LibraryItem(kind: .note,
+                        title: localized("For a difficult moment", "Para un momento difícil"),
+                        body: localized("Pause, breathe, and message someone I trust.",
+                                        "Pausa, respira y escribe a alguien de confianza."),
+                        tagIDs: Set([comfortTag].compactMap { $0 }),
+                        createdAt: now.addingTimeInterval(-172_800),
+                        updatedAt: now.addingTimeInterval(-172_800))
+        ]
+
+        preferences = AppPreferences(onboardingComplete: true,
+                                     appLockEnabled: false,
+                                     languageOverride: language,
+                                     showLibraryIntroduction: true,
+                                     showMealReflectionPreviews: true,
+                                     mealReflectionsEnabled: true,
+                                     showMealReflectionIntroduction: true,
+                                     previewDefaultsVersion: 1)
+        vault = VaultSnapshot(journalEntries: journalEntries,
+                              libraryItems: libraryItems,
+                              tags: tags)
+        GentleLocalization.configure(language)
+        activeLanguageOverride = language
+        isUnlocked = true
+        privacyCoverVisible = false
+        selectedTab = switch configuration.scenario {
+        case .library: .library
+        case .intakes: .reflections
+        case .settings: .settings
+        default: .journal
+        }
+    }
+}
+#endif

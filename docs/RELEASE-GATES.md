@@ -1,5 +1,12 @@
 # Gates remaining before a publishable candidate
 
+Prepared locally for candidate 0.8.1 (1): explicit English localization to
+make Settings language switching reliable, bilingual store metadata, truthful
+review notes, per-release privacy/age/category/export answers, bilingual legal
+page drafts, deterministic runtime screenshot fixtures, and manual protected
+workflows for screenshot capture and App Store metadata/assets. None of these
+new materials has been pushed, published, uploaded, or submitted yet.
+
 - Generate the Xcode project and compile/test on macOS with Xcode 16+.
 - Run all unit and UI flows on iOS 16/17/18 hardware and simulator.
 - On iOS 16 hardware, switch Settings between System Default, English, and
@@ -36,9 +43,19 @@
 - Obtain eating-disorder clinical, crisis, ARFID/neurodivergence, and diverse
   lived-experience review of every prompt, safety sentence, asset, and store
   claim. Do not add a review credit until that work and permission exist.
-- Approve and create a final app icon separately.
-- Finalize dedicated support alias, privacy/support URLs, Terms/EULA, app name
-  availability, signing, age rating, export compliance, and App Privacy.
+- Approve the current 1024×1024 opaque app icon as the final 1.0 icon or replace
+  it through a separately approved visual.
+- Publish and verify the prepared bilingual privacy/support pages. The existing
+  dedicated support alias is `coderappskrazel@gmail.com`.
+- DSA trader status is already configured in App Store Connect. Decide launch
+  territories and complete the recommended 13+/12+ age questionnaire,
+  regulated-medical-device declaration, Health & Fitness/Lifestyle categories,
+  content rights, export compliance, and Data Not Collected privacy answers.
+- The App Store version 1.0 record already exists and is empty. Supply and
+  approve the final copyright, uncheck the incorrect login requirement, choose
+  manual release, and select the final reviewed build. Capture and visually
+  approve the six EN/ES runtime screenshots before uploading them. App preview
+  video remains optional.
 - Keep optional StoreKit support hidden until products and owner authorization
   exist. Run the complete App Review preflight on the exact submitted build.
 - A public source repository and manual Local-QA unsigned IPA builds were

@@ -1,0 +1,130 @@
+name: Capture Gentle Note App Store Screenshots
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture-runtime-screenshots:
+    runs-on: macos-26
+    timeout-minutes: 35
+    steps:
+      - name: Check out exact source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode and verify source
+        shell: pwsh
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+          xcodebuild -version
+          ./scripts/verify.ps1
+
+      - name: Build the real simulator app
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild build \
+            -project GentleNote.xcodeproj \
+            -scheme GentleNote \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -derivedDataPath "$RUNNER_TEMP/StoreScreenshotDerivedData" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Capture accepted iPhone screenshots in English and Spanish
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP_PATH="$RUNNER_TEMP/StoreScreenshotDerivedData/Build/Products/Debug-iphonesimulator/GentleNote.app"
+          OUTPUT="$RUNNER_TEMP/GentleNote-App-Store-Screenshots"
+          BUNDLE_ID="com.krazel.gentlenote.B2X6D3A9J9"
+          test -d "$APP_PATH"
+          mkdir -p "$OUTPUT/en-US" "$OUTPUT/es-ES"
+
+          RUNTIME_ID="$(xcrun simctl list runtimes -j | jq -r '[.runtimes[] | select(.isAvailable == true and (.name | startswith("iOS")))] | sort_by(.version | split(".") | map(tonumber)) | last.identifier')"
+          test -n "$RUNTIME_ID"
+          DEVICE_TYPE_ID=""
+          DEVICE_NAME=""
+          # App Store Connect currently requests the 6.5-inch iPhone set for
+          # this version. These simulators produce an accepted 1284x2778 image.
+          for candidate in "iPhone 14 Plus" "iPhone 13 Pro Max" "iPhone 12 Pro Max"; do
+            candidate_id="$(xcrun simctl list devicetypes -j | jq -r --arg name "$candidate" '.devicetypes[] | select(.name == $name) | .identifier' | head -n 1)"
+            if [[ -n "$candidate_id" ]]; then
+              DEVICE_TYPE_ID="$candidate_id"
+              DEVICE_NAME="$candidate"
+              break
+            fi
+          done
+          test -n "$DEVICE_TYPE_ID"
+
+          UDID="$(xcrun simctl create "Gentle Note Store Capture" "$DEVICE_TYPE_ID" "$RUNTIME_ID")"
+          cleanup() { xcrun simctl shutdown "$UDID" >/dev/null 2>&1 || true; xcrun simctl delete "$UDID" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          xcrun simctl boot "$UDID"
+          xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time 9:41 --wifiBars 3 --cellularBars 4 --batteryState charged --batteryLevel 100
+          xcrun simctl install "$UDID" "$APP_PATH"
+
+          capture() {
+            local language="$1"
+            local locale="$2"
+            local scenario="$3"
+            local position="$4"
+            local destination="$OUTPUT/$locale/${position}-${scenario}.jpg"
+            local temporary="$RUNNER_TEMP/${locale}-${scenario}.png"
+            local apple_locale
+            if [[ "$language" == "es" ]]; then apple_locale="es_ES"; else apple_locale="en_US"; fi
+            xcrun simctl terminate "$UDID" "$BUNDLE_ID" >/dev/null 2>&1 || true
+            xcrun simctl launch "$UDID" "$BUNDLE_ID" \
+              -GNStoreScreenshot "$scenario" \
+              -GNStoreLanguage "$language" \
+              -AppleLanguages "($language)" \
+              -AppleLocale "$apple_locale" >/dev/null
+            sleep 3
+            xcrun simctl io "$UDID" screenshot --type=png "$temporary"
+            sips -s format jpeg -s formatOptions 100 "$temporary" --out "$destination" >/dev/null
+            local width height
+            width="$(sips -g pixelWidth "$destination" | awk '/pixelWidth/ {print $2}')"
+            height="$(sips -g pixelHeight "$destination" | awk '/pixelHeight/ {print $2}')"
+            case "${width}x${height}" in
+              1284x2778|1242x2688) ;;
+              *) echo "Unsupported App Store screenshot size: ${width}x${height}" >&2; exit 1 ;;
+            esac
+          }
+
+          for locale in en-US es-ES; do
+            if [[ "$locale" == "es-ES" ]]; then language="es"; else language="en"; fi
+            capture "$language" "$locale" journal 01
+            capture "$language" "$locale" templates 02
+            capture "$language" "$locale" library 03
+            capture "$language" "$locale" intakes 04
+            capture "$language" "$locale" privacy 05
+            capture "$language" "$locale" settings 06
+          done
+
+          cat > "$OUTPUT/manifest.json" <<JSON
+          {
+            "app": "Gentle Note",
+            "marketingVersion": "0.8.1",
+            "build": "1",
+            "commit": "$GITHUB_SHA",
+            "ciRun": "$GITHUB_RUN_ID",
+            "device": "$DEVICE_NAME",
+            "localizations": ["en-US", "es-ES"],
+            "screens": ["journal", "templates", "library", "intakes", "privacy", "settings"],
+            "source": "actual Debug simulator build using production views and deterministic non-user fixtures"
+          }
+          JSON
+          find "$OUTPUT" -type f -exec shasum -a 256 {} \; | sort > "$OUTPUT/SHA256SUMS.txt"
+
+      - name: Upload store screenshot evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: GentleNote-0.8.1-build-1-App-Store-screenshots-${{ github.sha }}
+          path: ${{ runner.temp }}/GentleNote-App-Store-Screenshots
+          if-no-files-found: error
+          retention-days: 30

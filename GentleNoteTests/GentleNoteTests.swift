@@ -155,6 +155,16 @@ final class GentleNoteTests: XCTestCase {
         )
     }
 
+    func testEnglishLocalizationIsPackagedForRuntimeSwitching() throws {
+        let path = try XCTUnwrap(Bundle.main.path(forResource: "en", ofType: "lproj"))
+        let english = try XCTUnwrap(Bundle(path: path))
+        XCTAssertEqual(english.localizedString(forKey: "Journal", value: nil, table: nil), "Journal")
+        XCTAssertEqual(english.localizedString(forKey: "Library", value: nil, table: nil), "Library")
+        XCTAssertEqual(english.localizedString(forKey: "Intakes", value: nil, table: nil), "Intakes")
+        XCTAssertTrue(Bundle.main.localizations.contains("en"))
+        XCTAssertTrue(Bundle.main.localizations.contains("es"))
+    }
+
     func testLanguageOverrideCanForceSpanishAndEnglish() {
         defer { GentleLocalization.configure(nil) }
 

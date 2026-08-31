@@ -1,0 +1,40 @@
+# App Review notes — draft for the exact release candidate
+
+Gentle Note is a free-to-use, local-only reflection journal for adults living
+with eating disorder recovery. It does not diagnose, treat, monitor, or provide
+emergency services.
+
+No account, login, network service, advertising, analytics, tracking, cloud
+sync, social feature, AI, or third-party runtime SDK is present. Journal text,
+notes, intake context, photos, audio, video, preferences, and the optional
+trusted contact remain encrypted on the iPhone. Content leaves the app only
+when the reviewer explicitly uses an iOS export/share flow, opens an external
+support resource, or opens Messages for the trusted contact.
+
+Review path:
+
+1. On first launch, proceed through the short overview and choose **Not Now**
+   on App Lock to inspect the app without authentication.
+2. **Journal** allows a blank entry or optional qualitative templates.
+3. **Library** stores notes and optional media and organizes them with tags.
+4. **Intakes** is optional. A main meal photo is required only when creating an
+   intake; all words, guided answers, additional photos, audio, video, date,
+   and meal label are optional. It never asks for calories, weight, quantities,
+   scores, streaks, or a required meal schedule.
+5. **Settings → App Language** switches immediately among System Default,
+   English, and Spanish.
+6. Camera and microphone permission prompts appear only after the reviewer
+   chooses a capture or recording action. Photo-library selection uses Apple's
+   system picker and does not request broad Photos access.
+7. Help & Safety contains region-aware emergency/support links and an optional
+   trusted-contact message composer. iOS always asks the user to confirm Send.
+
+The optional StoreKit support implementation is disabled in this binary. No
+purchase or subscription is visible or required. Apple’s standard EULA applies.
+
+Export compliance: the app uses Apple CryptoKit for local AES-GCM protection
+and declares `ITSAppUsesNonExemptEncryption = NO` because it uses only exempt
+standard encryption. It uses no proprietary cryptography.
+
+Before submission, replace this heading with the final version/build/commit and
+add the private App Review contact information only in App Store Connect.

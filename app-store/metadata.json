@@ -1,0 +1,27 @@
+{
+  "appId": "6805943178",
+  "bundleId": "com.krazel.gentlenote.B2X6D3A9J9",
+  "platform": "IOS",
+  "candidateVersion": "0.8.1",
+  "publicReleaseVersion": "1.0",
+  "primaryCategory": "HEALTH_AND_FITNESS",
+  "secondaryCategory": "LIFESTYLE",
+  "localizations": {
+    "en-US": {
+      "name": "Gentle Note",
+      "subtitle": "Private eating disorder diary",
+      "keywords": "eating disorder,recovery,journal,diary,reflection,private,notes,intakes,self care,wellbeing",
+      "description": "Gentle Note is a private journal for people living with eating disorder recovery. It gives you flexible ways to write, preserve reminders, and remember the context around meals without turning recovery into another score.\n\nJOURNAL\nWrite freely or choose an optional reflection template when a little structure would help. Prompts focus on what happened, what you noticed, what you needed, what helped, and moments you may want to remember.\n\nLIBRARY\nKeep private notes, images, audio, and video you may want to return to. Use tags to organize words, reminders, people, places, and supportive moments in your own way.\n\nINTAKES\nKeep one or more meal photos together with optional words, audio, or video. A guided check-in can help you notice context, thoughts, feelings, sensations, needs, and support without calories, weight, scores, streaks, or required meal logging.\n\nPRIVATE BY DESIGN\nYour journal, library, intakes, media, preferences, and trusted contact remain encrypted on this iPhone. Gentle Note has no account, ads, analytics, tracking, social feed, or AI. Nothing is uploaded to a developer server. You control export and deletion, and you can protect the app with Face ID, Touch ID, or your iPhone passcode.\n\nGentle Note is available in English and Spanish. It is designed to complement, not replace, professional care and personal support. It does not provide diagnosis, treatment, monitoring, or emergency services.",
+      "supportUrl": "https://krazel.github.io/gentle-note/support/",
+      "privacyPolicyUrl": "https://krazel.github.io/gentle-note/privacy/"
+    },
+    "es-ES": {
+      "name": "Gentle Note",
+      "subtitle": "Diario privado para TCA",
+      "keywords": "TCA,recuperación,diario,reflexión,privado,notas,ingestas,autocuidado,bienestar,apoyo",
+      "description": "Gentle Note es un diario privado para personas que viven un proceso de recuperación de un trastorno de la conducta alimentaria. Ofrece formas flexibles de escribir, conservar recordatorios y recordar el contexto de las comidas sin convertir la recuperación en otra puntuación.\n\nDIARIO\nEscribe libremente o elige una plantilla de reflexión opcional cuando te ayude tener un poco de estructura. Las preguntas se centran en qué ocurrió, qué notaste, qué necesitabas, qué ayudó y qué momentos quizá quieras recordar.\n\nBIBLIOTECA\nGuarda notas, imágenes, audios y vídeos privados a los que quizá quieras volver. Usa etiquetas para organizar palabras, recordatorios, personas, lugares y momentos de apoyo a tu manera.\n\nINGESTAS\nGuarda una o más fotos de una comida junto con texto, audio o vídeo opcional. Una guía breve puede ayudarte a observar el contexto, pensamientos, emociones, sensaciones, necesidades y apoyos sin calorías, peso, puntuaciones, rachas ni registro obligatorio de comidas.\n\nPRIVADA POR DISEÑO\nTu diario, biblioteca, ingestas, contenido multimedia, preferencias y contacto de confianza permanecen cifrados en este iPhone. Gentle Note no tiene cuenta, anuncios, analítica, rastreo, red social ni IA. Nada se sube a un servidor del desarrollador. Tú controlas la exportación y el borrado, y puedes proteger la app con Face ID, Touch ID o el código del iPhone.\n\nGentle Note está disponible en inglés y español. Está diseñada para complementar, no sustituir, la atención profesional y el apoyo personal. No ofrece diagnóstico, tratamiento, seguimiento ni servicios de emergencia.",
+      "supportUrl": "https://krazel.github.io/gentle-note/es/support/",
+      "privacyPolicyUrl": "https://krazel.github.io/gentle-note/es/privacy/"
+    }
+  }
+}

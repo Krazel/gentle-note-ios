@@ -1,0 +1,69 @@
+name: Manage Gentle Note App Store Candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Read status, prepare localized metadata, or upload approved screenshots
+        required: true
+        default: audit
+        type: choice
+        options:
+          - audit
+          - prepare-metadata
+          - upload-screenshots
+      screenshot_run_id:
+        description: Screenshot workflow run ID; required only for upload-screenshots
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  manage-app-store-candidate:
+    environment: app-store-production
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out exact source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Download approved screenshot evidence
+        if: inputs.operation == 'upload-screenshots'
+        uses: actions/download-artifact@v5
+        with:
+          repository: Krazel/gentle-note-ios
+          run-id: ${{ inputs.screenshot_run_id }}
+          pattern: GentleNote-0.8.1-build-1-App-Store-screenshots-*
+          path: ${{ runner.temp }}/GentleNote-App-Store-Screenshots
+          merge-multiple: true
+          github-token: ${{ github.token }}
+
+      - name: Audit or prepare the App Store candidate
+        shell: bash
+        env:
+          ASC_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          SCREENSHOT_DIRECTORY: ${{ runner.temp }}/GentleNote-App-Store-Screenshots
+        run: |
+          set -euo pipefail
+          KEY_PATH="$RUNNER_TEMP/GentleNote-AppStore-Connect.p8"
+          printf '%s' "$ASC_API_KEY_BASE64" | base64 --decode > "$KEY_PATH"
+          chmod 600 "$KEY_PATH"
+          export ASC_PRIVATE_KEY_PATH="$KEY_PATH"
+          case "${{ inputs.operation }}" in
+            audit) node scripts/manage-app-store-release.mjs audit ;;
+            prepare-metadata) node scripts/manage-app-store-release.mjs prepare-metadata --confirm-metadata-write ;;
+            upload-screenshots) node scripts/manage-app-store-release.mjs upload-screenshots --confirm-screenshot-upload ;;
+          esac
+
+      - name: Remove temporary API key
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/GentleNote-AppStore-Connect.p8"
+

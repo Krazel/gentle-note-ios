@@ -591,7 +591,7 @@ struct TermsView: View {
             Section("Use of Gentle Note") { Text("Gentle Note is provided as a private reflection tool for adults. It is not medical advice, diagnosis, treatment, monitoring, or an emergency service.") }
             Section("Your content") { Text("You control what you create, export, and delete. Keep copies only in destinations you trust. The app cannot recover deleted or lost content.") }
             Section("Safety") { Text("Do not delay urgent care or professional support because of this app. Stop using it if journaling feels compulsive, punishing, or more distressing.") }
-            Section("Availability") { Text("Features may change as the product is reviewed and tested. Final legal terms require review before public release.") }
+            Section("Availability") { Text("Gentle Note may be updated, changed, or discontinued. Availability of device features depends on iOS, hardware, permissions, and local services.") }
         }
         .scrollContentBackground(.hidden).linenScreen().navigationTitle("Terms of Use")
     }

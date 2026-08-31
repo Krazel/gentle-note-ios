@@ -1,0 +1,9 @@
+/*
+ English is the source language for Gentle Note.
+
+ This file intentionally establishes an explicit English localization bundle.
+ User-facing keys are already written in English, so missing entries correctly
+ fall back to the key while SwiftUI can reliably switch away from a Spanish
+ system locale at runtime.
+ */
+

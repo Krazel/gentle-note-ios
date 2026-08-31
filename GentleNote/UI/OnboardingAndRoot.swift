@@ -5,13 +5,15 @@ struct AppRootView: View {
 
     var body: some View {
         ZStack {
-            if !model.preferences.onboardingComplete {
-                OnboardingView()
-            } else if model.preferences.appLockEnabled && !model.isUnlocked {
-                LockedView()
+#if DEBUG
+            if let configuration = StoreScreenshotConfiguration.current {
+                StoreScreenshotRoot(configuration: configuration)
             } else {
-                MainShell()
+                standardRoot
             }
+#else
+            standardRoot
+#endif
             if model.privacyCoverVisible {
                 PaperBackground()
                 VStack(spacing: 20) {
@@ -27,7 +29,42 @@ struct AppRootView: View {
                 Button("Done") { model.lastError = nil }
             } message: { Text(model.lastError ?? "") }
     }
+
+    @ViewBuilder
+    private var standardRoot: some View {
+            if !model.preferences.onboardingComplete {
+                OnboardingView()
+            } else if model.preferences.appLockEnabled && !model.isUnlocked {
+                LockedView()
+            } else {
+                MainShell()
+            }
+    }
 }
+
+#if DEBUG
+private struct StoreScreenshotRoot: View {
+    @EnvironmentObject private var model: AppModel
+    let configuration: StoreScreenshotConfiguration
+
+    @ViewBuilder
+    var body: some View {
+        Group {
+            switch configuration.scenario {
+            case .templates:
+                NavigationStack { TemplateLibraryView() }
+                    .linenScreen()
+            case .privacy:
+                NavigationStack { PrivacyNoticeView() }
+                    .linenScreen()
+            case .journal, .library, .intakes, .settings:
+                MainShell()
+            }
+        }
+        .onAppear { model.prepareStoreScreenshot(configuration) }
+    }
+}
+#endif
 
 struct MainShell: View {
     @EnvironmentObject private var model: AppModel

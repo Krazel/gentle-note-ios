@@ -1,4 +1,4 @@
-# Release data-flow inventory — source candidate 0.8 (1)
+# Release data-flow inventory — source candidate 0.8.1 (1)
 
 | Data | Source | Storage | Transmission | Retention/control | Recipient |
 |---|---|---|---|---|---|
@@ -14,7 +14,7 @@
 | App preferences, including language, Library introduction, Intakes visibility, and intake-preview visibility | User controls | AES-GCM encrypted local preferences | None | Until reset/app removal; language is retained through erase-all so the completion UI remains understandable | None |
 | Optional trusted contact | User types a name and phone number; no Contacts access | AES-GCM encrypted local preferences | Recipient and localized preset text are passed to Apple’s Messages composer only after explicit tap | Until contact removal, erase-all, or app removal | User-selected contact through Apple Messages |
 | Authentication | Face ID/Touch ID/passcode through iOS | App stores only enabled/delay preference | No biometric data received | iOS-controlled | Apple OS only |
-| Optional support transaction | StoreKit; feature flag off in 0.8 | Transaction state only when activated | Apple StoreKit | Apple policy | Apple |
+| Optional support transaction | StoreKit; feature flag off in 0.8.1 | Transaction state only when activated | Apple StoreKit | Apple policy | Apple |
 | Help links/calls | Explicit tap; resources selected from iPhone region | Not stored by Gentle Note | Destination receives normal request/phone metadata, never journal content | Destination policy | Spain: 112/024/Ministry of Health; US: 911/988/support websites |
 
 No account, developer backend, CloudKit, iCloud Documents, HealthKit, Photos,
