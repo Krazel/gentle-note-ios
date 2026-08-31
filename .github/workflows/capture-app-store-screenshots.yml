@@ -79,11 +79,11 @@ jobs:
             local apple_locale
             if [[ "$language" == "es" ]]; then apple_locale="es_ES"; else apple_locale="en_US"; fi
             xcrun simctl terminate "$UDID" "$BUNDLE_ID" >/dev/null 2>&1 || true
-            xcrun simctl launch "$UDID" "$BUNDLE_ID" \
-              -GNStoreScreenshot "$scenario" \
-              -GNStoreLanguage "$language" \
-              -AppleLanguages "($language)" \
-              -AppleLocale "$apple_locale" >/dev/null
+            SIMCTL_CHILD_GNStoreScreenshot="$scenario" \
+            SIMCTL_CHILD_GNStoreLanguage="$language" \
+            SIMCTL_CHILD_AppleLanguages="($language)" \
+            SIMCTL_CHILD_AppleLocale="$apple_locale" \
+              xcrun simctl launch "$UDID" "$BUNDLE_ID" >/dev/null
             sleep 3
             xcrun simctl io "$UDID" screenshot --type=png "$temporary"
             sips -s format jpeg -s formatOptions 100 "$temporary" --out "$destination" >/dev/null
@@ -104,6 +104,11 @@ jobs:
             capture "$language" "$locale" intakes 04
             capture "$language" "$locale" privacy 05
             capture "$language" "$locale" settings 06
+            unique_count="$(find "$OUTPUT/$locale" -type f -name '*.jpg' -exec shasum -a 256 {} \; | awk '{print $1}' | sort -u | wc -l | tr -d ' ')"
+            if [[ "$unique_count" != "6" ]]; then
+              echo "Expected six visually distinct screenshots for $locale; found $unique_count." >&2
+              exit 1
+            fi
           done
 
           cat > "$OUTPUT/manifest.json" <<JSON

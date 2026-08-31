@@ -290,18 +290,25 @@ struct StoreScreenshotConfiguration {
 
     static var current: StoreScreenshotConfiguration? {
         let arguments = ProcessInfo.processInfo.arguments
-        guard let scenarioIndex = arguments.firstIndex(of: "-GNStoreScreenshot"),
-              arguments.indices.contains(scenarioIndex + 1),
-              let scenario = StoreScreenshotScenario(rawValue: arguments[scenarioIndex + 1]) else { return nil }
+        let environment = ProcessInfo.processInfo.environment
+        let scenarioValue = environment["GNStoreScreenshot"] ?? value(after: "-GNStoreScreenshot", in: arguments)
+        guard let scenarioValue,
+              let scenario = StoreScreenshotScenario(rawValue: scenarioValue) else { return nil }
         let language: AppLanguage
-        if let languageIndex = arguments.firstIndex(of: "-GNStoreLanguage"),
-           arguments.indices.contains(languageIndex + 1),
-           let requested = AppLanguage(rawValue: arguments[languageIndex + 1]) {
+        let languageValue = environment["GNStoreLanguage"] ?? value(after: "-GNStoreLanguage", in: arguments)
+        if let languageValue,
+           let requested = AppLanguage(rawValue: languageValue) {
             language = requested
         } else {
             language = .english
         }
         return StoreScreenshotConfiguration(scenario: scenario, language: language)
+    }
+
+    private static func value(after flag: String, in arguments: [String]) -> String? {
+        guard let index = arguments.firstIndex(of: flag),
+              arguments.indices.contains(index + 1) else { return nil }
+        return arguments[index + 1]
     }
 }
 
