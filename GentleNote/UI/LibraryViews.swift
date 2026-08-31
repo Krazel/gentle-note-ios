@@ -69,8 +69,6 @@ struct LibraryRootView: View {
                 if model.vault.libraryItems.isEmpty {
                     Spacer()
                     BotanicalSprig()
-                    Text("Keep a note, image, or recording without creating a journal entry.")
-                        .multilineTextAlignment(.center)
                     addButtons
                     Text("Nothing here yet.").font(.footnote).foregroundStyle(QuietLinen.muted)
                     Spacer()

@@ -82,6 +82,16 @@ the visual specification; runtime captures will be linked after macOS/Xcode QA.
   complete labelled controls. Runtime captures, rather than altered concept
   boards, will verify these direct owner corrections.
 
+- Owner-directed v0.8 amendment on 2026-08-31 renames the visible Meal
+  Reflections destination to `Intakes` / `Ingestas` across onboarding,
+  navigation, history, calendar, editor, privacy, export and Settings. The
+  existing approved Quiet Linen compositions remain authoritative. Inside the
+  approved words card, an inline disclosure reuses the existing secondary
+  control and `LinenTextEditor` components to reveal a five-question guided
+  intake check-in; it is not a new destination or full-screen composition.
+  Journal/template/Library copy is shortened as requested, with no change to
+  the approved hierarchy or assets.
+
 ## Runtime comparison
 
 Pending. This Windows host cannot run Xcode or an iOS Simulator. Store same-size

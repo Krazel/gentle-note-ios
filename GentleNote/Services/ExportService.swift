@@ -63,13 +63,13 @@ struct ExportService {
     func allMealReflections(_ reflections: [MealReflection]) throws -> [URL] {
         let ordered = reflections.sorted { $0.reflectionDate < $1.reflectionDate }
         let text = ordered.map(render).joined(separator: "\n\n————————————\n\n")
-        var items = [try writePDF(text, named: "Meal Reflections".gentleLocalized)]
+        var items = [try writePDF(text, named: "Intakes".gentleLocalized)]
         for (reflectionIndex, reflection) in ordered.enumerated() {
             items.append(try readableCopy(filename: reflection.mainPhotoFilename,
                                           ext: reflection.mainPhotoExtension,
-                                          name: "Reflection %d main photo".gentleLocalizedFormat(reflectionIndex + 1)))
+                                          name: "Intake %d main photo".gentleLocalizedFormat(reflectionIndex + 1)))
             for (attachmentIndex, attachment) in reflection.attachments.enumerated() {
-                let name = "Reflection %d %@ %d".gentleLocalizedFormat(
+                let name = "Intake %d %@ %d".gentleLocalizedFormat(
                     reflectionIndex + 1, attachment.kind.title, attachmentIndex + 1
                 )
                 items.append(try readableCopy(filename: attachment.encryptedMediaFilename,
@@ -93,12 +93,18 @@ struct ExportService {
     }
 
     private func render(_ reflection: MealReflection) -> String {
-        var lines = ["MEAL REFLECTION".gentleLocalized,
+        var lines = ["INTAKE".gentleLocalized,
                      reflection.reflectionDate.formatted(date: .long, time: .shortened)]
         if let moment = reflection.mealMoment { lines.append(moment.title) }
         lines.append("")
         if !reflection.words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             lines.append(reflection.words)
+            lines.append("")
+        }
+        for (prompt, answer) in zip(IntakeGuidePrompt.allCases, reflection.guidedAnswers)
+            where !answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            lines.append(prompt.question)
+            lines.append(answer)
             lines.append("")
         }
         lines.append("Main photo and %d attachment(s)".gentleLocalizedFormat(reflection.attachments.count))

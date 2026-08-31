@@ -18,7 +18,7 @@ struct JournalRootView: View {
                 VStack(spacing: 20) {
                     BotanicalSprig()
                     Text("Your journal").editorialTitle()
-                    Text("Start blank or choose a template to help you get started.\nNothing is due.")
+                    Text("Start blank or choose a template to help you get started.")
                         .multilineTextAlignment(.center).foregroundStyle(QuietLinen.muted)
 
                     if let draft = model.vault.journalDraft {
@@ -135,8 +135,6 @@ struct TemplateLibraryView: View {
                 VStack(spacing: 8) {
                     BotanicalSprig()
                     Text("Choose a template").editorialTitle()
-                    Text("Use a structure, start blank, or leave. Every prompt is optional.")
-                        .font(.footnote).multilineTextAlignment(.center)
                 }.textCase(nil).frame(maxWidth: .infinity)
             }
             Section {
@@ -171,11 +169,14 @@ struct JournalComposerView: View {
                     Text(subtitle).font(.caption).padding(.horizontal, 10).padding(.vertical, 4)
                         .background(QuietLinen.sage.opacity(0.2), in: Capsule())
                 }
-                Text(templateID.intro).font(.footnote).foregroundStyle(QuietLinen.muted).multilineTextAlignment(.center)
+                if let intro = templateID.intro {
+                    Text(intro).font(.footnote).foregroundStyle(QuietLinen.muted).multilineTextAlignment(.center)
+                }
                 TextField("Optional title", text: $title)
                     .textFieldStyle(.roundedBorder).accessibilityLabel("Optional title")
                 if templateID == .blank {
-                    LinenTextEditor(prompt: "Write whatever feels useful…", text: $entryText, minHeight: 330)
+                    LinenTextEditor(prompt: "", text: $entryText, minHeight: 330,
+                                    accessibilityName: "Journal entry")
                 } else {
                     ForEach(Array(templateID.prompts.enumerated()), id: \.offset) { index, prompt in
                         LinenTextEditor(prompt: prompt, text: binding(for: index), minHeight: 96)
@@ -185,7 +186,6 @@ struct JournalComposerView: View {
                     Label("Keep this entry easy to find", systemImage: kept ? "bookmark.fill" : "bookmark")
                 }.tint(QuietLinen.forest)
                 Button("Save Entry") { save() }.buttonStyle(PrimaryButtonStyle())
-                Text("You can stop here. Nothing is due.").font(.footnote).foregroundStyle(QuietLinen.muted)
             }.padding(20).frame(maxWidth: 700)
         }
         .linenScreen().navigationBarTitleDisplayMode(.inline)

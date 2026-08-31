@@ -1,10 +1,10 @@
-# Implementation handoff — 0.7.2 (1)
+# Implementation handoff — 0.8 (1)
 
 ## Implemented
 
 - Native SwiftUI iPhone app with the approved Quiet Linen language.
 - Three-step onboarding (welcome, a first-run overview that always lists
-  Journal, Library and Meal Reflections, then optional device lock). The overview can
+  Journal, Library and Intakes, then optional device lock). The overview can
   be skipped only to the App Lock choice and never completes onboarding or
   changes the lock preference. Detailed privacy and care limits remain
   available in Settings and Help & Safety,
@@ -23,9 +23,10 @@
   assignments. Library has a dismissible
   introduction explaining that it is a standalone archive for words and
   reminders the person may want to recover later; Settings can show it again.
-- Meal Reflections as a dedicated root section for meal photos and their context.
+- Intakes as a dedicated root section for meal photos and their context.
   Creation is camera-first with a multi-photo Photos alternative. A required main
-  photo anchors each saved reflection; optional words, multiple audio recordings or
+  photo anchors each saved intake; optional words, a qualitative guided check-in,
+  multiple audio recordings or
   chosen files, multiple recorded or chosen videos, and multiple additional
   captured or chosen images can coexist. The date defaults to now but is
   editable, and Breakfast, Morning snack, Lunch, Afternoon snack, or Dinner can
@@ -49,7 +50,7 @@
   full-interface refresh, the Library introduction, Meal Reflections visibility,
   lock delay, preview controls, guided-template visibility, permission status,
   dynamic storage breakdown, export, erase, safety, privacy, terms, and About.
-  The longer Library and Meal Reflections explanations are collapsed by default
+  The longer Library and Intakes explanations are collapsed by default
   behind clearly labelled information rows and expand only when requested.
 - Authentication before deletion is a separate App Lock option and is off by
   default. Confirmations remain visible; Face ID/Touch ID/passcode is requested

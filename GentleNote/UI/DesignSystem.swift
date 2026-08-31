@@ -123,11 +123,12 @@ struct LinenTextEditor: View {
     let prompt: String
     @Binding var text: String
     var minHeight: CGFloat = 104
+    var accessibilityName: String? = nil
 
     var body: some View {
         ZStack(alignment: .topLeading) {
             if text.isEmpty {
-                Text(prompt).foregroundStyle(QuietLinen.muted).padding(.horizontal, 13).padding(.vertical, 16)
+                Text(prompt.gentleLocalized).foregroundStyle(QuietLinen.muted).padding(.horizontal, 13).padding(.vertical, 16)
             }
             TextEditor(text: $text)
                 .scrollContentBackground(.hidden)
@@ -136,6 +137,6 @@ struct LinenTextEditor: View {
         }
         .background(QuietLinen.paperRaised.opacity(0.78), in: RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(QuietLinen.line))
-        .accessibilityLabel(prompt)
+        .accessibilityLabel((accessibilityName ?? prompt).gentleLocalized)
     }
 }

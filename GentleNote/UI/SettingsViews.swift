@@ -49,28 +49,28 @@ struct SettingsRootView: View {
                     ))
                     .tint(QuietLinen.forest)
                 }
-                Section("Meal Reflections") {
+                Section("Intakes") {
                     DisclosureGroup(isExpanded: $mealReflectionsSummaryExpanded) {
-                        Text("Keep one or more photos of a meal together with any words, audio, or video you want to add. Use this space only when it is useful to you.")
+                        Text("Keep one or more photos of an intake with words, audio, or video that help you remember its context.")
                             .font(.footnote)
                             .foregroundStyle(QuietLinen.muted)
                             .padding(.vertical, 6)
                     } label: {
-                        Label("What Meal Reflections is for", systemImage: "info.circle")
+                        Label("What Intakes is for", systemImage: "info.circle")
                             .frame(minHeight: 44)
                     }
                     .tint(QuietLinen.forest)
-                    Toggle("Show Meal Reflections Section", isOn: Binding(
+                    Toggle("Show Intakes Section", isOn: Binding(
                         get: { model.mealReflectionsEnabled },
                         set: { model.setMealReflectionsEnabled($0) }
                     ))
                     .tint(QuietLinen.forest)
-                    Toggle("Show Reflection Photo Previews", isOn: Binding(
+                    Toggle("Show Intake Photo Previews", isOn: Binding(
                         get: { model.showsMealReflectionPreviews },
                         set: { model.setMealReflectionPreviewsVisible($0) }
                     ))
                     .tint(QuietLinen.forest)
-                    Toggle("Show Meal Reflections Introduction", isOn: Binding(
+                    Toggle("Show Intakes Introduction", isOn: Binding(
                         get: { model.showsMealReflectionIntroduction },
                         set: { model.setMealReflectionIntroductionVisible($0) }
                     ))
@@ -156,7 +156,7 @@ struct PrivacyLockView: View {
                 Toggle("Show Journal Previews", isOn: $model.preferences.showJournalPreviews)
                 Toggle("Show Library Previews", isOn: $model.preferences.showLibraryPreviews)
                 Toggle("Show Video Thumbnails", isOn: $model.preferences.showVideoThumbnails)
-                Toggle("Show Reflection Photo Previews", isOn: Binding(
+                Toggle("Show Intake Photo Previews", isOn: Binding(
                     get: { model.showsMealReflectionPreviews },
                     set: { model.setMealReflectionPreviewsVisible($0) }
                 ))
@@ -164,7 +164,7 @@ struct PrivacyLockView: View {
             } footer: { Text("Turn off guided templates if they start to feel rigid or unhelpful. Your entries are not affected.") }
             .onChange(of: model.preferences) { _ in model.savePreferences() }
             Section("How your data is protected") {
-                Text("The app does not collect or sync your journal, reflections, or library. Text, metadata, images, and recordings are encrypted locally and use iPhone file protection. App Lock uses iPhone authentication.")
+                Text("The app does not collect or sync your journal, intakes, or library. Text, metadata, images, and recordings are encrypted locally and use iPhone file protection. App Lock uses iPhone authentication.")
                 Text("Gentle Note never receives your face, fingerprint, or passcode. Someone who knows your iPhone passcode may still be able to unlock it.")
                 Text("There is no automatic recovery. Exports are separate files controlled by the destination you choose.")
             }
@@ -264,8 +264,8 @@ struct ExportView: View {
             }
             Section { Button("Continue") { warning = true }.buttonStyle(PrimaryButtonStyle()) }
                 footer: { Text("Nothing is exported automatically.") }
-            Section("Meal Reflections") {
-                Button("Export All Reflections and Media") { reflectionWarning = true }
+            Section("Intakes") {
+                Button("Export All Intakes and Media") { reflectionWarning = true }
                     .disabled(model.vault.mealReflections.isEmpty)
                 Text("This creates a readable summary and separate copies of every main photo and attachment.")
                     .font(.footnote).foregroundStyle(QuietLinen.muted)
@@ -305,7 +305,7 @@ struct ExportView: View {
 
     private func createReflectionExport() {
         Task {
-            guard await model.authenticateSensitiveAction(reason: "Confirm export of all private meal reflections.".gentleLocalized) else { return }
+            guard await model.authenticateSensitiveAction(reason: "Confirm export of all private intakes.".gentleLocalized) else { return }
             do {
                 reflectionExportItems = try ExportService(store: model.store)
                     .allMealReflections(model.vault.mealReflections)
@@ -325,7 +325,7 @@ struct EraseAllView: View {
             VStack(spacing: 18) {
                 Image(systemName: "trash").font(.system(size: 42)).foregroundStyle(QuietLinen.danger)
                 Text("Erase all private content").editorialTitle()
-                Text("This permanently deletes every journal entry, meal reflection, photo, note, video, audio recording, tag, draft, and search record stored by Gentle Note on this iPhone.")
+                Text("This permanently deletes every journal entry, intake, photo, note, video, audio recording, tag, draft, and search record stored by Gentle Note on this iPhone.")
                     .multilineTextAlignment(.center)
                 Text("It does not delete files you previously exported. Gentle Note cannot recover your content after erasing it.")
                     .multilineTextAlignment(.center).foregroundStyle(QuietLinen.muted)
@@ -350,7 +350,7 @@ struct EraseAllView: View {
             Button("Cancel", role: .cancel) {}
         } message: { Text("All content on this iPhone will be deleted now.") }
         .alert("Private content erased", isPresented: $completed) { Button("Done") {} }
-            message: { Text("No entries, reflections, photos, notes, recordings, drafts, or tags remain in Gentle Note. Previously exported files were not changed.") }
+            message: { Text("No entries, intakes, photos, notes, recordings, drafts, or tags remain in Gentle Note. Previously exported files were not changed.") }
         .alert("Gentle Note couldn’t finish erasing", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
             Button("Done") { error = nil }
         } message: { Text("Some private data may still be on this iPhone. Close the app and try again. Do not assume it has been deleted.") }
@@ -569,7 +569,7 @@ struct MessageComposer: UIViewControllerRepresentable {
 struct PrivacyNoticeView: View {
     var body: some View {
         List {
-            notice("Journal, Reflections, and Library", "Your entries, meal reflections, notes, and media are stored only on this iPhone. Gentle Note does not create an account or sync this data to a developer server.", "books.vertical")
+            notice("Journal, Intakes, and Library", "Your entries, intakes, notes, and media are stored only on this iPhone. Gentle Note does not create an account or sync this data to a developer server.", "books.vertical")
             notice("Trusted Contact", "If you add a trusted contact, their name and phone number are encrypted on this iPhone. Gentle Note does not access your Contacts. The recipient and prepared text leave the app only when you choose to open Messages.", "person.crop.circle")
             notice("Face ID and Touch ID", "Authentication is handled by iOS. Gentle Note receives only whether authentication succeeded. It does not receive your face, fingerprint, or passcode.", "faceid")
             notice("Exporting", "When you export, you choose an external destination. The exported file is no longer protected or controlled by Gentle Note.", "square.and.arrow.up")

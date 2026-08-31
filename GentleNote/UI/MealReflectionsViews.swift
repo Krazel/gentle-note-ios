@@ -57,7 +57,7 @@ struct MealReflectionsRootView: View {
                 .frame(maxWidth: 720)
             }
             .linenScreen()
-            .navigationTitle("Meal Reflections")
+            .navigationTitle("Intakes")
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     NavigationLink {
@@ -110,10 +110,10 @@ struct MealReflectionsRootView: View {
                     .frame(minWidth: 34, maxWidth: 34, minHeight: 44, alignment: .top)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Photos and context, together")
+                    Text("Remember each intake in context")
                         .font(.system(.title2, design: .serif))
                         .foregroundStyle(QuietLinen.forest)
-                    Text("Start with one or more photos of a meal. Add words, audio, or video to give it the context you want.")
+                    Text("Keep one or more photos of an intake with the words, audio, or video that help you remember what was happening and how the moment felt.")
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 Button {
@@ -210,7 +210,7 @@ private struct ReflectionHistoryList: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Your reflections").font(.system(.title2, design: .serif))
+            Text("Your intakes").font(.system(.title2, design: .serif))
             ForEach(reflections) { reflection in
                 NavigationLink(value: reflection.id) {
                     HStack(spacing: 14) {
@@ -275,7 +275,7 @@ private struct ReflectionCalendarView: View {
                 Text(selectedDate.formatted(date: .long, time: .omitted))
                     .font(.system(.headline, design: .serif))
                 if selectedReflections.isEmpty {
-                    Text("No reflection saved for this day.")
+                    Text("No intake saved for this day.")
                         .foregroundStyle(QuietLinen.muted)
                 } else {
                     ForEach(selectedReflections) { reflection in
@@ -334,7 +334,7 @@ private struct ReflectionCalendarView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(date.formatted(date: .long, time: .omitted))
-        .accessibilityValue(count == 0 ? "No reflections".gentleLocalized : "%d reflection(s)".gentleLocalizedFormat(count))
+        .accessibilityValue(count == 0 ? "No intakes".gentleLocalized : "%d intake(s)".gentleLocalizedFormat(count))
     }
 
     private func daysInMonth() -> [Date] {
@@ -372,6 +372,8 @@ private struct MealReflectionEditorView: View {
     @State private var existingMainFilename: String?
     @State private var mainPhotoChanged = false
     @State private var words = ""
+    @State private var guidedAnswers = Array(repeating: "", count: IntakeGuidePrompt.allCases.count)
+    @State private var showsGuidedQuestions = false
     @State private var reflectionDate = Date()
     @State private var mealMoment: MealMoment?
     @State private var attachments: [ReflectionDraftAttachment] = []
@@ -430,7 +432,7 @@ private struct MealReflectionEditorView: View {
                 LinenCard {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("When was this?").font(.headline)
-                        DatePicker("Reflection date", selection: $reflectionDate,
+                        DatePicker("Intake date", selection: $reflectionDate,
                                    displayedComponents: [.date, .hourAndMinute])
                         Text("Optional meal label").font(.headline)
                         mealMomentChips
@@ -444,6 +446,31 @@ private struct MealReflectionEditorView: View {
                             .font(.footnote).foregroundStyle(QuietLinen.muted)
                         LinenTextEditor(prompt: "Write only what feels useful…".gentleLocalized,
                                         text: $words, minHeight: 130)
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                showsGuidedQuestions.toggle()
+                            }
+                        } label: {
+                            Label(showsGuidedQuestions ? "Hide guided questions" : "Use guided questions",
+                                  systemImage: "list.bullet.rectangle")
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(QuietLinen.forest)
+
+                        if showsGuidedQuestions {
+                            Divider()
+                            Text("Guided intake check-in").font(.headline)
+                            Text("Use this when you want to notice the context around an intake—what was happening, what you felt, and what support might help.")
+                                .font(.footnote).foregroundStyle(QuietLinen.muted)
+                            ForEach(Array(IntakeGuidePrompt.allCases.enumerated()), id: \.element.id) { index, prompt in
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(prompt.question).font(.subheadline.weight(.medium))
+                                    LinenTextEditor(prompt: "Your words…", text: guidedBinding(for: index), minHeight: 88,
+                                                    accessibilityName: prompt.question)
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -451,18 +478,16 @@ private struct MealReflectionEditorView: View {
 
                 if !attachments.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Added to this reflection").font(.headline)
+                        Text("Added to this intake").font(.headline)
                         ForEach(attachments) { attachment in attachmentRow(attachment) }
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
 
-                Label("Everything is optional after the main photo and stays encrypted on this iPhone.", systemImage: "lock.fill")
-                    .font(.footnote).foregroundStyle(QuietLinen.muted).multilineTextAlignment(.center)
             }
             .padding(20).frame(maxWidth: 720)
         }
         .linenScreen()
-        .navigationTitle(seed.existingID == nil ? "New Reflection" : "Edit Reflection")
+        .navigationTitle(seed.existingID == nil ? "New Intake" : "Edit Intake")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
@@ -514,11 +539,11 @@ private struct MealReflectionEditorView: View {
             Button("Open iPhone Settings") { UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!) }
             Button("Cancel", role: .cancel) {}
         } message: { Text("Gentle Note cannot record a video without access. You can change this in iPhone Settings.") }
-        .alert("This reflection couldn’t be saved", isPresented: Binding(
+        .alert("This intake couldn’t be saved", isPresented: Binding(
             get: { error != nil }, set: { if !$0 { error = nil } }
         )) {
             Button("Keep Editing") { error = nil }
-        } message: { Text(error ?? "Your saved reflections are unchanged.".gentleLocalized) }
+        } message: { Text(error ?? "Your saved intakes are unchanged.".gentleLocalized) }
     }
 
     private var mealMomentChips: some View {
@@ -546,9 +571,7 @@ private struct MealReflectionEditorView: View {
     private var layerPicker: some View {
         LinenCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Add more to this reflection").font(.headline)
-                Text("Add as many photos as you like, plus optional audio or video.")
-                    .font(.footnote).foregroundStyle(QuietLinen.muted)
+                Text("Photos, audio, and video").font(.headline)
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                     attachmentAction("Take Another Photo", icon: "camera") {
                         requestAdditionalCamera()
@@ -616,6 +639,8 @@ private struct MealReflectionEditorView: View {
         existingMainFilename = reflection.mainPhotoFilename
         mainPhotoExtension = reflection.mainPhotoExtension
         words = reflection.words
+        guidedAnswers = normalizedGuidedAnswers(reflection.guidedAnswers)
+        showsGuidedQuestions = guidedAnswers.contains { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         reflectionDate = reflection.reflectionDate
         mealMoment = reflection.mealMoment
         originalCreatedAt = reflection.createdAt
@@ -818,6 +843,9 @@ private struct MealReflectionEditorView: View {
                                             mainPhotoFilename: mainFilename,
                                             mainPhotoExtension: mainPhotoExtension,
                                             words: words,
+                                            guidedAnswers: guidedAnswers.map {
+                                                $0.trimmingCharacters(in: .whitespacesAndNewlines)
+                                            },
                                             attachments: savedAttachments,
                                             reflectionDate: reflectionDate,
                                             mealMoment: mealMoment,
@@ -832,6 +860,21 @@ private struct MealReflectionEditorView: View {
             saving = false
             self.error = error.localizedDescription
         }
+    }
+
+    private func guidedBinding(for index: Int) -> Binding<String> {
+        Binding(get: {
+            index < guidedAnswers.count ? guidedAnswers[index] : ""
+        }, set: { value in
+            guidedAnswers = normalizedGuidedAnswers(guidedAnswers)
+            guidedAnswers[index] = value
+        })
+    }
+
+    private func normalizedGuidedAnswers(_ answers: [String]) -> [String] {
+        var result = Array(answers.prefix(IntakeGuidePrompt.allCases.count))
+        while result.count < IntakeGuidePrompt.allCases.count { result.append("") }
+        return result
     }
 
     private func protectedTemporaryFile(data: Data, extension ext: String) throws -> URL {
@@ -857,7 +900,7 @@ private struct ReflectionAudioRecorderSheet: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Text("Audio reflection").editorialTitle()
+            Text("Intake audio").editorialTitle()
             DecorativeWaveform(level: recorder.level).frame(height: 120)
             Text(recorder.elapsed.clockString).font(.title2)
             if recorder.finishedURL == nil {
@@ -881,7 +924,7 @@ private struct ReflectionAudioRecorderSheet: View {
                     recorder.finishedURL = nil; recorder.start()
                 }.buttonStyle(SecondaryButtonStyle())
             }
-            Label("This recording will be attached only when you save the reflection.", systemImage: "lock")
+            Label("This recording will be attached only when you save the intake.", systemImage: "lock")
                 .font(.footnote).foregroundStyle(QuietLinen.muted).multilineTextAlignment(.center)
             Spacer()
         }
@@ -991,39 +1034,51 @@ struct MealReflectionDetailView: View {
                     if !reflection.words.isEmpty {
                         LinenCard { Text(reflection.words).frame(maxWidth: .infinity, alignment: .leading) }
                     }
+                    ForEach(Array(IntakeGuidePrompt.allCases.enumerated()), id: \.element.id) { index, prompt in
+                        if index < reflection.guidedAnswers.count,
+                           !reflection.guidedAnswers[index].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            LinenCard {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text(prompt.question).font(.subheadline.weight(.semibold))
+                                    Text(reflection.guidedAnswers[index])
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                            }
+                        }
+                    }
                     ForEach(reflection.attachments) { attachment in
                         PrivateReflectionAttachmentView(attachment: attachment)
                     }
-                    Button("Edit Reflection") {
+                    Button("Edit Intake") {
                         editSeed = ReflectionEditorSeed(existingID: reflection.id)
                     }.buttonStyle(SecondaryButtonStyle())
-                    Button("Export Reflection") { export(reflection) }.buttonStyle(SecondaryButtonStyle())
+                    Button("Export Intake") { export(reflection) }.buttonStyle(SecondaryButtonStyle())
                     Button(role: .destructive) { confirmDelete = true } label: {
-                        Label("Delete Reflection", systemImage: "trash")
+                        Label("Delete Intake", systemImage: "trash")
                     }.buttonStyle(SecondaryButtonStyle()).foregroundStyle(QuietLinen.danger)
                     Label("Stored encrypted on this iPhone.", systemImage: "lock.fill")
                         .font(.footnote).foregroundStyle(QuietLinen.muted)
                 }.padding(20).frame(maxWidth: 720)
             }
         }
-        .linenScreen().navigationTitle("Reflection").navigationBarTitleDisplayMode(.inline)
+        .linenScreen().navigationTitle("Intake").navigationBarTitleDisplayMode(.inline)
         .fullScreenCover(item: $editSeed) { seed in
             NavigationStack { MealReflectionEditorView(seed: seed) }
         }
         .sheet(isPresented: $sharing) {
             ActivitySheet(items: shareItems) { try? model.store.clearTemporaryFiles() }
         }
-        .confirmationDialog("Delete this reflection?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete Reflection", role: .destructive) {
+        .confirmationDialog("Delete this intake?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete Intake", role: .destructive) {
                 Task {
-                    guard await model.authorizeDeletion(reason: "Confirm deletion of this private reflection.".gentleLocalized) else { return }
+                    guard await model.authorizeDeletion(reason: "Confirm deletion of this private intake.".gentleLocalized) else { return }
                     do { try model.deleteMealReflection(reflectionID); dismiss() }
                     catch { self.error = error.localizedDescription }
                 }
             }
             Button("Cancel", role: .cancel) {}
         } message: { Text("This permanently deletes its photo, words, and attachments from this iPhone. It cannot be undone.") }
-        .alert("This reflection couldn’t be opened", isPresented: Binding(
+        .alert("This intake couldn’t be opened", isPresented: Binding(
             get: { error != nil }, set: { if !$0 { error = nil } }
         )) { Button("Done") { error = nil } }
         message: { Text(error ?? "Try again.".gentleLocalized) }
@@ -1031,7 +1086,7 @@ struct MealReflectionDetailView: View {
 
     private func export(_ reflection: MealReflection) {
         Task {
-            guard await model.authenticateSensitiveAction(reason: "Confirm export of this private reflection.".gentleLocalized) else { return }
+            guard await model.authenticateSensitiveAction(reason: "Confirm export of this private intake.".gentleLocalized) else { return }
             do {
                 shareItems = try ExportService(store: model.store).mealReflection(reflection)
                 sharing = true
@@ -1090,16 +1145,16 @@ struct ReflectionPrivacyView: View {
                     set: { model.setMealReflectionPreviewsVisible($0) }
                 )).tint(QuietLinen.forest)
             } footer: {
-                Text("When off, history shows a quiet placeholder instead of each main photo. Full photos remain visible inside a reflection.")
+                Text("When off, history shows a quiet placeholder instead of each main photo. Full photos remain visible inside an intake.")
             }
             Section("Export") {
-                Button("Export All Reflections") { warning = true }
+                Button("Export All Intakes") { warning = true }
                     .disabled(model.vault.mealReflections.isEmpty)
                 Text("Nothing is exported automatically. The destination you choose controls any copies outside Gentle Note.")
                     .font(.footnote).foregroundStyle(QuietLinen.muted)
             }
             Section("Section visibility") {
-                Button("Hide Meal Reflections") {
+                Button("Hide Intakes") {
                     model.setMealReflectionsEnabled(false)
                     dismiss()
                 }
@@ -1107,11 +1162,11 @@ struct ReflectionPrivacyView: View {
                     .font(.footnote).foregroundStyle(QuietLinen.muted)
             }
             Section("Private by design") {
-                Text("Reflections, dates, photos, words, audio, and video stay encrypted on this iPhone. Gentle Note does not create an account, sync them, analyze them, or use them for statistics.")
-                Text("This is a private reflection tool, not treatment or meal monitoring.")
+                Text("Intakes, dates, photos, words, audio, and video stay encrypted on this iPhone. Gentle Note does not create an account, sync them, analyze them, or use them for statistics.")
+                Text("This is a private intake journal, not treatment or a required food log.")
             }
         }
-        .scrollContentBackground(.hidden).linenScreen().navigationTitle("Reflection Privacy")
+        .scrollContentBackground(.hidden).linenScreen().navigationTitle("Intake Privacy")
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
         .confirmationDialog("Your export leaves the app", isPresented: $warning, titleVisibility: .visible) {
             Button("Continue to Export") { exportAll() }
@@ -1130,7 +1185,7 @@ struct ReflectionPrivacyView: View {
 
     private func exportAll() {
         Task {
-            guard await model.authenticateSensitiveAction(reason: "Confirm export of all private meal reflections.".gentleLocalized) else { return }
+            guard await model.authenticateSensitiveAction(reason: "Confirm export of all private intakes.".gentleLocalized) else { return }
             do {
                 shareItems = try ExportService(store: model.store).allMealReflections(model.vault.mealReflections)
                 sharing = true

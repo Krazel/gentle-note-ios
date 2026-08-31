@@ -106,18 +106,18 @@ enum JournalTemplateID: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    var intro: String {
-        let key = switch self {
-        case .blank: "Write whatever feels useful right now."
-        case .gentleCheckIn: "Answer any question, in any order. Leave anything blank."
-        case .balancedThought: "A gentle, non-scored reflection. Every prompt is optional."
-        case .selfCompassionPause: "Make room for difficulty without needing to fix it."
-        case .valuesCompass: "Notice what matters without turning it into a target."
-        case .presentMoment: "Notice the present without needing to change it."
-        case .prepareToTalk: "Gather words for yourself, someone you trust, or your care team."
-        case .noticeSomethingSmall: "This is not a score or achievement."
+    var intro: String? {
+        let key: String? = switch self {
+        case .blank: nil
+        case .gentleCheckIn: "Use this when you want to understand a moment by noticing what happened, what you felt, and what you needed."
+        case .balancedThought: "Use this when one thought feels especially strong and you want to examine it from more than one angle."
+        case .selfCompassionPause: "Use this when you are being hard on yourself or carrying a difficult moment."
+        case .valuesCompass: "Use this when you feel pulled off course and want to reconnect with what matters."
+        case .presentMoment: "Use this when you feel overwhelmed, disconnected, or caught in thoughts and want to return to the present."
+        case .prepareToTalk: "Use this before talking with someone you trust or your care team about what is happening and what support you want."
+        case .noticeSomethingSmall: "Use this when you want to remember a small act of care, honesty, flexibility, or courage."
         }
-        return key.gentleLocalized
+        return key?.gentleLocalized
     }
 
     var summary: String {
@@ -340,6 +340,7 @@ struct MealReflection: Identifiable, Codable, Hashable {
     var mainPhotoFilename: String
     var mainPhotoExtension: String
     var words = ""
+    var guidedAnswers: [String] = []
     var attachments: [ReflectionAttachment] = []
     var reflectionDate = Date()
     var mealMoment: MealMoment?
@@ -347,11 +348,73 @@ struct MealReflection: Identifiable, Codable, Hashable {
     var updatedAt = Date()
 
     var displayTitle: String {
-        mealMoment?.title ?? "Meal reflection".gentleLocalized
+        mealMoment?.title ?? "Intake".gentleLocalized
     }
 
     var allMediaFilenames: Set<String> {
         Set([mainPhotoFilename] + attachments.map(\.encryptedMediaFilename))
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, mainPhotoFilename, mainPhotoExtension, words, guidedAnswers, attachments,
+             reflectionDate, mealMoment, createdAt, updatedAt
+    }
+
+    init(id: UUID = UUID(),
+         mainPhotoFilename: String,
+         mainPhotoExtension: String,
+         words: String = "",
+         guidedAnswers: [String] = [],
+         attachments: [ReflectionAttachment] = [],
+         reflectionDate: Date = Date(),
+         mealMoment: MealMoment? = nil,
+         createdAt: Date = Date(),
+         updatedAt: Date = Date()) {
+        self.id = id
+        self.mainPhotoFilename = mainPhotoFilename
+        self.mainPhotoExtension = mainPhotoExtension
+        self.words = words
+        self.guidedAnswers = guidedAnswers
+        self.attachments = attachments
+        self.reflectionDate = reflectionDate
+        self.mealMoment = mealMoment
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        mainPhotoFilename = try container.decode(String.self, forKey: .mainPhotoFilename)
+        mainPhotoExtension = try container.decode(String.self, forKey: .mainPhotoExtension)
+        words = try container.decodeIfPresent(String.self, forKey: .words) ?? ""
+        guidedAnswers = try container.decodeIfPresent([String].self, forKey: .guidedAnswers) ?? []
+        attachments = try container.decodeIfPresent([ReflectionAttachment].self, forKey: .attachments) ?? []
+        reflectionDate = try container.decodeIfPresent(Date.self, forKey: .reflectionDate) ?? Date()
+        mealMoment = try container.decodeIfPresent(MealMoment.self, forKey: .mealMoment)
+        createdAt = try container.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
+        updatedAt = try container.decodeIfPresent(Date.self, forKey: .updatedAt) ?? createdAt
+    }
+}
+
+enum IntakeGuidePrompt: String, CaseIterable, Identifiable {
+    case context
+    case thoughtsAndFeelings
+    case difficultOrSupportive
+    case needs
+    case rememberOrShare
+
+    var id: String { rawValue }
+
+    var question: String {
+        let key = switch self {
+        case .context: "What was happening around this intake?"
+        case .thoughtsAndFeelings: "What thoughts, feelings, or body sensations showed up?"
+        case .difficultOrSupportive: "What felt difficult or supportive?"
+        case .needs: "What did you need in that moment?"
+        case .rememberOrShare: "What would you like to remember or bring to someone you trust?"
+        }
+        return key.gentleLocalized
     }
 }
 

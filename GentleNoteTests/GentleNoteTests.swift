@@ -35,7 +35,7 @@ final class GentleNoteTests: XCTestCase {
     }
 
     func testFirstRunOverviewAlwaysContainsThreeOrderedSpaces() {
-        XCTAssertEqual(onboardingOverviewItems.map(\.title), ["Journal", "Library", "Meal Reflections"])
+        XCTAssertEqual(onboardingOverviewItems.map(\.title), ["Journal", "Library", "Intakes"])
         XCTAssertEqual(onboardingOverviewItems.count, 3)
         XCTAssertEqual(
             onboardingOverviewItems.last?.body,
@@ -67,7 +67,7 @@ final class GentleNoteTests: XCTestCase {
 
     func testProductAvoidsQuantifiedRecoveryFields() {
         let visibleTemplateText = JournalTemplateID.allCases
-            .flatMap { [$0.title, $0.intro] + $0.prompts }
+            .flatMap { [$0.title] + [$0.intro].compactMap { $0 } + $0.prompts }
             .joined(separator: " ").lowercased()
         for forbidden in ["calorie", "bmi", "macro", "weight goal", "streak", "score your", "how much did you eat"] {
             XCTAssertFalse(visibleTemplateText.contains(forbidden), "Found prohibited template phrase: \(forbidden)")
@@ -109,14 +109,7 @@ final class GentleNoteTests: XCTestCase {
             spanish.localizedString(forKey: "Three spaces, each with its own purpose.", value: nil, table: nil),
             "Tres espacios, cada uno con su propósito."
         )
-        XCTAssertEqual(
-            spanish.localizedString(
-                forKey: "Write freely or choose a template. There is nothing to keep up with.",
-                value: nil,
-                table: nil
-            ),
-            "Escribe libremente o elige una plantilla. No hay nada pendiente."
-        )
+        XCTAssertEqual(spanish.localizedString(forKey: "Intakes", value: nil, table: nil), "Ingestas")
         XCTAssertEqual(
             spanish.localizedString(
                 forKey: "Keep private notes, images, videos, and audio to return to whenever you choose.",
@@ -126,12 +119,8 @@ final class GentleNoteTests: XCTestCase {
             "Guarda notas, imágenes, vídeos y audios privados para volver a ellos cuando tú decidas."
         )
         XCTAssertEqual(
-            spanish.localizedString(
-                forKey: "Reflect in your own words on moments related to food. It is always optional.",
-                value: nil,
-                table: nil
-            ),
-            "Reflexiona con tus propias palabras sobre momentos relacionados con la comida. Siempre es opcional."
+            spanish.localizedString(forKey: "Write a note to return to later…", value: nil, table: nil),
+            "Escribe una nota a la que quieras volver más adelante…"
         )
         XCTAssertEqual(spanish.localizedString(forKey: "Skip tour", value: nil, table: nil), "Omitir recorrido")
         XCTAssertEqual(
@@ -149,8 +138,8 @@ final class GentleNoteTests: XCTestCase {
             "Para qué sirve la Biblioteca"
         )
         XCTAssertEqual(
-            spanish.localizedString(forKey: "What Meal Reflections is for", value: nil, table: nil),
-            "Para qué sirven Reflexiones sobre comidas"
+            spanish.localizedString(forKey: "What Intakes is for", value: nil, table: nil),
+            "Para qué sirven las Ingestas"
         )
         XCTAssertEqual(
             spanish.localizedString(forKey: "Show Library Introduction", value: nil, table: nil),
@@ -285,6 +274,32 @@ final class GentleNoteTests: XCTestCase {
         XCTAssertEqual(reflection.attachments.map(\.kind), [.image, .audio, .video])
         XCTAssertEqual(reflection.allMediaFilenames,
                        ["main.gnm", "additional.gnm", "voice.gnm", "clip.gnm"])
+    }
+
+    func testIntakeGuideUsesQualitativeDocumentedPrompts() {
+        XCTAssertEqual(IntakeGuidePrompt.allCases.count, 5)
+        let text = IntakeGuidePrompt.allCases.map(\.question).joined(separator: " ").lowercased()
+        for forbidden in ["calorie", "weight", "bmi", "macro", "how much", "score"] {
+            XCTAssertFalse(text.contains(forbidden), "Found quantified intake phrase: \(forbidden)")
+        }
+    }
+
+    func testOlderMealReflectionDecodesWithoutGuidedAnswers() throws {
+        let json = """
+        {
+          "id": "48EBA538-7D5A-49C6-8F6F-83B7AA104A40",
+          "mainPhotoFilename": "main.gnm",
+          "mainPhotoExtension": "jpg",
+          "words": "Existing words",
+          "attachments": [],
+          "reflectionDate": "2026-08-31T10:00:00Z",
+          "createdAt": "2026-08-31T10:00:00Z",
+          "updatedAt": "2026-08-31T10:00:00Z"
+        }
+        """
+        let intake = try JSONDecoder.gentle.decode(MealReflection.self, from: Data(json.utf8))
+        XCTAssertTrue(intake.guidedAnswers.isEmpty)
+        XCTAssertEqual(intake.words, "Existing words")
     }
 
     func testSpanishDefaultTagNamesArePackaged() throws {

@@ -10,7 +10,7 @@ struct RootTabBar: View {
             tab(.journal, "Journal", "book.closed")
             tab(.library, "Library", "books.vertical")
             if model.mealReflectionsEnabled {
-                tab(.reflections, "Reflections", "fork.knife")
+                tab(.reflections, "Intakes", "fork.knife")
             }
             tab(.settings, "Settings", "gearshape")
         }

@@ -73,7 +73,7 @@ if ($Info.Contains('NSPhotoLibraryUsageDescription')) { $Failures.Add('Photos pe
 $Swift = Get-ChildItem -LiteralPath (Join-Path $ProjectRoot 'GentleNote') -Filter '*.swift' -Recurse |
     ForEach-Object { Get-Content -LiteralPath $_.FullName -Raw }
 $AllSwift = $Swift -join "`n"
-foreach ($RequiredText in @('Journal History','Record Video','Record Audio','Add Image','PhotosPicker','selectedTagID','migrateCollectionsToTags','PickedVideoFile','PhotoCapturePicker','fileImporter','Data Not Collected','deviceOwnerAuthentication','AES.GCM','isExcludedFromBackup','enteredInactive','MFMessageComposeViewController','tel:112','tel:024','trustedContact','requireAuthenticationForDeletion','KeyboardDismissInstaller','DefaultCollectionKind','Helpful Reminders','languageOverride','showLibraryIntroduction','template.summary','MealReflection','MealReflectionsRootView','ReflectionCalendarView','MealMoment','schemaVersion = 3','OnboardingStep','OnboardingFlowState','Three spaces, each with its own purpose.','Continue to App Lock','Show Meal Reflections in the app','Choose Photos','Open Calendar')) {
+foreach ($RequiredText in @('Journal History','Record Video','Record Audio','Add Image','PhotosPicker','selectedTagID','migrateCollectionsToTags','PickedVideoFile','PhotoCapturePicker','fileImporter','Data Not Collected','deviceOwnerAuthentication','AES.GCM','isExcludedFromBackup','enteredInactive','MFMessageComposeViewController','tel:112','tel:024','trustedContact','requireAuthenticationForDeletion','KeyboardDismissInstaller','DefaultCollectionKind','Helpful Reminders','languageOverride','showLibraryIntroduction','template.summary','MealReflection','MealReflectionsRootView','ReflectionCalendarView','MealMoment','IntakeGuidePrompt','guidedAnswers','schemaVersion = 3','OnboardingStep','OnboardingFlowState','Three spaces, each with its own purpose.','Continue to App Lock','Show Intakes in the app','Choose Photos','Open Calendar')) {
     if (-not $AllSwift.Contains($RequiredText) -and $RequiredText -ne 'Data Not Collected') {
         $Failures.Add("Expected implementation marker missing: $RequiredText")
     }
@@ -104,10 +104,10 @@ foreach ($OnboardingMarker in @('case welcome','case overview','case appLock','f
 }
 $JournalPosition = $Onboarding.IndexOf('title: "Journal"')
 $LibraryPosition = $Onboarding.IndexOf('title: "Library"')
-$ReflectionPosition = $Onboarding.IndexOf('title: "Meal Reflections"')
+$ReflectionPosition = $Onboarding.IndexOf('title: "Intakes"')
 if ($JournalPosition -lt 0 -or $LibraryPosition -lt 0 -or $ReflectionPosition -lt 0 -or
     -not ($JournalPosition -lt $LibraryPosition -and $LibraryPosition -lt $ReflectionPosition)) {
-    $Failures.Add('Onboarding overview must keep Journal, Library, and Meal Reflections in that order')
+    $Failures.Add('Onboarding overview must keep Journal, Library, and Intakes in that order')
 }
 $OnboardingCompletionCalls = [regex]::Matches($Onboarding, 'model\.setOnboardingComplete\(\)').Count
 if ($OnboardingCompletionCalls -ne 2) {
@@ -116,20 +116,20 @@ if ($OnboardingCompletionCalls -ne 2) {
 $Components = Get-Content -LiteralPath (Join-Path $ProjectRoot 'GentleNote\UI\Components.swift') -Raw
 $RootJournal = $Components.IndexOf('tab(.journal, "Journal"')
 $RootLibrary = $Components.IndexOf('tab(.library, "Library"')
-$RootReflections = $Components.IndexOf('tab(.reflections, "Reflections"')
+$RootReflections = $Components.IndexOf('tab(.reflections, "Intakes"')
 $RootSettings = $Components.IndexOf('tab(.settings, "Settings"')
 if ($RootJournal -lt 0 -or $RootLibrary -lt 0 -or $RootReflections -lt 0 -or $RootSettings -lt 0 -or
     -not ($RootJournal -lt $RootLibrary -and $RootLibrary -lt $RootReflections -and $RootReflections -lt $RootSettings)) {
-    $Failures.Add('Root navigation must keep Journal, Library, Reflections, and Settings in that order')
+    $Failures.Add('Root navigation must keep Journal, Library, Intakes, and Settings in that order')
 }
 $MealReflectionsUI = Get-Content -LiteralPath (Join-Path $ProjectRoot 'GentleNote\UI\MealReflectionsViews.swift') -Raw
-foreach ($MealMarker in @('NavigationLink {','ReflectionCalendarScreen','maxSelectionCount: 20','Take Another Photo','Choose Audio File','Record Video','setMealReflectionIntroductionVisible(false)')) {
+foreach ($MealMarker in @('NavigationLink {','ReflectionCalendarScreen','maxSelectionCount: 20','Take Another Photo','Choose Audio File','Record Video','setMealReflectionIntroductionVisible(false)','Use guided questions','Guided intake check-in','guidedBinding(for:')) {
     if (-not $MealReflectionsUI.Contains($MealMarker)) { $Failures.Add("Meal Reflections marker missing: $MealMarker") }
 }
 foreach ($RemovedMealUI in @('Image(systemName: "lock.shield")','Picker("View", selection: $mode)','A moment, held gently','There is nothing to complete and no schedule to keep.')) {
     if ($MealReflectionsUI.Contains($RemovedMealUI)) { $Failures.Add("Removed Meal Reflections UI is still present: $RemovedMealUI") }
 }
-foreach ($RemovedVisibleCopy in @('Reflection templates are not therapy or medical advice.','No account. No ads. No analytics.','New Journal Entry','Start blank or choose a gentle template.')) {
+foreach ($RemovedVisibleCopy in @('Reflection templates are not therapy or medical advice.','No account. No ads. No analytics.','New Journal Entry','Start blank or choose a gentle template.','Nothing is due.','There is nothing to keep up with.','Write whatever feels useful right now.','Write whatever feels useful…','Use a structure, start blank, or leave.','Every prompt is optional.','Answer any question, in any order. Leave anything blank.','Keep a note, image, or recording without creating a journal entry.','Add as many photos as you like, plus optional audio or video.','Everything is optional after the main photo and stays encrypted on this iPhone.')) {
     if ($AllSwift.Contains($RemovedVisibleCopy)) { $Failures.Add("Removed visible copy is still present: $RemovedVisibleCopy") }
 }
 $SettingsUI = Get-Content -LiteralPath (Join-Path $ProjectRoot 'GentleNote\UI\SettingsViews.swift') -Raw
@@ -139,7 +139,7 @@ foreach ($SettingsSummaryMarker in @(
     'DisclosureGroup(isExpanded: $librarySummaryExpanded)',
     'DisclosureGroup(isExpanded: $mealReflectionsSummaryExpanded)',
     'Label("What Library is for", systemImage: "info.circle")',
-    'Label("What Meal Reflections is for", systemImage: "info.circle")'
+    'Label("What Intakes is for", systemImage: "info.circle")'
 )) {
     if (-not $SettingsUI.Contains($SettingsSummaryMarker)) {
         $Failures.Add("Settings summary disclosure marker missing: $SettingsSummaryMarker")
@@ -178,7 +178,7 @@ if ($BeginConfiguration -lt 0 -or $CommitConfiguration -lt 0 -or $StartRunning -
 $SpanishCatalog = Get-Content -LiteralPath (Join-Path $ProjectRoot 'GentleNote\Resources\es.lproj\Localizable.strings') -Raw
 $SpanishKeys = [regex]::Matches($SpanishCatalog, '(?m)^"(?:\\.|[^"])*"\s*=')
 if ($SpanishKeys.Count -lt 360) { $Failures.Add("Spanish catalog is unexpectedly incomplete: $($SpanishKeys.Count) keys") }
-foreach ($RequiredSpanish in @('"Journal" = "Diario";','"Library" = "Biblioteca";','"Settings" = "Ajustes";','"Gentle Check-In" = "Pausa para escucharte";','"Call 112" = "Llamar al 112";','"Call 024" = "Llamar al 024";','"Trusted Contact" = "Contacto de confianza";','"Helpful Reminders" = "Recordatorios que ayudan";','"Require Authentication to Delete" = "Solicitar autenticación para eliminar";','"App Language" = "Idioma de la app";','"What Library is for" = "Para qué sirve la Biblioteca";','"What Meal Reflections is for" = "Para qué sirven Reflexiones sobre comidas";','"Show Library Introduction" = "Mostrar la introducción de la Biblioteca";','"Audio recording could not start. Please try again." = "No se ha podido iniciar la grabación de audio. Inténtalo de nuevo.";','"Three spaces, each with its own purpose." = "Tres espacios, cada uno con su propósito.";','"Write freely or choose a template. Your personal journal." = "Escribe libremente o elige una plantilla. Tu diario personal.";','"Keep private notes, images, videos, and audio to return to when you need them." = "Guarda notas, imágenes, vídeos y audios privados para volver a ellos cuando los necesites.";','"Keep one or more photos of your meals together with any words, audio, or video you want to add." = "Guarda una o más fotos de tus comidas junto al texto, audio o vídeo que quieras añadir.";','"Show Meal Reflections in the app" = "Mostrar Reflexiones sobre comidas en la app";','"Skip tour" = "Omitir recorrido";','"Continue to App Lock" = "Continuar al bloqueo";')) {
+foreach ($RequiredSpanish in @('"Journal" = "Diario";','"Library" = "Biblioteca";','"Intakes" = "Ingestas";','"Settings" = "Ajustes";','"Gentle Check-In" = "Pausa para escucharte";','"Call 112" = "Llamar al 112";','"Call 024" = "Llamar al 024";','"Trusted Contact" = "Contacto de confianza";','"Helpful Reminders" = "Recordatorios que ayudan";','"Require Authentication to Delete" = "Solicitar autenticación para eliminar";','"App Language" = "Idioma de la app";','"What Library is for" = "Para qué sirve la Biblioteca";','"What Intakes is for" = "Para qué sirven las Ingestas";','"Show Library Introduction" = "Mostrar la introducción de la Biblioteca";','"Audio recording could not start. Please try again." = "No se ha podido iniciar la grabación de audio. Inténtalo de nuevo.";','"Three spaces, each with its own purpose." = "Tres espacios, cada uno con su propósito.";','"Write freely or choose a template. Your personal journal." = "Escribe libremente o elige una plantilla. Tu diario personal.";','"Keep private notes, images, videos, and audio to return to when you need them." = "Guarda notas, imágenes, vídeos y audios privados para volver a ellos cuando los necesites.";','"Keep one or more photos of your meals together with any words, audio, or video you want to add." = "Guarda una o más fotos de tus comidas junto al texto, audio o vídeo que quieras añadir.";','"Show Intakes in the app" = "Mostrar Ingestas en la app";','"Use guided questions" = "Usar preguntas guiadas";','"Write a note to return to later…" = "Escribe una nota a la que quieras volver más adelante…";','"Skip tour" = "Omitir recorrido";','"Continue to App Lock" = "Continuar al bloqueo";')) {
     if (-not $SpanishCatalog.Contains($RequiredSpanish)) { $Failures.Add("Missing required Spanish translation: $RequiredSpanish") }
 }
 
@@ -195,7 +195,7 @@ foreach ($Source in @('GentleNoteApp.swift','Models.swift','SecureStore.swift','
 foreach ($LocalizedResource in @('Localizable.strings','InfoPlist.strings','knownRegions = (en, es, Base)')) {
     if (-not $Pbx.Contains($LocalizedResource)) { $Failures.Add("Xcode project omits localization marker: $LocalizedResource") }
 }
-if (-not $Pbx.Contains('MARKETING_VERSION = 0.7.2')) { $Failures.Add('Marketing version is not 0.7.2') }
+if (-not $Pbx.Contains('MARKETING_VERSION = 0.8')) { $Failures.Add('Marketing version is not 0.8') }
 if (-not $Pbx.Contains('CURRENT_PROJECT_VERSION = 1')) { $Failures.Add('Build number is not 1') }
 if (-not $Pbx.Contains('ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon')) { $Failures.Add('Xcode target does not select the AppIcon asset catalog') }
 if (-not $Pbx.Contains('IPHONEOS_DEPLOYMENT_TARGET = 16.0')) { $Failures.Add('Minimum iOS version is not 16.0') }
@@ -213,7 +213,7 @@ if (-not (Test-Path -LiteralPath $AppIconPath)) { $Failures.Add('AppIcon-1024.pn
 if (-not $AppIconContents.Contains('"filename" : "AppIcon-1024.png"')) { $Failures.Add('App icon catalog does not reference AppIcon-1024.png') }
 
 $Workflow = Get-Content -LiteralPath (Join-Path $ProjectRoot '.github\workflows\ios-verify.yml') -Raw
-foreach ($VersionMarker in @('runs-on: macos-26','GentleNote-0.7.2-build-1-${SHORT_SHA}-Local-QA-unsigned','"marketingVersion": "0.7.2"','"build": "1"','GentleNote-0.7.2-build-1-test-evidence')) {
+foreach ($VersionMarker in @('runs-on: macos-26','GentleNote-0.8-build-1-${SHORT_SHA}-Local-QA-unsigned','"marketingVersion": "0.8"','"build": "1"','GentleNote-0.8-build-1-test-evidence')) {
     if (-not $Workflow.Contains($VersionMarker)) { $Failures.Add("Workflow version marker missing: $VersionMarker") }
 }
 
@@ -230,7 +230,7 @@ if (-not (Test-Path -LiteralPath $TestFlightWorkflowPath)) {
         'com.krazel.gentlenote.B2X6D3A9J9',
         'runs-on: macos-26',
         'CFBundleIcons:CFBundlePrimaryIcon:CFBundleIconName',
-        'GentleNote-0.7.2-build-1-signed-${{ github.sha }}'
+        'GentleNote-0.8-build-1-signed-${{ github.sha }}'
     )) {
         if (-not $TestFlightWorkflow.Contains($Marker)) {
             $Failures.Add("TestFlight workflow is missing marker: $Marker")
@@ -247,5 +247,5 @@ if ($Failures.Count -gt 0) {
 Write-Output 'VERIFY: PASS'
 Write-Output "Swift files: $($Swift.Count)"
 Write-Output "Approved boards: $($Approved.Count)"
-Write-Output 'Version: 0.7.2 (1), iOS 16+'
+Write-Output 'Version: 0.8 (1), iOS 16+'
 Write-Output 'Scope: iPhone, English and Spanish, local-only, no accounts/ads/analytics/tracking'

@@ -86,7 +86,7 @@ let onboardingOverviewItems = [
                            title: "Library",
                            body: "Keep private notes, images, videos, and audio to return to when you need them."),
     OnboardingOverviewItem(icon: "fork.knife",
-                           title: "Meal Reflections",
+                           title: "Intakes",
                            body: "Keep one or more photos of your meals together with any words, audio, or video you want to add.")
 ]
 
@@ -228,9 +228,9 @@ struct OnboardingView: View {
                             }
                             .accessibilityElement(children: .combine)
 
-                            if item.title == "Meal Reflections" {
+                            if item.title == "Intakes" {
                                 Divider()
-                                Toggle("Show Meal Reflections in the app".gentleLocalized, isOn: Binding(
+                                Toggle("Show Intakes in the app".gentleLocalized, isOn: Binding(
                                     get: { model.mealReflectionsEnabled },
                                     set: { model.setMealReflectionsEnabled($0) }
                                 ))
