@@ -142,6 +142,14 @@ if (mode === "prepare-review") {
       attributes: { ...contact, notes }
     }
   });
+  const verifiedDetail = (await request("GET", `/v1/appStoreReviewDetails/${targetDetail.id}`)).data;
+  const verifiedAttributes = verifiedDetail?.attributes ?? {};
+  const contactVerified = Object.entries(contact)
+    .every(([key, value]) => verifiedAttributes[key]?.trim() === value);
+  const notesVerified = verifiedAttributes.notes?.trim() === notes;
+  if (!contactVerified || !notesVerified) {
+    fail("App Store Connect did not preserve the authorized App Review details exactly.");
+  }
   await request("PATCH", `/v1/appStoreVersions/${releaseVersion.id}`, {
     data: {
       type: "appStoreVersions",
@@ -155,7 +163,9 @@ if (mode === "prepare-review") {
     versionId: releaseVersion.id,
     versionString: publicVersion,
     contact: "COPIED_WITHIN_APP_STORE_CONNECT",
+    contactVerified,
     notesLength: notes.length,
+    notesVerified,
     copyright: review.copyright
   }));
   process.exit(0);
